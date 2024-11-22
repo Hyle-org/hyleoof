@@ -1,24 +1,12 @@
-use yew::prelude::*;
+#![recursion_limit = "256"]
 
-#[function_component]
-fn App() -> Html {
-    let counter = use_state(|| 0);
-    let onclick = {
-        let counter = counter.clone();
-        move |_| {
-            let value = *counter + 1;
-            counter.set(value);
-        }
-    };
-    println!("couocu");
+mod text_input;
 
-    html! {
-        <div>
-            <button {onclick}>{ "+1" }</button>
-            <p>{ *counter }</p>
-        </div>
-    }
-}
+mod app;
+mod contracts;
+mod faucet;
+
+use app::App;
 
 fn main() {
     yew::Renderer::<App>::new().render();
