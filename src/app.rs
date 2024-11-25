@@ -2,11 +2,12 @@ extern crate zxcvbn;
 
 use std::time::Duration;
 
+use futures::FutureExt;
 use hyllar::{HyllarToken, HyllarTokenContract};
 use sdk::erc20::ERC20;
 use yew::prelude::*;
 
-use crate::{contracts::spawn_fetch_state, faucet::faucet, text_input::TextInput};
+use crate::{client::WalletClient, contracts::spawn_fetch_state, text_input::TextInput};
 
 pub const TEN_SECS: Duration = Duration::from_secs(10);
 
@@ -27,10 +28,15 @@ pub struct App {
 }
 
 impl App {
-    fn faucet(&self, ctx: &Context<Self>, username: &str) {
+    fn faucet(&self, ctx: &Context<Self>, username: String) {
         ctx.link()
             .send_message(Msg::SetProgress("Fauceting...".to_string()));
-        faucet(username);
+        ctx.link().send_future(async move {
+            match WalletClient::default().faucet(username.clone()).await {
+                Ok(_) => Msg::SetProgress(format!("Faucet successful for user {}", username)),
+                Err(e) => Msg::SetProgress(format!("Faucet failed: {}", e)),
+            }
+        });
     }
 
     fn display_name(&self) -> String {
@@ -53,7 +59,7 @@ impl Component for App {
             Msg::SetUserName(next_username) => self.username = next_username,
             Msg::SetPassword(next_password) => self.password = next_password,
             Msg::SetProgress(progress) => self.progress = progress,
-            Msg::Faucet => self.faucet(ctx, &self.username),
+            Msg::Faucet => self.faucet(ctx, self.display_name()),
             Msg::ContractStateUpdate(state) => {
                 self.state = Some(HyllarTokenContract::init(
                     state,

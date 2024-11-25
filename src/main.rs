@@ -3,8 +3,8 @@
 mod text_input;
 
 mod app;
+mod client;
 mod contracts;
-mod faucet;
 
 use app::App;
 
