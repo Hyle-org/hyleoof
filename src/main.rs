@@ -5,6 +5,9 @@ mod text_input;
 mod app;
 mod client;
 mod contracts;
+mod faucet;
+mod register;
+mod transfer;
 
 use app::App;
 

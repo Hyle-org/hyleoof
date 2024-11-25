@@ -7,7 +7,7 @@ use yew::{
     Callback,
 };
 
-use super::app::TEN_SECS;
+use super::faucet::TEN_SECS;
 
 #[derive(Deserialize, Debug)]
 pub struct Contract {

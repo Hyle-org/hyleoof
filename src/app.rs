@@ -1,116 +1,72 @@
-extern crate zxcvbn;
-
-use std::time::Duration;
-
-use futures::FutureExt;
-use hyllar::{HyllarToken, HyllarTokenContract};
-use sdk::erc20::ERC20;
 use yew::prelude::*;
 
-use crate::{client::WalletClient, contracts::spawn_fetch_state, text_input::TextInput};
-
-pub const TEN_SECS: Duration = Duration::from_secs(10);
+#[derive(Clone, PartialEq)]
+pub enum Tab {
+    Register,
+    Faucet,
+    Transfer,
+}
 
 pub enum Msg {
-    SetUserName(String),
-    SetPassword(String),
-    SetProgress(String),
-    ContractStateUpdate(HyllarToken),
-    Faucet,
+    SwitchTab(Tab),
 }
 
-#[derive(Default)]
 pub struct App {
-    username: String,
-    password: String,
-    progress: String,
-    state: Option<HyllarTokenContract>,
-}
-
-impl App {
-    fn faucet(&self, ctx: &Context<Self>, username: String) {
-        ctx.link()
-            .send_message(Msg::SetProgress("Fauceting...".to_string()));
-        ctx.link().send_future(async move {
-            match WalletClient::default().faucet(username.clone()).await {
-                Ok(_) => Msg::SetProgress(format!("Faucet successful for user {}", username)),
-                Err(e) => Msg::SetProgress(format!("Faucet failed: {}", e)),
-            }
-        });
-    }
-
-    fn display_name(&self) -> String {
-        format!("{}.hydentity", self.username)
-    }
+    active_tab: Tab,
 }
 
 impl Component for App {
     type Message = Msg;
     type Properties = ();
 
-    fn create(ctx: &Context<Self>) -> Self {
-        let state_cb = ctx.link().callback(Msg::ContractStateUpdate);
-        spawn_fetch_state(state_cb);
-        Self::default()
+    fn create(_ctx: &Context<Self>) -> Self {
+        Self {
+            active_tab: Tab::Transfer, // Onglet par défaut
+        }
     }
 
-    fn update(&mut self, ctx: &Context<Self>, msg: Self::Message) -> bool {
+    fn update(&mut self, _ctx: &Context<Self>, msg: Self::Message) -> bool {
         match msg {
-            Msg::SetUserName(next_username) => self.username = next_username,
-            Msg::SetPassword(next_password) => self.password = next_password,
-            Msg::SetProgress(progress) => self.progress = progress,
-            Msg::Faucet => self.faucet(ctx, self.display_name()),
-            Msg::ContractStateUpdate(state) => {
-                self.state = Some(HyllarTokenContract::init(
-                    state,
-                    sdk::Identity(self.username.clone()),
-                ))
+            Msg::SwitchTab(tab) => {
+                self.active_tab = tab;
+                true
             }
-        };
-        true
+        }
     }
 
     fn view(&self, ctx: &Context<Self>) -> Html {
-        let display_state = match &self.state {
-            Some(token) => html! {
-                <div>
-                <p>{"Total supply: "} {token.total_supply().unwrap()}</p>
-                <p>{"Balance: "} {token.balance_of(&self.display_name()).map_or_else(|e| e, |b| b.to_string())}</p>
-                </div>
-            },
-            None => html! {
-                <span>{"No state fetched yet"}</span>
-            },
+        let tab_content = match self.active_tab {
+            Tab::Register => html! { <crate::register::Register /> },
+            Tab::Faucet => html! { <crate::faucet::Faucet /> },
+            Tab::Transfer => html! { <crate::transfer::Transfer /> },
         };
 
         html! {
-            <main class="container">
-                <div>
-                    <div>
-                        {"Username:"}
-                    </div>
-                    <div>
-                        <TextInput on_change={ctx.link().callback(Msg::SetUserName)} value={self.username.clone()}  />
-                    </div>
-                    //<div>
-                    //    {"Password:"}
-                    //</div>
-                    //<div>
-                    //    <TextInput on_change={ctx.link().callback(Msg::SetPassword)} value={self.password.clone()}  />
-                    //</div>
-                </div>
-                <div class="readout">
-                    <button onclick={ctx.link().callback(|_| Msg::Faucet)} class="submit-button">
-                        {"Faucet 10 to "} {self.display_name()}
+            <div class="container">
+                <div class="tabs">
+                    <button
+                        class={if self.active_tab == Tab::Register { "tab active" } else { "tab" }}
+                        onclick={ctx.link().callback(|_| Msg::SwitchTab(Tab::Register))}
+                    >
+                        {"Register"}
+                    </button>
+                    <button
+                        class={if self.active_tab == Tab::Faucet { "tab active" } else { "tab" }}
+                        onclick={ctx.link().callback(|_| Msg::SwitchTab(Tab::Faucet))}
+                    >
+                        {"Faucet"}
+                    </button>
+                    <button
+                        class={if self.active_tab == Tab::Transfer { "tab active" } else { "tab" }}
+                        onclick={ctx.link().callback(|_| Msg::SwitchTab(Tab::Transfer))}
+                    >
+                        {"Transfer"}
                     </button>
                 </div>
-                <div class="progress">
-                    {self.progress.clone()}
+                <div class="content">
+                    {tab_content}
                 </div>
-                <div class="state">
-                    {display_state}
-                </div>
-            </main>
+            </div>
         }
     }
 }
