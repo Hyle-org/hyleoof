@@ -2370,7 +2370,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "hyle-riche"
+name = "hyleoof"
 version = "0.1.0"
 dependencies = [
  "anyhow",
