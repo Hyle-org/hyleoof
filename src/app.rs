@@ -6,15 +6,8 @@ use hyllar::{HyllarToken, HyllarTokenContract};
 use sdk::erc20::ERC20;
 use yew::prelude::*;
 
-use crate::{
-    contracts::{self, spawn_fetch_state},
-    faucet::faucet,
-    text_input::TextInput,
-};
-use anyhow::Result;
-use futures::{FutureExt, StreamExt};
+use crate::{contracts::spawn_fetch_state, faucet::faucet, text_input::TextInput};
 
-pub const ONE_SEC: Duration = Duration::from_secs(1);
 pub const TEN_SECS: Duration = Duration::from_secs(10);
 
 pub enum Msg {
@@ -38,6 +31,10 @@ impl App {
         ctx.link()
             .send_message(Msg::SetProgress("Fauceting...".to_string()));
         faucet(username);
+    }
+
+    fn display_name(&self) -> String {
+        format!("{}.hydentity", self.username)
     }
 }
 
@@ -72,7 +69,7 @@ impl Component for App {
             Some(token) => html! {
                 <div>
                 <p>{"Total supply: "} {token.total_supply().unwrap()}</p>
-                <p>{"Balance: "} {token.balance_of(&self.username).map_or_else(|e| e, |b| b.to_string())}</p>
+                <p>{"Balance: "} {token.balance_of(&self.display_name()).map_or_else(|e| e, |b| b.to_string())}</p>
                 </div>
             },
             None => html! {
@@ -81,32 +78,32 @@ impl Component for App {
         };
 
         html! {
-            <main>
-                <div class="entry">
+            <main class="container">
+                <div>
                     <div>
                         {"Username:"}
                     </div>
                     <div>
-                        <TextInput on_change={ctx.link().callback(Msg::SetUserName)} value={self.username.clone()} />
+                        <TextInput on_change={ctx.link().callback(Msg::SetUserName)} value={self.username.clone()}  />
                     </div>
-                    <div>
-                        {"Password:"}
-                    </div>
-                    <div>
-                        <TextInput on_change={ctx.link().callback(Msg::SetPassword)} value={self.password.clone()} />
-                    </div>
+                    //<div>
+                    //    {"Password:"}
+                    //</div>
+                    //<div>
+                    //    <TextInput on_change={ctx.link().callback(Msg::SetPassword)} value={self.password.clone()}  />
+                    //</div>
                 </div>
                 <div class="readout">
-                    <button onclick={ctx.link().callback(|_| Msg::Faucet)}>
-                        {"Faucet 10 to user"}
+                    <button onclick={ctx.link().callback(|_| Msg::Faucet)} class="submit-button">
+                        {"Faucet 10 to "} {self.display_name()}
                     </button>
                 </div>
-        <div class="progress">
-                {self.progress.clone()}
-        </div>
-        <div class="state">
-         {display_state}
-        </div>
+                <div class="progress">
+                    {self.progress.clone()}
+                </div>
+                <div class="state">
+                    {display_state}
+                </div>
             </main>
         }
     }

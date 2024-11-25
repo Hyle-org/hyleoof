@@ -26,6 +26,9 @@ pub fn text_input(props: &Props) -> Html {
     });
 
     html! {
-        <input type="text" {value} {oninput} />
+        <div class="input-wrapper">
+            <input type="text" {value} {oninput} class="input-text"/>
+            <span class="input-suffix">{".hydentity"}</span>
+        </div>
     }
 }
