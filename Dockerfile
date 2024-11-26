@@ -11,7 +11,7 @@ ADD https://github.com/thedodd/trunk/releases/download/v0.21.4/trunk-x86_64-unkn
 RUN cd /tmp && tar xf trunk-x86_64-unknown-linux-gnu.tar.gz && chmod +x trunk && mv trunk /bin
 
 WORKDIR /app
-COPY . .
+COPY ./crates/ui .
 
 RUN trunk build --release
 
