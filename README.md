@@ -27,6 +27,7 @@ That's it, we're done!
 
 The frontend runs with:
 ```bash
+cd crates/ui
 trunk serve
 ```
 
