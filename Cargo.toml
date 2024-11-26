@@ -8,8 +8,8 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-sdk = { path = "../hyle/contract-sdk", package="hyle-contract-sdk"  }
-hyllar = { path = "../hyle/contracts/hyllar/contract" }
+sdk = { git = "https://github.com/Hyle-org/hyle.git", package="hyle-contract-sdk", branch = "client_improvements"  }
+hyllar= { git = "https://github.com/Hyle-org/hyle.git", package="hyllar", branch = "client_improvements"  }
 
 serde = { version = "1.0", default-features = false, features = [
     "derive",

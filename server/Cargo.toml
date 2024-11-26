@@ -4,10 +4,10 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-sdk = { path = "../../hyle/contract-sdk", package="hyle-contract-sdk"  }
-hyllar = { path = "../../hyle/contracts/hyllar/contract" }
-hydentity = { path = "../../hyle/contracts/hydentity/contract" }
-hyle = { path = "../../hyle", package = "hyle" }
+sdk = { git = "https://github.com/Hyle-org/hyle.git", package="hyle-contract-sdk" , branch = "client_improvements" }
+hyllar = { git = "https://github.com/Hyle-org/hyle.git", package="hyllar", branch = "client_improvements"  }
+hydentity = { git = "https://github.com/Hyle-org/hyle.git", package="hydentity", branch = "client_improvements"  }
+hyle = { git = "https://github.com/Hyle-org/hyle.git", package="hyle", branch = "client_improvements"  }
 
 axum = "0.6"
 tokio = { version = "1", features = ["full"] }
