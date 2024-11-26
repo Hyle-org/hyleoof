@@ -11,10 +11,12 @@ ADD https://github.com/thedodd/trunk/releases/download/v0.21.4/trunk-x86_64-unkn
 RUN cd /tmp && tar xf trunk-x86_64-unknown-linux-gnu.tar.gz && chmod +x trunk && mv trunk /bin
 
 WORKDIR /app
-COPY ./crates/ui .
+COPY ./crates ./crates
+COPY ./Cargo.toml .
+COPY ./Cargo.lock .
 
-RUN trunk build --release
+RUN cd /app/crates/ui && trunk build --release
 
 FROM nginx:1.21.5-alpine AS production
 
-COPY --from=build /app/dist /usr/share/nginx/html
+COPY --from=build /app/crates/ui/dist /usr/share/nginx/html

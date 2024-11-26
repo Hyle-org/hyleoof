@@ -1,3 +1,5 @@
+use std::env;
+
 use anyhow::Result;
 use axum::{
     extract::Json,
@@ -42,11 +44,6 @@ async fn main() {
         .serve(app.into_make_service())
         .await
         .unwrap();
-}
-
-struct Config {
-    host: String,
-    port: u16,
 }
 
 // --------------------------------------------------------
@@ -109,13 +106,9 @@ async fn register(Json(payload): Json<RegisterRequest>) -> Result<impl IntoRespo
 }
 
 async fn register_identity(username: String, password: String) -> Result<TxHash, AppError> {
-    let config = Config {
-        host: "localhost".to_string(),
-        port: 4321,
-    };
-    let url = format!("http://{}:{}", config.host, config.port);
+    let node_url = env::var("NODE_URL").unwrap_or_else(|_| "http://localhost:4321".to_string());
     let client = ApiHttpClient {
-        url: Url::parse(url.as_str()).unwrap(),
+        url: Url::parse(node_url.as_str()).unwrap(),
         reqwest_client: Client::new(),
     };
     let password = password.into_bytes().to_vec();
@@ -171,13 +164,9 @@ async fn do_transfer(
     recipient: String,
     amount: u128,
 ) -> Result<TxHash, AppError> {
-    let config = Config {
-        host: "localhost".to_string(),
-        port: 4321,
-    };
-    let url = format!("http://{}:{}", config.host, config.port);
+    let node_url = env::var("NODE_URL").unwrap_or_else(|_| "http://localhost:4321".to_string());
     let client = ApiHttpClient {
-        url: Url::parse(url.as_str()).unwrap(),
+        url: Url::parse(node_url.as_str()).unwrap(),
         reqwest_client: Client::new(),
     };
 

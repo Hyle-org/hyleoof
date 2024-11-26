@@ -1,0 +1,24 @@
+FROM rust:alpine AS builder
+
+RUN apk add pkgconfig openssl-dev gcc musl-dev
+RUN apk add --no-cache openssl-libs-static
+
+WORKDIR /app
+COPY .cargo .cargo
+COPY ./crates ./crates
+COPY Cargo.toml . 
+COPY Cargo.lock .
+
+RUN cargo build -p server
+
+# RUNNER
+FROM alpine:latest
+
+WORKDIR /app
+
+COPY --from=builder /app/target/debug/server ./
+
+EXPOSE 3000
+
+CMD ["./server"]
+
