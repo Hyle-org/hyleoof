@@ -2,13 +2,15 @@ use anyhow::{bail, Result};
 use reqwest::Client;
 use serde::Serialize;
 
+use crate::utils::get_server_url;
+
 pub struct WalletClient {
     base_url: String,
     http_client: Client,
 }
 impl Default for WalletClient {
     fn default() -> Self {
-        Self::new("http://127.0.0.1:3000".to_string())
+        Self::new(get_server_url())
     }
 }
 

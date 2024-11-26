@@ -19,4 +19,5 @@ RUN cd /app/crates/ui && trunk build --release
 
 FROM nginx:1.21.5-alpine AS production
 
+COPY --from=build /app/crates/ui/config.js /usr/share/nginx/html
 COPY --from=build /app/crates/ui/dist /usr/share/nginx/html

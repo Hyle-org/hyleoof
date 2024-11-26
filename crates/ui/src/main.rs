@@ -8,6 +8,7 @@ mod contracts;
 mod faucet;
 mod register;
 mod transfer;
+mod utils;
 
 use app::App;
 

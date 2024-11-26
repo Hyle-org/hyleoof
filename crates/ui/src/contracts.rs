@@ -7,6 +7,8 @@ use yew::{
     Callback,
 };
 
+use crate::utils::get_node_url;
+
 use super::faucet::TEN_SECS;
 
 #[derive(Deserialize, Debug)]
@@ -21,7 +23,7 @@ pub fn spawn_fetch_state(state_cb: Callback<HyllarToken>) {
     // Spawn a background task that will fetch state and send it to the component.
     spawn_local(async move {
         loop {
-            let url = "http://127.0.0.1:4321".to_string(); // TODO configurable
+            let url = get_node_url();
             let resp = match reqwest::get(format!("{}/v1/contract/hyllar", url)).await {
                 Ok(it) => it,
                 Err(_) => {
