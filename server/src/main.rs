@@ -2,7 +2,7 @@ use anyhow::Result;
 use axum::{
     extract::Json,
     http::{Method, StatusCode},
-    response::{IntoResponse, Response},
+    response::IntoResponse,
     routing::post,
     Router,
 };
@@ -17,8 +17,10 @@ use sdk::{
 };
 use serde::Deserialize;
 use tower_http::cors::{Any, CorsLayer};
+use utils::AppError;
 
 mod contract;
+mod utils;
 
 #[tokio::main]
 async fn main() {
@@ -47,6 +49,10 @@ struct Config {
     port: u16,
 }
 
+// --------------------------------------------------------
+//      Faucet
+// --------------------------------------------------------
+
 #[derive(Deserialize)]
 struct FaucetRequest {
     username: String,
@@ -63,6 +69,10 @@ async fn faucet(Json(payload): Json<FaucetRequest>) -> Result<impl IntoResponse,
 
     Ok(Json(tx_hash))
 }
+
+// --------------------------------------------------------
+//      Transfer
+// --------------------------------------------------------
 
 #[derive(Deserialize)]
 struct TransferRequest {
@@ -82,6 +92,10 @@ async fn transfer(Json(payload): Json<TransferRequest>) -> Result<impl IntoRespo
     .await?;
     Ok(Json(tx_hash))
 }
+
+// --------------------------------------------------------
+//      Register
+// --------------------------------------------------------
 
 #[derive(Deserialize)]
 struct RegisterRequest {
@@ -223,25 +237,4 @@ async fn do_transfer(
     contract::send_proof(&client, tx_hash.clone(), "hyllar".into(), transfer_proof).await?;
 
     Ok(tx_hash)
-}
-
-// Make our own error that wraps `anyhow::Error`.
-pub struct AppError(StatusCode, anyhow::Error);
-
-// Tell axum how to convert `AppError` into a response.
-impl IntoResponse for AppError {
-    fn into_response(self) -> Response {
-        (self.0, format!("{}", self.1)).into_response()
-    }
-}
-
-// This enables using `?` on functions that return `Result<_, anyhow::Error>` to turn them into
-// `Result<_, AppError>`. That way you don't need to do that manually.
-impl<E> From<E> for AppError
-where
-    E: Into<anyhow::Error>,
-{
-    fn from(err: E) -> Self {
-        Self(StatusCode::INTERNAL_SERVER_ERROR, err.into())
-    }
 }
