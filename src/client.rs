@@ -1,3 +1,4 @@
+use anyhow::{bail, Result};
 use reqwest::Client;
 use serde::Serialize;
 
@@ -19,7 +20,7 @@ impl WalletClient {
         }
     }
 
-    pub async fn faucet(&self, username: String) -> Result<(), reqwest::Error> {
+    pub async fn faucet(&self, username: String) -> Result<()> {
         #[derive(Serialize)]
         struct FaucetRequest {
             username: String,
@@ -42,65 +43,52 @@ impl WalletClient {
 
     pub async fn transfer(
         &self,
-        username: &str,
-        password: &str,
-        nonce: u64,
-        recipient: &str,
+        username: String,
+        password: String,
+        recipient: String,
         amount: u64,
-    ) -> Result<(), reqwest::Error> {
+    ) -> Result<()> {
         #[derive(Serialize)]
         struct TransferRequest {
             username: String,
             password: String,
-            nonce: u64,
             recipient: String,
             amount: u64,
         }
 
         let request = TransferRequest {
-            username: username.to_string(),
-            password: password.to_string(),
-            nonce,
-            recipient: recipient.to_string(),
+            username,
+            password,
+            recipient,
             amount,
         };
 
         let url = format!("{}/transfer", self.base_url);
         let response = self.http_client.post(&url).json(&request).send().await?;
 
-        if response.status().is_success() {
-            println!(
-                "Transfer of {} to {} successful from user: {}",
-                amount, recipient, username
-            );
-        } else {
+        if !response.status().is_success() {
             let error_text = response.text().await?;
-            eprintln!("Transfer request failed: {}", error_text);
+            bail!("Transfer request failed: {}", error_text);
         }
 
         Ok(())
     }
 
-    pub async fn register(&self, username: &str, password: &str) -> Result<(), reqwest::Error> {
+    pub async fn register(&self, username: String, password: String) -> Result<()> {
         #[derive(Serialize)]
         struct RegisterRequest {
             username: String,
             password: String,
         }
 
-        let request = RegisterRequest {
-            username: username.to_string(),
-            password: password.to_string(),
-        };
+        let request = RegisterRequest { username, password };
 
         let url = format!("{}/register", self.base_url);
         let response = self.http_client.post(&url).json(&request).send().await?;
 
-        if response.status().is_success() {
-            println!("Registration successful for user: {}", username);
-        } else {
+        if !response.status().is_success() {
             let error_text = response.text().await?;
-            eprintln!("Registration request failed: {}", error_text);
+            bail!("Registration request failed: {}", error_text);
         }
 
         Ok(())

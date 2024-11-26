@@ -2,7 +2,7 @@ use hyllar::{HyllarToken, HyllarTokenContract};
 use sdk::erc20::ERC20;
 use yew::prelude::*;
 
-use crate::{contracts::spawn_fetch_state, text_input::TextInput};
+use crate::{client::WalletClient, contracts::spawn_fetch_state, text_input::TextInput};
 
 pub enum Msg {
     SetUserName(String),
@@ -25,6 +25,26 @@ pub struct Transfer {
 }
 
 impl Transfer {
+    fn transfer(
+        ctx: &Context<Self>,
+        name: String,
+        password: String,
+        recipient: String,
+        amount: u64,
+    ) {
+        ctx.link()
+            .send_message(Msg::SetProgress("Transfering...".to_string()));
+
+        ctx.link().send_future(async move {
+            match WalletClient::default()
+                .transfer(name.clone(), password, recipient, amount)
+                .await
+            {
+                Ok(_) => Msg::SetProgress(format!("Transfer successful for user {}", name)),
+                Err(e) => Msg::SetProgress(format!("{}", e)),
+            }
+        });
+    }
     fn display_name(user: &str) -> String {
         format!("{}.hydentity", user)
     }
@@ -43,14 +63,20 @@ impl Component for Transfer {
         }
     }
 
-    fn update(&mut self, _ctx: &Context<Self>, msg: Self::Message) -> bool {
+    fn update(&mut self, ctx: &Context<Self>, msg: Self::Message) -> bool {
         match msg {
             Msg::SetUserName(next_username) => self.username = next_username,
             Msg::SetRecipient(next_username) => self.recipient = next_username,
             Msg::SetPassword(next_password) => self.password = next_password,
             Msg::SetAmount(next_amount) => self.amount = next_amount,
             Msg::SetProgress(progress) => self.progress = progress,
-            Msg::Transfer => todo!(),
+            Msg::Transfer => Self::transfer(
+                ctx,
+                Self::display_name(&self.username),
+                self.password.clone(),
+                Self::display_name(&self.recipient),
+                self.amount.parse::<u64>().unwrap_or(0),
+            ),
             Msg::ContractStateUpdate(state) => {
                 self.state = Some(HyllarTokenContract::init(
                     state,

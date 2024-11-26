@@ -152,9 +152,10 @@ async fn register_identity(username: String, password: String) -> Result<TxHash,
 
 async fn get_nonce(client: &ApiHttpClient, username: &str) -> Result<u32, AppError> {
     let state: Hydentity = contract::fetch_current_state(client, &"hydentity".into()).await?;
+    println!("State fetched: {:?}", state);
     let info = state
         .get_identity_info(username)
-        .map_err(|_| AppError(StatusCode::NOT_FOUND, anyhow::anyhow!("Identity not found")))?;
+        .map_err(|err| AppError(StatusCode::NOT_FOUND, anyhow::anyhow!(err)))?;
     let state: AccountInfo = serde_json::from_str(&info).map_err(|_| {
         AppError(
             StatusCode::INTERNAL_SERVER_ERROR,

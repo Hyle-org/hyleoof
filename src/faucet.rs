@@ -27,7 +27,7 @@ pub struct Faucet {
 }
 
 impl Faucet {
-    fn faucet(&self, ctx: &Context<Self>, username: String) {
+    fn faucet(ctx: &Context<Self>, username: String) {
         ctx.link()
             .send_message(Msg::SetProgress("Fauceting...".to_string()));
         ctx.link().send_future(async move {
@@ -58,7 +58,7 @@ impl Component for Faucet {
             Msg::SetUserName(next_username) => self.username = next_username,
             Msg::SetPassword(next_password) => self.password = next_password,
             Msg::SetProgress(progress) => self.progress = progress,
-            Msg::Faucet => self.faucet(ctx, self.display_name()),
+            Msg::Faucet => Self::faucet(ctx, self.display_name()),
             Msg::ContractStateUpdate(state) => {
                 self.state = Some(HyllarTokenContract::init(
                     state,
