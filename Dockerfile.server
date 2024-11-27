@@ -9,6 +9,9 @@ COPY ./crates ./crates
 COPY Cargo.toml . 
 COPY Cargo.lock .
 
+RUN mkdir -p /hyle/contracts/hyllar && wget https://raw.githubusercontent.com/Hyle-org/hyle/refs/heads/main/contracts/hyllar/hyllar.img -O /hyle/contracts/hyllar/hyllar.img
+RUN mkdir -p /hyle/contracts/hydentity && wget https://raw.githubusercontent.com/Hyle-org/hyle/refs/heads/main/contracts/hydentity/hydentity.img -O /hyle/contracts/hydentity/hydentity.img
+
 RUN cargo build -p server
 
 # RUNNER

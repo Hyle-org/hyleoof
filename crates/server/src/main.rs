@@ -24,6 +24,9 @@ use utils::AppError;
 mod contract;
 mod utils;
 
+static HYLLAR_BIN: &[u8] = include_bytes!("../../../../hyle/contracts/hyllar/hyllar.img");
+static HYDENTITY_BIN: &[u8] = include_bytes!("../../../../hyle/contracts/hydentity/hydentity.img");
+
 #[tokio::main]
 async fn main() {
     // Créer un middleware CORS
@@ -127,6 +130,7 @@ async fn register_identity(username: String, password: String) -> Result<TxHash,
     let hydentity_proof = contract::run(
         &client,
         &"hydentity".into(),
+        HYDENTITY_BIN,
         |token: hydentity::Hydentity| -> ContractInput<hydentity::Hydentity> {
             ContractInput::<Hydentity> {
                 initial_state: token,
@@ -196,6 +200,7 @@ async fn do_transfer(
     let hydentity_proof = contract::run(
         &client,
         &"hydentity".into(),
+        HYDENTITY_BIN,
         |token: hydentity::Hydentity| -> ContractInput<hydentity::Hydentity> {
             ContractInput::<Hydentity> {
                 initial_state: token,
@@ -211,6 +216,7 @@ async fn do_transfer(
     let transfer_proof = contract::run(
         &client,
         &"hyllar".into(),
+        HYLLAR_BIN,
         |token: hyllar::HyllarToken| -> ContractInput<hyllar::HyllarToken> {
             ContractInput::<HyllarToken> {
                 initial_state: token,

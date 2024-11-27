@@ -3,7 +3,6 @@ use borsh::to_vec;
 use hyle::{
     indexer::model::ContractDb,
     model::{BlobTransaction, ProofData, ProofTransaction},
-    node_state::model::Contract,
     rest::client::ApiHttpClient,
 };
 use sdk::{
@@ -13,6 +12,7 @@ use sdk::{
 pub async fn run<State, Builder>(
     client: &ApiHttpClient,
     contract_name: &ContractName,
+    binary: &'static [u8],
     build_contract_input: Builder,
 ) -> Result<ProofData>
 where
@@ -27,7 +27,7 @@ where
 
     println!("{}", "-".repeat(20));
     println!("Checking transition for {contract_name}...");
-    let execute_info = execute(contract_name, &contract_input)?;
+    let execute_info = execute(binary, &contract_input)?;
     let output = execute_info.journal.decode::<HyleOutput>().unwrap();
     if !output.success {
         let program_error = std::str::from_utf8(&output.program_outputs).unwrap();
@@ -42,7 +42,7 @@ where
 
     println!("{}", "-".repeat(20));
     println!("Proving transition for {contract_name}...");
-    let prove_info = prove(contract_name, &contract_input)?;
+    let prove_info = prove(binary, &contract_input)?;
 
     let receipt = prove_info.receipt;
 
@@ -80,7 +80,7 @@ where
 }
 
 fn execute<State>(
-    contract_name: &ContractName,
+    binary: &'static [u8],
     contract_input: &ContractInput<State>,
 ) -> Result<risc0_zkvm::SessionInfo>
 where
@@ -93,19 +93,11 @@ where
         .unwrap();
 
     let prover = risc0_zkvm::default_executor();
-    let file_path = format!("../hyle/contracts/{}/{}.img", contract_name, contract_name);
-    if let Ok(binary) = std::fs::read(file_path.as_str()) {
-        Ok(prover.execute(env, &binary).unwrap())
-    } else {
-        println!("Could not read ELF binary at {}.", file_path);
-        println!("Please ensure that the ELF binary is built and located at the specified path.");
-        println!("\x1b[93m--> Tip: Did you run build_contracts.sh ?\x1b[0m");
-        bail!("Could not read ELF binary");
-    }
+    Ok(prover.execute(env, binary).unwrap())
 }
 
 fn prove<State>(
-    contract_name: &ContractName,
+    binary: &'static [u8],
     contract_input: &ContractInput<State>,
 ) -> Result<risc0_zkvm::ProveInfo>
 where
@@ -118,15 +110,7 @@ where
         .unwrap();
 
     let prover = risc0_zkvm::default_prover();
-    let file_path = format!("../hyle/contracts/{}/{}.img", contract_name, contract_name);
-    if let Ok(binary) = std::fs::read(file_path.as_str()) {
-        Ok(prover.prove(env, &binary).unwrap())
-    } else {
-        println!("Could not read ELF binary at {}.", file_path);
-        println!("Please ensure that the ELF binary is built and located at the specified path.");
-        println!("\x1b[93m--> Tip: Did you run build_contracts.sh ?\x1b[0m");
-        bail!("Could not read ELF binary");
-    }
+    Ok(prover.prove(env, binary).unwrap())
 }
 
 pub async fn send_proof(
