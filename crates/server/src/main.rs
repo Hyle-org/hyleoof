@@ -39,7 +39,10 @@ async fn main() {
         .route("/api/register", post(register))
         .layer(cors); // Appliquer le middleware CORS
 
-    let addr = "127.0.0.1:3000".parse().unwrap();
+    let addr = env::var("HYLEOOF_HOST")
+        .unwrap_or_else(|_| "127.0.0.1:3000".to_string())
+        .parse()
+        .unwrap();
     println!("Server running on {}", addr);
     axum::Server::bind(&addr)
         .serve(app.into_make_service())
