@@ -24,7 +24,7 @@ pub fn spawn_fetch_state(state_cb: Callback<HyllarToken>) {
     spawn_local(async move {
         loop {
             let url = get_node_url();
-            let resp = match reqwest::get(format!("{}/v1/contract/hyllar", url)).await {
+            let resp = match reqwest::get(format!("{}/v1/indexer/contract/hyllar", url)).await {
                 Ok(it) => it,
                 Err(_) => {
                     sleep(TEN_SECS).await;

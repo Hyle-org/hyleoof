@@ -2,6 +2,7 @@ use anyhow::{bail, Error, Result};
 use borsh::to_vec;
 use hyle::{
     model::{BlobTransaction, ProofData, ProofTransaction},
+    node_state::model::Contract,
     rest::client::ApiHttpClient,
 };
 use sdk::{Blob, ContractInput, ContractName, Digestable, HyleOutput, Identity, TxHash};
@@ -66,7 +67,11 @@ pub async fn fetch_current_state<State>(
 where
     State: TryFrom<sdk::StateDigest, Error = Error>,
 {
-    let resp = client.get_contract(contract_name).await?;
+    let resp = client
+        .get_indexer_contract(contract_name)
+        .await?
+        .json::<Contract>()
+        .await?;
 
     resp.state.try_into()
 }
