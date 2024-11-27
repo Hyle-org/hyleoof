@@ -41,7 +41,11 @@ jobs:
           password: ${{ secrets.GOOGLE_CREDENTIALS }}
           registry: '${{ env.AR_REPO_LOCATION }}-docker.pkg.dev'
 
-      - name: Build and Push Container
-        run: |-
-          docker build -f Dockerfile.${{ matrix.suffix }} -t ${{ steps.meta.outputs.tags }} ./
-          docker push ${{ steps.meta.outputs.tags }}
+      - name: Build and push
+        uses: docker/build-push-action@v6
+        with:
+          push: true
+          context: .
+          file: Dockerfile.${{ matrix.suffix }}
+          tags: ${{ steps.meta.outputs.tags }
+          labels: ${{ steps.meta.outputs.labels }
