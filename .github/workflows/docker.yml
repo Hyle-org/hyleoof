@@ -1,5 +1,7 @@
 name: Push to Artifact Registry
 
+on: [push, pull_request]
+
 env:
   IMAGE_NAME: 'hyleoof'
   PROJECT_ID: 'hyle-413414'
