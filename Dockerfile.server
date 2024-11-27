@@ -2,6 +2,7 @@ FROM rust:alpine AS builder
 
 RUN apk add pkgconfig openssl-dev gcc musl-dev
 RUN apk add --no-cache openssl-libs-static
+RUN apk add g++
 
 WORKDIR /app
 COPY .cargo .cargo
@@ -22,6 +23,8 @@ WORKDIR /app
 COPY --from=builder /app/target/debug/server ./
 
 EXPOSE 3000
+
+ENV RISC0_EXECUTOR=local
 
 CMD ["./server"]
 
