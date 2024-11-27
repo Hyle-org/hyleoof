@@ -1,3 +1,2 @@
-window.SERVER_URL = "http://localhost:3000";
-window.NODE_URL = "http://localhost:4321";
-
+window.SERVER_URL = "https://hyleoof.devnet.hyle.eu/api";
+window.NODE_URL = "https://rest-api.devnet.hyle.eu";

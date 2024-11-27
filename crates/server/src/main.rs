@@ -5,7 +5,7 @@ use axum::{
     extract::Json,
     http::{Method, StatusCode},
     response::IntoResponse,
-    routing::post,
+    routing::{get, post},
     Router,
 };
 use hydentity::{AccountInfo, Hydentity};
@@ -33,9 +33,10 @@ async fn main() {
         .allow_headers(Any); // Permet tous les en-têtes
 
     let app = Router::new()
-        .route("/faucet", post(faucet))
-        .route("/transfer", post(transfer))
-        .route("/register", post(register))
+        .route("/_health", get(health))
+        .route("/api/faucet", post(faucet))
+        .route("/api/transfer", post(transfer))
+        .route("/api/register", post(register))
         .layer(cors); // Appliquer le middleware CORS
 
     let addr = "127.0.0.1:3000".parse().unwrap();
@@ -44,6 +45,10 @@ async fn main() {
         .serve(app.into_make_service())
         .await
         .unwrap();
+}
+
+async fn health() -> impl IntoResponse {
+    Json("OK")
 }
 
 // --------------------------------------------------------
