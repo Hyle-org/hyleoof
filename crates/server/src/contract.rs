@@ -1,11 +1,14 @@
 use anyhow::{bail, Error, Result};
 use borsh::to_vec;
 use hyle::{
+    indexer::model::ContractDb,
     model::{BlobTransaction, ProofData, ProofTransaction},
     node_state::model::Contract,
     rest::client::ApiHttpClient,
 };
-use sdk::{Blob, ContractInput, ContractName, Digestable, HyleOutput, Identity, TxHash};
+use sdk::{
+    Blob, ContractInput, ContractName, Digestable, HyleOutput, Identity, StateDigest, TxHash,
+};
 
 pub async fn run<State, Builder>(
     client: &ApiHttpClient,
@@ -70,10 +73,10 @@ where
     let resp = client
         .get_indexer_contract(contract_name)
         .await?
-        .json::<Contract>()
+        .json::<ContractDb>()
         .await?;
 
-    resp.state.try_into()
+    StateDigest(resp.state_digest).try_into()
 }
 
 fn execute<State>(
