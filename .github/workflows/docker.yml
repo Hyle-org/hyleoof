@@ -11,7 +11,7 @@ env:
   WORKLOAD_IDENTITY_PROVIDER: ''
 
 jobs:
-  push_to_ar:
+  build_and_push:
     permissions:
       contents: 'read'
       id-token: 'write'
@@ -31,6 +31,7 @@ jobs:
         id: auth
         uses: 'google-github-actions/auth@v2'
         with:
+          token_format: "access_token"
           credentials_json: ${{ secrets.GOOGLE_CREDENTIALS }}
 
       - name: Docker meta
