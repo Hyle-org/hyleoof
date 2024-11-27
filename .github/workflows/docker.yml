@@ -27,13 +27,6 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v2
 
-      - name: Google Auth
-        id: auth
-        uses: 'google-github-actions/auth@v2'
-        with:
-          token_format: "access_token"
-          credentials_json: ${{ secrets.GOOGLE_CREDENTIALS }}
-
       - name: Docker meta
         id: meta
         uses: docker/metadata-action@v5
@@ -42,10 +35,10 @@ jobs:
 
       - name: Docker Auth
         id: docker-auth
-        uses: 'docker/login-action@v1'
+        uses: 'docker/login-action@v3'
         with:
-          username: 'oauth2accesstoken'
-          password: '${{ steps.auth.outputs.access_token }}'
+          username: _json_key
+          password: ${{ secrets.GOOGLE_CREDENTIALS }}
           registry: '${{ env.AR_REPO_LOCATION }}-docker.pkg.dev'
 
       - name: Build and Push Container
