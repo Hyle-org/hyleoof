@@ -1,0 +1,51 @@
+name: Push to Artifact Registry
+
+env:
+  IMAGE_NAME: 'hyleoof'
+  PROJECT_ID: 'hyle-413414'
+  AR_REPO_LOCATION: 'europe-west3'
+  AR_URL: 'europe-west3-docker.pkg.dev/hyle-413414/hyle-docker'
+  SERVICE_ACCOUNT: 'github-actions-service-account@hyle-413414.iam.gserviceaccount.com' 
+  WORKLOAD_IDENTITY_PROVIDER: ''
+
+jobs:
+  push_to_ar:
+    permissions:
+      contents: 'read'
+      id-token: 'write'
+
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        suffix:
+          - server
+          - ui
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Google Auth
+        id: auth
+        uses: 'google-github-actions/auth@v2'
+        with:
+          credentials_json: ${{ secrets.GOOGLE_CREDENTIALS }}
+
+      - name: Docker meta
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.AR_URL }}/${{ env.IMAGE_NAME }}-${{ matrix.suffix }}
+
+      - name: Docker Auth
+        id: docker-auth
+        uses: 'docker/login-action@v1'
+        with:
+          username: 'oauth2accesstoken'
+          password: '${{ steps.auth.outputs.access_token }}'
+          registry: '${{ env.AR_REPO_LOCATION }}-docker.pkg.dev'
+
+      - name: Build and Push Container
+        run: |-
+          docker build -f Dockerfile.${{ matrix.suffix }} -t ${{ steps.meta.outputs.tags }} .
+          docker push ${{ steps.meta.outputs.tags }}
