@@ -1,5 +1,6 @@
 use std::env;
 
+use amm::{AmmAction, AmmState};
 use anyhow::Result;
 use axum::{
     extract::Json,
@@ -15,7 +16,7 @@ use reqwest::{Client, Url};
 use sdk::{
     erc20::ERC20Action,
     identity_provider::{IdentityAction, IdentityVerification},
-    BlobData, ContractInput, ContractName, Identity, TxHash,
+    BlobData, BlobIndex, ContractInput, ContractName, Identity, TxHash,
 };
 use serde::Deserialize;
 use tower_http::cors::{Any, CorsLayer};
@@ -24,8 +25,9 @@ use utils::AppError;
 mod contract;
 mod utils;
 
-static HYLLAR_BIN: &[u8] = include_bytes!("../../../../hyle/contracts/hyllar/hyllar.img");
-static HYDENTITY_BIN: &[u8] = include_bytes!("../../../../hyle/contracts/hydentity/hydentity.img");
+static HYLLAR_BIN: &[u8] = include_bytes!("../../../../hyle3/contracts/hyllar/hyllar.img");
+static HYDENTITY_BIN: &[u8] = include_bytes!("../../../../hyle3/contracts/hydentity/hydentity.img");
+static AMM_BIN: &[u8] = include_bytes!("../../../../hyle3/contracts/amm/amm.img");
 
 #[tokio::main]
 async fn main() {
@@ -40,6 +42,8 @@ async fn main() {
         .route("/api/faucet", post(faucet))
         .route("/api/transfer", post(transfer))
         .route("/api/register", post(register))
+        .route("/api/approve", post(approve))
+        .route("/api/swap", post(swap))
         .layer(cors); // Appliquer le middleware CORS
 
     let addr = env::var("HYLEOOF_HOST")
@@ -64,6 +68,7 @@ async fn health() -> impl IntoResponse {
 #[derive(Deserialize)]
 struct FaucetRequest {
     username: String,
+    token: ContractName,
 }
 
 async fn faucet(Json(payload): Json<FaucetRequest>) -> Result<impl IntoResponse, AppError> {
@@ -71,6 +76,7 @@ async fn faucet(Json(payload): Json<FaucetRequest>) -> Result<impl IntoResponse,
         "faucet.hydentity".into(),
         "password".into(),
         payload.username,
+        payload.token,
         10,
     )
     .await?;
@@ -87,6 +93,7 @@ struct TransferRequest {
     username: String,
     password: String,
     recipient: String,
+    token: ContractName,
     amount: u128,
 }
 
@@ -95,9 +102,59 @@ async fn transfer(Json(payload): Json<TransferRequest>) -> Result<impl IntoRespo
         payload.username.into(),
         payload.password,
         payload.recipient,
+        payload.token,
         payload.amount,
     )
     .await?;
+    Ok(Json(tx_hash))
+}
+
+// --------------------------------------------------------
+//    Approve
+// --------------------------------------------------------
+
+#[derive(Deserialize)]
+struct ApproveRequest {
+    username: String,
+    password: String,
+    spender: String,
+    amount: u128,
+}
+
+async fn approve(Json(payload): Json<ApproveRequest>) -> Result<impl IntoResponse, AppError> {
+    let tx_hash = do_approve(
+        payload.username.into(),
+        payload.password,
+        payload.spender,
+        payload.amount,
+    )
+    .await?;
+    Ok(Json(tx_hash))
+}
+
+// --------------------------------------------------------
+//   Swap
+// --------------------------------------------------------
+
+#[derive(Deserialize)]
+struct SwapRequest {
+    username: String,
+    password: String,
+    token_a: String,
+    token_b: String,
+    amount: u128,
+}
+
+async fn swap(Json(payload): Json<SwapRequest>) -> Result<impl IntoResponse, AppError> {
+    let SwapRequest {
+        username,
+        password,
+        token_a,
+        token_b,
+        amount,
+    } = payload;
+
+    let tx_hash = do_swap(username.into(), password, token_a, token_b, amount).await?;
     Ok(Json(tx_hash))
 }
 
@@ -116,6 +173,9 @@ async fn register(Json(payload): Json<RegisterRequest>) -> Result<impl IntoRespo
     Ok(Json(tx_hash))
 }
 
+// --------------------------------------------------------
+// --------------------------------------------------------
+
 async fn register_identity(username: String, password: String) -> Result<TxHash, AppError> {
     let node_url = env::var("NODE_URL").unwrap_or_else(|_| "http://localhost:4321".to_string());
     let client = ApiHttpClient {
@@ -126,7 +186,7 @@ async fn register_identity(username: String, password: String) -> Result<TxHash,
     let identity_cf = IdentityAction::RegisterIdentity {
         account: username.clone(),
     };
-    let blobs = vec![(ContractName("hydentity".to_owned()), identity_cf).into()];
+    let blobs = vec![identity_cf.as_blob(ContractName("hydentity".to_owned()))];
     let hydentity_proof = contract::run(
         &client,
         &"hydentity".into(),
@@ -135,10 +195,10 @@ async fn register_identity(username: String, password: String) -> Result<TxHash,
             ContractInput::<Hydentity> {
                 initial_state: token,
                 identity: username.clone().into(),
-                tx_hash: "".to_string(),
+                tx_hash: "".into(),
                 private_blob: BlobData(password.clone()),
                 blobs: blobs.clone(),
-                index: 0,
+                index: 0.into(),
             }
         },
     )
@@ -170,10 +230,25 @@ async fn get_nonce(client: &ApiHttpClient, username: &str) -> Result<u32, AppErr
     Ok(state.nonce)
 }
 
+async fn get_paired_amount(
+    client: &ApiHttpClient,
+    token_a: String,
+    token_b: String,
+    amount: u128,
+) -> Result<u128, AppError> {
+    let state: AmmState = contract::fetch_current_state(client, &"amm".into()).await?;
+    println!("State fetched: {:?}", state);
+    let attr = state
+        .get_paired_amount(token_a, token_b, amount)
+        .ok_or_else(|| AppError(StatusCode::NOT_FOUND, anyhow::anyhow!("Key pair not found")))?;
+    Ok(attr)
+}
+
 async fn do_transfer(
     identity: Identity,
     password: String,
     recipient: String,
+    token: ContractName,
     amount: u128,
 ) -> Result<TxHash, AppError> {
     let node_url = env::var("NODE_URL").unwrap_or_else(|_| "http://localhost:4321".to_string());
@@ -193,8 +268,8 @@ async fn do_transfer(
     let hyllar_cf = ERC20Action::Transfer { recipient, amount };
 
     let blobs = vec![
-        (ContractName("hydentity".to_owned()), identity_cf).into(),
-        (ContractName("hyllar".to_owned()), hyllar_cf).into(),
+        identity_cf.as_blob(ContractName("hydentity".to_owned())),
+        hyllar_cf.as_blob(token.clone(), None, None),
     ];
 
     let hydentity_proof = contract::run(
@@ -205,10 +280,83 @@ async fn do_transfer(
             ContractInput::<Hydentity> {
                 initial_state: token,
                 identity: identity.clone(),
-                tx_hash: "".to_string(),
+                tx_hash: "".into(),
                 private_blob: BlobData(password.clone()),
                 blobs: blobs.clone(),
-                index: 0,
+                index: 0.into(),
+            }
+        },
+    )
+    .await?;
+    let transfer_proof = contract::run(
+        &client,
+        &token.clone(),
+        HYLLAR_BIN,
+        |token: hyllar::HyllarToken| -> ContractInput<hyllar::HyllarToken> {
+            ContractInput::<HyllarToken> {
+                initial_state: token,
+                identity: identity.clone(),
+                tx_hash: "".into(),
+                private_blob: BlobData(vec![]),
+                blobs: blobs.clone(),
+                index: 1.into(),
+            }
+        },
+    )
+    .await?;
+
+    let tx_hash = contract::send_blobs(&client, identity, blobs).await?;
+    contract::send_proof(
+        &client,
+        tx_hash.clone(),
+        "hydentity".into(),
+        hydentity_proof,
+    )
+    .await?;
+    contract::send_proof(&client, tx_hash.clone(), token, transfer_proof).await?;
+
+    Ok(tx_hash)
+}
+
+async fn do_approve(
+    identity: Identity,
+    password: String,
+    spender: String,
+    amount: u128,
+) -> Result<TxHash, AppError> {
+    let node_url = env::var("NODE_URL").unwrap_or_else(|_| "http://localhost:4321".to_string());
+    let client = ApiHttpClient {
+        url: Url::parse(node_url.as_str()).unwrap(),
+        reqwest_client: Client::new(),
+    };
+
+    let nonce = get_nonce(&client, &identity.0).await?;
+    let password = password.into_bytes().to_vec();
+
+    let identity_cf = IdentityAction::VerifyIdentity {
+        account: identity.0.clone(),
+        nonce,
+        blobs_hash: vec!["".into()], // TODO: hash blob
+    };
+    let hyllar_cf = ERC20Action::Approve { spender, amount };
+
+    let blobs = vec![
+        identity_cf.as_blob(ContractName("hydentity".to_owned())),
+        hyllar_cf.as_blob(ContractName("hyllar".to_owned()), None, None),
+    ];
+
+    let hydentity_proof = contract::run(
+        &client,
+        &"hydentity".into(),
+        HYDENTITY_BIN,
+        |token: hydentity::Hydentity| -> ContractInput<hydentity::Hydentity> {
+            ContractInput::<Hydentity> {
+                initial_state: token,
+                identity: identity.clone(),
+                tx_hash: "".into(),
+                private_blob: BlobData(password.clone()),
+                blobs: blobs.clone(),
+                index: 0.into(),
             }
         },
     )
@@ -221,10 +369,10 @@ async fn do_transfer(
             ContractInput::<HyllarToken> {
                 initial_state: token,
                 identity: identity.clone(),
-                tx_hash: "".to_string(),
+                tx_hash: "".into(),
                 private_blob: BlobData(vec![]),
                 blobs: blobs.clone(),
-                index: 1,
+                index: 1.into(),
             }
         },
     )
@@ -239,6 +387,137 @@ async fn do_transfer(
     )
     .await?;
     contract::send_proof(&client, tx_hash.clone(), "hyllar".into(), transfer_proof).await?;
+
+    Ok(tx_hash)
+}
+
+async fn do_swap(
+    identity: Identity,
+    password: String,
+    token_a: String,
+    token_b: String,
+    amount: u128,
+) -> Result<TxHash, AppError> {
+    let node_url = env::var("NODE_URL").unwrap_or_else(|_| "http://localhost:4321".to_string());
+    let client = ApiHttpClient {
+        url: Url::parse(node_url.as_str()).unwrap(),
+        reqwest_client: Client::new(),
+    };
+
+    let nonce = get_nonce(&client, &identity.0).await?;
+    let password = password.into_bytes().to_vec();
+
+    let amount_b = get_paired_amount(&client, token_a.clone(), token_b.clone(), amount).await?;
+
+    println!("amount_b: {}", amount_b);
+
+    let identity_cf = IdentityAction::VerifyIdentity {
+        account: identity.0.clone(),
+        nonce,
+        blobs_hash: vec!["".into()], // TODO: hash blob
+    };
+    let amm_cf = AmmAction::Swap {
+        from: identity.clone(),
+        pair: (token_a.clone(), token_b.clone()),
+    };
+    let token_a_transfer_cf = ERC20Action::TransferFrom {
+        sender: identity.0.clone(),
+        recipient: "amm".into(),
+        amount,
+    };
+    let token_b_transfer_cf = ERC20Action::Transfer {
+        recipient: identity.0.clone(),
+        amount: amount_b,
+    };
+
+    let blobs = vec![
+        identity_cf.as_blob(ContractName("hydentity".to_owned())),
+        amm_cf.as_blob(
+            ContractName("amm".to_owned()),
+            None,
+            Some(vec![BlobIndex(2), BlobIndex(3)]),
+        ),
+        token_a_transfer_cf.as_blob(ContractName(token_a.clone()), Some(BlobIndex(1)), None),
+        token_b_transfer_cf.as_blob(ContractName(token_b.clone()), Some(BlobIndex(1)), None),
+    ];
+
+    let swap_proof = contract::run(
+        &client,
+        &"amm".into(),
+        AMM_BIN,
+        |state: AmmState| -> ContractInput<AmmState> {
+            ContractInput::<AmmState> {
+                initial_state: state,
+                identity: identity.clone(),
+                tx_hash: "".into(),
+                private_blob: BlobData(vec![]),
+                blobs: blobs.clone(),
+                index: 1.into(),
+            }
+        },
+    )
+    .await?;
+    let transfer_a_proof = contract::run(
+        &client,
+        &token_a.clone().into(),
+        HYLLAR_BIN,
+        |state: hyllar::HyllarToken| -> ContractInput<hyllar::HyllarToken> {
+            ContractInput::<HyllarToken> {
+                initial_state: state,
+                identity: identity.clone(),
+                tx_hash: "".into(),
+                private_blob: BlobData(vec![]),
+                blobs: blobs.clone(),
+                index: 2.into(),
+            }
+        },
+    )
+    .await?;
+    let transfer_b_proof = contract::run(
+        &client,
+        &token_b.clone().into(),
+        HYLLAR_BIN,
+        |state: hyllar::HyllarToken| -> ContractInput<hyllar::HyllarToken> {
+            ContractInput::<HyllarToken> {
+                initial_state: state,
+                identity: identity.clone(),
+                tx_hash: "".into(),
+                private_blob: BlobData(vec![]),
+                blobs: blobs.clone(),
+                index: 3.into(),
+            }
+        },
+    )
+    .await?;
+
+    let hydentity_proof = contract::run(
+        &client,
+        &"hydentity".into(),
+        HYDENTITY_BIN,
+        |state: hydentity::Hydentity| -> ContractInput<hydentity::Hydentity> {
+            ContractInput::<Hydentity> {
+                initial_state: state,
+                identity: identity.clone(),
+                tx_hash: "".into(),
+                private_blob: BlobData(password.clone()),
+                blobs: blobs.clone(),
+                index: 0.into(),
+            }
+        },
+    )
+    .await?;
+
+    let tx_hash = contract::send_blobs(&client, identity, blobs).await?;
+    contract::send_proof(
+        &client,
+        tx_hash.clone(),
+        "hydentity".into(),
+        hydentity_proof,
+    )
+    .await?;
+    contract::send_proof(&client, tx_hash.clone(), "amm".into(), swap_proof).await?;
+    contract::send_proof(&client, tx_hash.clone(), token_a.into(), transfer_a_proof).await?;
+    contract::send_proof(&client, tx_hash.clone(), token_b.into(), transfer_b_proof).await?;
 
     Ok(tx_hash)
 }

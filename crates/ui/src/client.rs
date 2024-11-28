@@ -22,13 +22,14 @@ impl WalletClient {
         }
     }
 
-    pub async fn faucet(&self, username: String) -> Result<()> {
+    pub async fn faucet(&self, username: String, token: String) -> Result<()> {
         #[derive(Serialize)]
         struct FaucetRequest {
             username: String,
+            token: String,
         }
 
-        let request = FaucetRequest { username };
+        let request = FaucetRequest { username, token };
 
         let url = format!("{}/faucet", self.base_url);
         let response = self.http_client.post(&url).json(&request).send().await?;
@@ -48,6 +49,7 @@ impl WalletClient {
         username: String,
         password: String,
         recipient: String,
+        token: String,
         amount: u64,
     ) -> Result<()> {
         #[derive(Serialize)]
@@ -55,6 +57,7 @@ impl WalletClient {
             username: String,
             password: String,
             recipient: String,
+            token: String,
             amount: u64,
         }
 
@@ -62,10 +65,47 @@ impl WalletClient {
             username,
             password,
             recipient,
+            token,
             amount,
         };
 
         let url = format!("{}/transfer", self.base_url);
+        let response = self.http_client.post(&url).json(&request).send().await?;
+
+        if !response.status().is_success() {
+            let error_text = response.text().await?;
+            bail!("Transfer request failed: {}", error_text);
+        }
+
+        Ok(())
+    }
+
+    pub async fn swap(
+        &self,
+        username: String,
+        password: String,
+        token_a: String,
+        token_b: String,
+        amount: u64,
+    ) -> Result<()> {
+        #[derive(Serialize)]
+        struct TransferRequest {
+            username: String,
+            password: String,
+            token_a: String,
+            token_b: String,
+            amount: u64,
+        }
+
+        let request = TransferRequest {
+            username,
+            password,
+            token_a,
+            token_b,
+            amount,
+        };
+
+        let url = format!("{}/swap", self.base_url);
         let response = self.http_client.post(&url).json(&request).send().await?;
 
         if !response.status().is_success() {

@@ -4,8 +4,8 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-sdk = { git = "https://github.com/Hyle-org/hyle.git", package="hyle-contract-sdk", branch = "client_improvements"  }
-hyllar= { git = "https://github.com/Hyle-org/hyle.git", package="hyllar", branch = "client_improvements"  }
+sdk = { git = "https://github.com/Hyle-org/hyle.git", package="hyle-contract-sdk", branch = "fix_amm"  }
+hyllar= { git = "https://github.com/Hyle-org/hyle.git", package="hyllar", branch = "fix_amm"  }
 
 serde = { version = "1.0", default-features = false, features = [
     "derive",
@@ -15,7 +15,7 @@ futures = "0.3"
 yew = { version = "0.21.0", features = ["csr"] }
 zxcvbn = "3.1.0"
 js-sys = "0.3.70"
-web-sys = { version = "0.3", features = ["Event","EventTarget","InputEvent"] }
+web-sys = { version = "0.3", features = ["Event","EventTarget","InputEvent","HtmlSelectElement"] }
 wasm-bindgen = "0.2"
 reqwest =  { version = "0.12.8", features = ["json"] }
 anyhow = "1.0.93"

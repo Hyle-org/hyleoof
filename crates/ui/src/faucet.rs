@@ -6,7 +6,10 @@ use hyllar::{HyllarToken, HyllarTokenContract};
 use sdk::erc20::ERC20;
 use yew::prelude::*;
 
-use crate::{client::WalletClient, contracts::spawn_fetch_state, text_input::TextInput};
+use crate::{
+    client::WalletClient, contracts::spawn_fetch_state, selector::TokenSelector,
+    text_input::TextInput,
+};
 
 pub const TEN_SECS: Duration = Duration::from_secs(10);
 
@@ -16,6 +19,7 @@ pub enum Msg {
     SetProgress(String),
     ContractStateUpdate(HyllarToken),
     Faucet,
+    TokenChanged(String),
 }
 
 #[derive(Default)]
@@ -23,16 +27,23 @@ pub struct Faucet {
     username: String,
     password: String,
     progress: String,
+    selected_token: String,
     state: Option<HyllarTokenContract>,
 }
 
 impl Faucet {
-    fn faucet(ctx: &Context<Self>, username: String) {
+    fn faucet(ctx: &Context<Self>, username: String, token: String) {
         ctx.link()
             .send_message(Msg::SetProgress("Fauceting...".to_string()));
         ctx.link().send_future(async move {
-            match WalletClient::default().faucet(username.clone()).await {
-                Ok(_) => Msg::SetProgress(format!("Faucet successful for user {}", username)),
+            match WalletClient::default()
+                .faucet(username.clone(), token.clone())
+                .await
+            {
+                Ok(_) => Msg::SetProgress(format!(
+                    "Faucet successful for user {}, token {}",
+                    username, token
+                )),
                 Err(e) => Msg::SetProgress(format!("Faucet failed: {}", e)),
             }
         });
@@ -50,7 +61,10 @@ impl Component for Faucet {
     fn create(ctx: &Context<Self>) -> Self {
         let state_cb = ctx.link().callback(Msg::ContractStateUpdate);
         spawn_fetch_state(state_cb);
-        Self::default()
+        Self {
+            selected_token: "hyllar".to_string(),
+            ..Default::default()
+        }
     }
 
     fn update(&mut self, ctx: &Context<Self>, msg: Self::Message) -> bool {
@@ -58,12 +72,15 @@ impl Component for Faucet {
             Msg::SetUserName(next_username) => self.username = next_username,
             Msg::SetPassword(next_password) => self.password = next_password,
             Msg::SetProgress(progress) => self.progress = progress,
-            Msg::Faucet => Self::faucet(ctx, self.display_name()),
+            Msg::Faucet => Self::faucet(ctx, self.display_name(), self.selected_token.clone()),
             Msg::ContractStateUpdate(state) => {
                 self.state = Some(HyllarTokenContract::init(
                     state,
                     sdk::Identity(self.username.clone()),
                 ))
+            }
+            Msg::TokenChanged(token) => {
+                self.selected_token = token;
             }
         };
         true
@@ -85,6 +102,9 @@ impl Component for Faucet {
         html! {
            <div>
                 <div>
+                    <TokenSelector
+                       on_token_change={ctx.link().callback(Msg::TokenChanged)}
+                    />
                     <div>
                         {"Username:"}
                     </div>
@@ -94,7 +114,7 @@ impl Component for Faucet {
                 </div>
                 <div class="readout">
                     <button onclick={ctx.link().callback(|_| Msg::Faucet)} class="submit-button">
-                        {"Faucet 10 to "} {self.display_name()}
+                        {"Faucet 10 "} { self.selected_token.clone() } {" to "} {self.display_name()}
                     </button>
                 </div>
                 <div class="progress">

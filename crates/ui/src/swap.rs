@@ -10,43 +10,43 @@ use crate::{
 pub enum Msg {
     SetUserName(String),
     SetPassword(String),
-    SetRecipient(String),
     SetAmount(String),
     SetProgress(String),
     ContractStateUpdate(HyllarToken),
-    TokenChanged(String),
-    Transfer,
+    TokenAChanged(String),
+    TokenBChanged(String),
+    Swap,
 }
 
 #[derive(Default)]
-pub struct Transfer {
+pub struct Swap {
     username: String,
     password: String,
-    selected_token: String,
-    recipient: String,
+    selected_token_a: String,
+    selected_token_b: String,
     progress: String,
     amount: String,
     state: Option<HyllarTokenContract>,
 }
 
-impl Transfer {
-    fn transfer(
+impl Swap {
+    fn swap(
         ctx: &Context<Self>,
         name: String,
         password: String,
-        recipient: String,
-        token: String,
+        token_a: String,
+        token_b: String,
         amount: u64,
     ) {
         ctx.link()
-            .send_message(Msg::SetProgress("Transfering...".to_string()));
+            .send_message(Msg::SetProgress("swaping...".to_string()));
 
         ctx.link().send_future(async move {
             match WalletClient::default()
-                .transfer(name.clone(), password, recipient, token, amount)
+                .swap(name.clone(), password, token_a, token_b, amount)
                 .await
             {
-                Ok(_) => Msg::SetProgress(format!("Transfer successful for user {}", name)),
+                Ok(_) => Msg::SetProgress(format!("swap successful for user {}", name)),
                 Err(e) => Msg::SetProgress(format!("{}", e)),
             }
         });
@@ -56,7 +56,7 @@ impl Transfer {
     }
 }
 
-impl Component for Transfer {
+impl Component for Swap {
     type Message = Msg;
     type Properties = ();
 
@@ -65,7 +65,8 @@ impl Component for Transfer {
         spawn_fetch_state(state_cb);
         Self {
             amount: "0".to_owned(),
-            selected_token: "hyllar".to_owned(),
+            selected_token_a: "hyllar".to_owned(),
+            selected_token_b: "hyllar2".to_owned(),
             ..Self::default()
         }
     }
@@ -73,16 +74,15 @@ impl Component for Transfer {
     fn update(&mut self, ctx: &Context<Self>, msg: Self::Message) -> bool {
         match msg {
             Msg::SetUserName(next_username) => self.username = next_username,
-            Msg::SetRecipient(next_username) => self.recipient = next_username,
             Msg::SetPassword(next_password) => self.password = next_password,
             Msg::SetAmount(next_amount) => self.amount = next_amount,
             Msg::SetProgress(progress) => self.progress = progress,
-            Msg::Transfer => Self::transfer(
+            Msg::Swap => Self::swap(
                 ctx,
                 Self::display_name(&self.username),
                 self.password.clone(),
-                Self::display_name(&self.recipient),
-                self.selected_token.clone(),
+                self.selected_token_a.clone(),
+                self.selected_token_b.clone(),
                 self.amount.parse::<u64>().unwrap_or(0),
             ),
             Msg::ContractStateUpdate(state) => {
@@ -91,8 +91,11 @@ impl Component for Transfer {
                     sdk::Identity(self.username.clone()),
                 ))
             }
-            Msg::TokenChanged(token) => {
-                self.selected_token = token;
+            Msg::TokenAChanged(token) => {
+                self.selected_token_a = token;
+            }
+            Msg::TokenBChanged(token) => {
+                self.selected_token_b = token;
             }
         };
         true
@@ -116,9 +119,6 @@ impl Component for Transfer {
         html! {
             <div>
                 <div>
-                    <TokenSelector
-                       on_token_change={ctx.link().callback(Msg::TokenChanged)}
-                    />
 
                     <div>
                         {"Username:"}
@@ -132,12 +132,12 @@ impl Component for Transfer {
                     <div>
                         <TextInput on_change={ctx.link().callback(Msg::SetPassword)} value={self.password.clone()}  />
                     </div>
-                    <div>
-                        {"Recipient:"}
-                    </div>
-                    <div>
-                        <TextInput suffix={".hydentity"} on_change={ctx.link().callback(Msg::SetRecipient)} value={self.recipient.clone()}  />
-                    </div>
+                    <TokenSelector
+                       on_token_change={ctx.link().callback(Msg::TokenAChanged)}
+                    />
+                    <TokenSelector
+                       on_token_change={ctx.link().callback(Msg::TokenBChanged)}
+                    />
                     <div>
                         {"Amount:"}
                     </div>
@@ -147,9 +147,8 @@ impl Component for Transfer {
                     <div>{display_balance}</div>
                 </div>
                 <div class="readout">
-                    <button onclick={ctx.link().callback(|_| Msg::Transfer)} class="submit-button">
-                        {"Transfer "} {self.amount.clone()} {" "} { self.selected_token.clone() } {" from "} {Self::display_name(&self.username)} {" to "} {Self::display_name(&self.recipient)}
-
+                    <button onclick={ctx.link().callback(|_| Msg::Swap)} class="submit-button">
+                        {"swap "} {self.amount.clone()} {" from "} { self.selected_token_a.clone() } {" to "} { self.selected_token_b.clone() }
                     </button>
                 </div>
                 <div class="progress">

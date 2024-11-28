@@ -7,6 +7,8 @@ mod client;
 mod contracts;
 mod faucet;
 mod register;
+mod selector;
+mod swap;
 mod transfer;
 mod utils;
 
