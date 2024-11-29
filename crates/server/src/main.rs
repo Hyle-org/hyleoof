@@ -20,6 +20,8 @@ use sdk::{
 };
 use serde::Deserialize;
 use tower_http::cors::{Any, CorsLayer};
+use tracing::{info, level_filters::LevelFilter};
+use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt, EnvFilter, Layer};
 use utils::AppError;
 
 mod contract;
@@ -31,6 +33,20 @@ static AMM_BIN: &[u8] = include_bytes!("../../../../hyle3/contracts/amm/amm.img"
 
 #[tokio::main]
 async fn main() {
+    let mut filter = EnvFilter::builder()
+        .with_default_directive(LevelFilter::INFO.into())
+        .from_env()
+        .unwrap();
+    let var = std::env::var("RUST_LOG").unwrap_or("".to_string());
+    if !var.contains("risc0_zkvm") {
+        filter = filter.add_directive("risc0_zkvm=info".parse().unwrap());
+        filter = filter.add_directive("risc0_circuit_rv32im=info".parse().unwrap());
+    }
+
+    tracing_subscriber::registry()
+        .with(tracing_subscriber::fmt::layer().with_filter(filter))
+        .init();
+
     // Créer un middleware CORS
     let cors = CorsLayer::new()
         .allow_origin(Any) // Permet toutes les origines (peut être restreint)
@@ -50,7 +66,7 @@ async fn main() {
         .unwrap_or_else(|_| "127.0.0.1:3000".to_string())
         .parse()
         .unwrap();
-    println!("Server running on {}", addr);
+    info!("Server running on {}", addr);
     axum::Server::bind(&addr)
         .serve(app.into_make_service())
         .await
@@ -217,7 +233,7 @@ async fn register_identity(username: String, password: String) -> Result<TxHash,
 
 async fn get_nonce(client: &ApiHttpClient, username: &str) -> Result<u32, AppError> {
     let state: Hydentity = contract::fetch_current_state(client, &"hydentity".into()).await?;
-    println!("State fetched: {:?}", state);
+    info!("State fetched: {:?}", state);
     let info = state
         .get_identity_info(username)
         .map_err(|err| AppError(StatusCode::NOT_FOUND, anyhow::anyhow!(err)))?;
@@ -237,7 +253,7 @@ async fn get_paired_amount(
     amount: u128,
 ) -> Result<u128, AppError> {
     let state: AmmState = contract::fetch_current_state(client, &"amm".into()).await?;
-    println!("State fetched: {:?}", state);
+    info!("State fetched: {:?}", state);
     let attr = state
         .get_paired_amount(token_a, token_b, amount)
         .ok_or_else(|| AppError(StatusCode::NOT_FOUND, anyhow::anyhow!("Key pair not found")))?;
@@ -409,7 +425,7 @@ async fn do_swap(
 
     let amount_b = get_paired_amount(&client, token_a.clone(), token_b.clone(), amount).await?;
 
-    println!("amount_b: {}", amount_b);
+    info!("amount_b: {}", amount_b);
 
     let identity_cf = IdentityAction::VerifyIdentity {
         account: identity.0.clone(),

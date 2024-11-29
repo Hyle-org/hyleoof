@@ -8,6 +8,7 @@ use hyle::{
 use sdk::{
     Blob, ContractInput, ContractName, Digestable, HyleOutput, Identity, StateDigest, TxHash,
 };
+use tracing::info;
 
 pub async fn run<State, Builder>(
     client: &ApiHttpClient,
@@ -21,12 +22,12 @@ where
     Builder: Fn(State) -> ContractInput<State>,
 {
     let initial_state = fetch_current_state(client, contract_name).await?;
-    println!("Fetched current state: {:?}", initial_state);
+    info!("Fetched current state: {:?}", initial_state);
 
     let contract_input = build_contract_input(initial_state);
 
-    println!("{}", "-".repeat(20));
-    println!("Checking transition for {contract_name}...");
+    info!("{}", "-".repeat(20));
+    info!("Checking transition for {contract_name}...");
     let execute_info = execute(binary, &contract_input)?;
     let output = execute_info.journal.decode::<HyleOutput>().unwrap();
     if !output.success {
@@ -37,14 +38,15 @@ where
         );
     } else {
         let next_state: State = output.next_state.try_into().unwrap();
-        println!("New state: {:?}", next_state);
+        info!("New state: {:?}", next_state);
     }
 
-    println!("{}", "-".repeat(20));
-    println!("Proving transition for {contract_name}...");
-    let prove_info = prove(binary, &contract_input)?;
+    info!("{}", "-".repeat(20));
+    info!("Proving transition for {contract_name}...");
 
-    let receipt = prove_info.receipt;
+    let input = bonsai_runner::as_input_data(&contract_input)?;
+
+    let receipt = bonsai_runner::run_bonsai(binary, input).await?;
 
     let hyle_output = receipt
         .journal
@@ -128,8 +130,8 @@ pub async fn send_proof(
         .await?;
     assert!(res.status().is_success());
 
-    println!("Proof sent successfully");
-    println!("Response: {}", res.text().await?);
+    info!("Proof sent successfully");
+    info!("Response: {}", res.text().await?);
 
     Ok(())
 }
@@ -143,7 +145,7 @@ pub async fn send_blobs(
         .send_tx_blob(&BlobTransaction { identity, blobs })
         .await?;
 
-    println!("Blob sent successfully. Response: {}", tx_hash);
+    info!("Blob sent successfully. Response: {}", tx_hash);
 
     Ok(tx_hash)
 }

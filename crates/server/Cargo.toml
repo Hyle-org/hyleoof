@@ -9,6 +9,13 @@ hyllar = { git = "https://github.com/Hyle-org/hyle.git", package="hyllar", branc
 hydentity = { git = "https://github.com/Hyle-org/hyle.git", package="hydentity", branch = "fix_amm"  }
 amm = { git = "https://github.com/Hyle-org/hyle.git", package="amm", branch = "fix_amm"  }
 hyle = { git = "https://github.com/Hyle-org/hyle.git", package="hyle", branch = "fix_amm"  }
+bonsai_runner = { git = "https://github.com/Hyle-org/hyle.git", package="bonsai-runner", branch = "bonsai_runner"  }
+
+# sdk = { path = "../../../hyle3/contract-sdk", package="hyle-contract-sdk"}
+# hyllar = { path = "../../../hyle3/contracts/hyllar/contract", package="hyllar" }
+# hydentity = { path = "../../../hyle3/contracts/hydentity/contract", package="hydentity" }
+# amm = { path = "../../../hyle3/contracts/amm/contract", package="amm" }
+# hyle = { path = "../../../hyle3", package="hyle" }
 
 axum = "0.6"
 tokio = { version = "1", features = ["full"] }
@@ -22,4 +29,6 @@ hex = "0.4.3"
 
 risc0-zkvm = { version = "1.1.3" }
 borsh = "1.5.3"
+tracing = "0.1.41"
+tracing-subscriber = "0.3.18"
 
