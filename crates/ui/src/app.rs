@@ -6,6 +6,7 @@ pub enum Tab {
     Faucet,
     Transfer,
     Swap,
+    Approve,
 }
 
 pub enum Msg {
@@ -22,7 +23,7 @@ impl Component for App {
 
     fn create(_ctx: &Context<Self>) -> Self {
         Self {
-            active_tab: Tab::Faucet, // Onglet par défaut
+            active_tab: Tab::Approve, // Onglet par défaut
         }
     }
 
@@ -41,6 +42,7 @@ impl Component for App {
             Tab::Faucet => html! { <crate::faucet::Faucet /> },
             Tab::Transfer => html! { <crate::transfer::Transfer /> },
             Tab::Swap => html! { <crate::swap::Swap /> },
+            Tab::Approve => html! { <crate::approve::Approve /> },
         };
 
         html! {
@@ -63,6 +65,12 @@ impl Component for App {
                         onclick={ctx.link().callback(|_| Msg::SwitchTab(Tab::Transfer))}
                     >
                         {"Transfer"}
+                    </button>
+                    <button
+                        class={if self.active_tab == Tab::Approve { "tab active" } else { "tab" }}
+                        onclick={ctx.link().callback(|_| Msg::SwitchTab(Tab::Approve))}
+                    >
+                        {"Approve"}
                     </button>
                     <button
                         class={if self.active_tab == Tab::Swap { "tab active" } else { "tab" }}

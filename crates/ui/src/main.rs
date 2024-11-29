@@ -3,6 +3,7 @@
 mod text_input;
 
 mod app;
+mod approve;
 mod client;
 mod contracts;
 mod faucet;

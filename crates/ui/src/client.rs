@@ -80,6 +80,42 @@ impl WalletClient {
         Ok(())
     }
 
+    pub async fn approve(
+        &self,
+        username: String,
+        password: String,
+        spender: String,
+        token: String,
+        amount: u128,
+    ) -> Result<()> {
+        #[derive(Serialize)]
+        struct ApproveRequest {
+            username: String,
+            password: String,
+            spender: String,
+            token: String,
+            amount: u128,
+        }
+
+        let request = ApproveRequest {
+            username,
+            password,
+            spender,
+            token,
+            amount,
+        };
+
+        let url = format!("{}/approve", self.base_url);
+        let response = self.http_client.post(&url).json(&request).send().await?;
+
+        if !response.status().is_success() {
+            let error_text = response.text().await?;
+            bail!("Approve request failed: {}", error_text);
+        }
+
+        Ok(())
+    }
+
     pub async fn swap(
         &self,
         username: String,

@@ -134,6 +134,7 @@ struct ApproveRequest {
     username: String,
     password: String,
     spender: String,
+    token: String,
     amount: u128,
 }
 
@@ -142,6 +143,7 @@ async fn approve(Json(payload): Json<ApproveRequest>) -> Result<impl IntoRespons
         payload.username.into(),
         payload.password,
         payload.spender,
+        payload.token.into(),
         payload.amount,
     )
     .await?;
@@ -338,6 +340,7 @@ async fn do_approve(
     identity: Identity,
     password: String,
     spender: String,
+    token: ContractName,
     amount: u128,
 ) -> Result<TxHash, AppError> {
     let node_url = env::var("NODE_URL").unwrap_or_else(|_| "http://localhost:4321".to_string());
@@ -358,16 +361,16 @@ async fn do_approve(
 
     let blobs = vec![
         identity_cf.as_blob(ContractName("hydentity".to_owned())),
-        hyllar_cf.as_blob(ContractName("hyllar".to_owned()), None, None),
+        hyllar_cf.as_blob(token.clone(), None, None),
     ];
 
     let hydentity_proof = contract::run(
         &client,
         &"hydentity".into(),
         HYDENTITY_BIN,
-        |token: hydentity::Hydentity| -> ContractInput<hydentity::Hydentity> {
+        |state: hydentity::Hydentity| -> ContractInput<hydentity::Hydentity> {
             ContractInput::<Hydentity> {
-                initial_state: token,
+                initial_state: state,
                 identity: identity.clone(),
                 tx_hash: "".into(),
                 private_blob: BlobData(password.clone()),
@@ -379,11 +382,11 @@ async fn do_approve(
     .await?;
     let transfer_proof = contract::run(
         &client,
-        &"hyllar".into(),
+        &token.clone(),
         HYLLAR_BIN,
-        |token: hyllar::HyllarToken| -> ContractInput<hyllar::HyllarToken> {
+        |state: hyllar::HyllarToken| -> ContractInput<hyllar::HyllarToken> {
             ContractInput::<HyllarToken> {
-                initial_state: token,
+                initial_state: state,
                 identity: identity.clone(),
                 tx_hash: "".into(),
                 private_blob: BlobData(vec![]),
@@ -402,7 +405,7 @@ async fn do_approve(
         hydentity_proof,
     )
     .await?;
-    contract::send_proof(&client, tx_hash.clone(), "hyllar".into(), transfer_proof).await?;
+    contract::send_proof(&client, tx_hash.clone(), token, transfer_proof).await?;
 
     Ok(tx_hash)
 }
