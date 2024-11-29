@@ -4,12 +4,12 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-sdk = { git = "https://github.com/Hyle-org/hyle.git", package="hyle-contract-sdk" , branch = "fix_amm" }
-hyllar = { git = "https://github.com/Hyle-org/hyle.git", package="hyllar", branch = "fix_amm"  }
-hydentity = { git = "https://github.com/Hyle-org/hyle.git", package="hydentity", branch = "fix_amm"  }
-amm = { git = "https://github.com/Hyle-org/hyle.git", package="amm", branch = "fix_amm"  }
-hyle = { git = "https://github.com/Hyle-org/hyle.git", package="hyle", branch = "fix_amm"  }
-bonsai_runner = { git = "https://github.com/Hyle-org/hyle.git", package="bonsai-runner", branch = "bonsai_runner"  }
+sdk = { git = "https://github.com/Hyle-org/hyle.git", package="hyle-contract-sdk" , branch = "main" }
+hyllar = { git = "https://github.com/Hyle-org/hyle.git", package="hyllar", branch = "main"  }
+hydentity = { git = "https://github.com/Hyle-org/hyle.git", package="hydentity", branch = "main"  }
+amm = { git = "https://github.com/Hyle-org/hyle.git", package="amm", branch = "main"  }
+hyle = { git = "https://github.com/Hyle-org/hyle.git", package="hyle", branch = "main"  }
+bonsai_runner = { git = "https://github.com/Hyle-org/hyle.git", package="bonsai-runner", branch = "main"  }
 
 # sdk = { path = "../../../hyle3/contract-sdk", package="hyle-contract-sdk"}
 # hyllar = { path = "../../../hyle3/contracts/hyllar/contract", package="hyllar" }

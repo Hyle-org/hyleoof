@@ -4,8 +4,8 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-sdk = { git = "https://github.com/Hyle-org/hyle.git", package="hyle-contract-sdk", branch = "fix_amm"  }
-hyllar= { git = "https://github.com/Hyle-org/hyle.git", package="hyllar", branch = "fix_amm"  }
+sdk = { git = "https://github.com/Hyle-org/hyle.git", package="hyle-contract-sdk", branch = "main"  }
+hyllar= { git = "https://github.com/Hyle-org/hyle.git", package="hyllar", branch = "main"  }
 
 serde = { version = "1.0", default-features = false, features = [
     "derive",
