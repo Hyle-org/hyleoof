@@ -27,9 +27,9 @@ use utils::AppError;
 mod contract;
 mod utils;
 
-static HYLLAR_BIN: &[u8] = include_bytes!("../../../../hyle3/contracts/hyllar/hyllar.img");
-static HYDENTITY_BIN: &[u8] = include_bytes!("../../../../hyle3/contracts/hydentity/hydentity.img");
-static AMM_BIN: &[u8] = include_bytes!("../../../../hyle3/contracts/amm/amm.img");
+static HYLLAR_BIN: &[u8] = include_bytes!("../../../../hyle/contracts/hyllar/hyllar.img");
+static HYDENTITY_BIN: &[u8] = include_bytes!("../../../../hyle/contracts/hydentity/hydentity.img");
+static AMM_BIN: &[u8] = include_bytes!("../../../../hyle/contracts/amm/amm.img");
 
 #[tokio::main]
 async fn main() {
