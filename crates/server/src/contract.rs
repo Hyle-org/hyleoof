@@ -1,68 +1,141 @@
+use std::env;
+
 use anyhow::{bail, Error, Result};
-use borsh::to_vec;
 use hyle::{
     indexer::model::ContractDb,
-    model::{BlobTransaction, ProofData, ProofTransaction},
+    model::{ProofData, ProofTransaction},
     rest::client::ApiHttpClient,
 };
+use reqwest::{Client, Url};
 use sdk::{
-    Blob, ContractInput, ContractName, Digestable, HyleOutput, Identity, StateDigest, TxHash,
+    Blob, BlobData, BlobIndex, ContractInput, ContractName, Digestable, HyleOutput, Identity,
+    StateDigest, TxHash,
 };
+use serde::Serialize;
 use tracing::info;
 
-pub async fn run<State, Builder>(
-    client: &ApiHttpClient,
-    contract_name: &ContractName,
-    binary: &'static [u8],
-    build_contract_input: Builder,
-) -> Result<ProofData>
-where
-    State: TryFrom<sdk::StateDigest, Error = Error>,
-    State: Digestable + std::fmt::Debug + serde::Serialize,
-    Builder: Fn(State) -> ContractInput<State>,
-{
-    let initial_state = fetch_current_state(client, contract_name).await?;
-    info!("Fetched current state: {:?}", initial_state);
+static HYLLAR_BIN: &[u8] = include_bytes!("../../../../hyle/contracts/hyllar/hyllar.img");
+static HYDENTITY_BIN: &[u8] = include_bytes!("../../../../hyle/contracts/hydentity/hydentity.img");
+static AMM_BIN: &[u8] = include_bytes!("../../../../hyle/contracts/amm/amm.img");
 
-    let contract_input = build_contract_input(initial_state);
+fn get_binary(contract_name: ContractName) -> Result<&'static [u8]> {
+    match contract_name.0.as_str() {
+        "hyllar" | "hyllar2" => Ok(HYLLAR_BIN),
+        "hydentity" => Ok(HYDENTITY_BIN),
+        "amm" => Ok(AMM_BIN),
+        _ => bail!("contract {} not supported", contract_name),
+    }
+}
 
-    info!("{}", "-".repeat(20));
-    info!("Checking transition for {contract_name}...");
-    let execute_info = execute(binary, &contract_input)?;
-    let output = execute_info.journal.decode::<HyleOutput>().unwrap();
-    if !output.success {
-        let program_error = std::str::from_utf8(&output.program_outputs).unwrap();
-        bail!(
-            "\x1b[91mExecution failed ! Program output: {}\x1b[0m",
-            program_error
-        );
-    } else {
-        let next_state: State = output.next_state.try_into().unwrap();
-        info!("New state: {:?}", next_state);
+pub struct ContractRunner {
+    client: ApiHttpClient,
+    contract_name: ContractName,
+    contract_input: Vec<u8>,
+}
+
+impl ContractRunner {
+    pub async fn new<State>(
+        contract_name: ContractName,
+        identity: Identity,
+        private_blob: BlobData,
+        blobs: Vec<Blob>,
+        index: BlobIndex,
+    ) -> Result<Self>
+    where
+        State: TryFrom<sdk::StateDigest, Error = Error> + std::fmt::Debug + Digestable + Serialize,
+    {
+        let node_url = env::var("NODE_URL").unwrap_or_else(|_| "http://localhost:4321".to_string());
+        let client = ApiHttpClient {
+            url: Url::parse(node_url.as_str()).unwrap(),
+            reqwest_client: Client::new(),
+        };
+
+        let initial_state = fetch_current_state(&client, &contract_name).await?;
+
+        info!("Fetched current state: {:?}", initial_state);
+
+        let contract_input = ContractInput::<State> {
+            initial_state,
+            identity,
+            tx_hash: "".into(),
+            private_blob,
+            blobs,
+            index,
+        };
+        let contract_input = bonsai_runner::as_input_data(&contract_input)?;
+
+        Ok(Self {
+            client,
+            contract_name,
+            contract_input,
+        })
     }
 
-    info!("{}", "-".repeat(20));
-    info!("Proving transition for {contract_name}...");
+    pub fn execute(&self) -> Result<()> {
+        info!("Checking transition for {}...", self.contract_name);
 
-    let input = bonsai_runner::as_input_data(&contract_input)?;
-
-    let receipt = bonsai_runner::run_bonsai(binary, input).await?;
-
-    let hyle_output = receipt
-        .journal
-        .decode::<HyleOutput>()
-        .expect("Failed to decode journal");
-
-    if !hyle_output.success {
-        let program_error = std::str::from_utf8(&hyle_output.program_outputs).unwrap();
-        bail!(
-            "\x1b[91mExecution failed ! Program output: {}\x1b[0m",
-            program_error
-        );
+        let binary = get_binary(self.contract_name.clone())?;
+        let execute_info = execute(binary, &self.contract_input)?;
+        let output = execute_info.journal.decode::<HyleOutput>().unwrap();
+        if !output.success {
+            let program_error = std::str::from_utf8(&output.program_outputs).unwrap();
+            bail!(
+                "\x1b[91mExecution failed ! Program output: {}\x1b[0m",
+                program_error
+            );
+        }
+        Ok(())
     }
 
-    let encoded_receipt = to_vec(&receipt).expect("Unable to encode receipt");
-    Ok(ProofData::Bytes(encoded_receipt))
+    pub async fn prove(&self) -> Result<ProofData> {
+        info!("Proving transition for {}...", self.contract_name);
+
+        let binary = get_binary(self.contract_name.clone())?;
+        let explicit = std::env::var("RISC0_PROVER").unwrap_or_default();
+        let receipt = match explicit.to_lowercase().as_str() {
+            "bonsai" => bonsai_runner::run_bonsai(binary, self.contract_input.clone()).await?,
+            _ => {
+                let env = risc0_zkvm::ExecutorEnv::builder()
+                    .write_slice(&self.contract_input)
+                    .build()
+                    .unwrap();
+
+                let prover = risc0_zkvm::default_prover();
+                let prove_info = prover.prove(env, binary)?;
+                prove_info.receipt
+            }
+        };
+
+        let hyle_output = receipt
+            .journal
+            .decode::<HyleOutput>()
+            .expect("Failed to decode journal");
+
+        if !hyle_output.success {
+            let program_error = std::str::from_utf8(&hyle_output.program_outputs).unwrap();
+            bail!(
+                "\x1b[91mExecution failed ! Program output: {}\x1b[0m",
+                program_error
+            );
+        }
+
+        let encoded_receipt = borsh::to_vec(&receipt).expect("Unable to encode receipt");
+        Ok(ProofData::Bytes(encoded_receipt))
+    }
+
+    pub async fn broadcast_proof(
+        &self,
+        blob_tx_hash: TxHash,
+        proof: ProofData,
+    ) -> Result<(), Error> {
+        send_proof(
+            &self.client,
+            blob_tx_hash,
+            self.contract_name.clone(),
+            proof,
+        )
+        .await
+    }
 }
 
 pub async fn fetch_current_state<State>(
@@ -81,16 +154,9 @@ where
     StateDigest(resp.state_digest).try_into()
 }
 
-fn execute<State>(
-    binary: &'static [u8],
-    contract_input: &ContractInput<State>,
-) -> Result<risc0_zkvm::SessionInfo>
-where
-    State: Digestable + serde::Serialize,
-{
+fn execute(binary: &'static [u8], contract_input: &[u8]) -> Result<risc0_zkvm::SessionInfo> {
     let env = risc0_zkvm::ExecutorEnv::builder()
-        .write(contract_input)
-        .unwrap()
+        .write_slice(contract_input)
         .build()
         .unwrap();
 
@@ -98,24 +164,7 @@ where
     Ok(prover.execute(env, binary).unwrap())
 }
 
-fn prove<State>(
-    binary: &'static [u8],
-    contract_input: &ContractInput<State>,
-) -> Result<risc0_zkvm::ProveInfo>
-where
-    State: Digestable + serde::Serialize,
-{
-    let env = risc0_zkvm::ExecutorEnv::builder()
-        .write(contract_input)
-        .unwrap()
-        .build()
-        .unwrap();
-
-    let prover = risc0_zkvm::default_prover();
-    Ok(prover.prove(env, binary).unwrap())
-}
-
-pub async fn send_proof(
+async fn send_proof(
     client: &ApiHttpClient,
     blob_tx_hash: TxHash,
     contract_name: ContractName,
@@ -134,18 +183,4 @@ pub async fn send_proof(
     info!("Response: {}", res.text().await?);
 
     Ok(())
-}
-
-pub async fn send_blobs(
-    client: &ApiHttpClient,
-    identity: Identity,
-    blobs: Vec<Blob>,
-) -> Result<TxHash> {
-    let tx_hash = client
-        .send_tx_blob(&BlobTransaction { identity, blobs })
-        .await?;
-
-    info!("Blob sent successfully. Response: {}", tx_hash);
-
-    Ok(tx_hash)
 }
