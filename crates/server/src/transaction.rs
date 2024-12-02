@@ -8,38 +8,42 @@ use reqwest::{Client, Url};
 use sdk::{
     erc20::ERC20Action,
     identity_provider::{IdentityAction, IdentityVerification},
-    Blob, BlobData, BlobIndex, ContractName, Identity, TxHash,
+    Blob, BlobData, BlobIndex, ContractName, Identity, StateDigest, TxHash,
 };
 use tracing::info;
 
-use crate::{contract::ContractRunner, utils::AppError};
+use crate::{
+    contract::{ContractRunner, States},
+    utils::AppError,
+};
 
 pub struct Password(BlobData);
 
 pub struct TransactionBuilder {
-    client: ApiHttpClient,
     identity: Identity,
     hydentity_cf: Vec<(IdentityAction, Password, BlobIndex)>,
     hyllar_cf: Vec<(ERC20Action, ContractName, BlobIndex)>,
     amm_cf: Vec<(AmmAction, BlobIndex)>,
     blobs: Vec<Blob>,
+    runners: Vec<ContractRunner>,
+    tx_hash: Option<TxHash>,
+}
+
+pub struct ExecutionResult {
+    pub contract_name: ContractName,
+    pub state_digest: StateDigest,
 }
 
 impl TransactionBuilder {
     pub fn new(identity: Identity) -> Self {
-        let node_url =
-            std::env::var("NODE_URL").unwrap_or_else(|_| "http://localhost:4321".to_string());
-        let client = ApiHttpClient {
-            url: Url::parse(node_url.as_str()).unwrap(),
-            reqwest_client: Client::new(),
-        };
         Self {
-            client,
             identity,
             hydentity_cf: vec![],
             hyllar_cf: vec![],
             amm_cf: vec![],
             blobs: vec![],
+            runners: vec![],
+            tx_hash: None,
         }
     }
 
@@ -68,8 +72,12 @@ impl TransactionBuilder {
             .push(action.as_blob("amm".into(), None, Some(callees)));
     }
 
-    pub async fn verify_identity(&mut self, password: String) -> Result<(), AppError> {
-        let nonce = get_nonce(&self.client, &self.identity.0).await?;
+    pub async fn verify_identity(
+        &mut self,
+        state: &Hydentity,
+        password: String,
+    ) -> Result<(), AppError> {
+        let nonce = get_nonce(state, &self.identity.0).await?;
         let password = Password(BlobData(password.into_bytes().to_vec()));
 
         self.add_hydentity_cf(
@@ -105,12 +113,13 @@ impl TransactionBuilder {
 
     pub async fn swap(
         &mut self,
+        state: &AmmState,
         token_a: ContractName,
         token_b: ContractName,
         amount: u128,
     ) -> Result<(), AppError> {
         let amount_b =
-            get_paired_amount(&self.client, token_a.0.clone(), token_b.0.clone(), amount).await?;
+            get_paired_amount(state, token_a.0.clone(), token_b.0.clone(), amount).await?;
 
         info!("amount_b: {}", amount_b);
         let swap_blob_index = self.blobs.len() as u32;
@@ -145,59 +154,87 @@ impl TransactionBuilder {
         Ok(())
     }
 
-    pub async fn build(self) -> Result<TxHash> {
-        let mut runners: Vec<ContractRunner> = vec![];
-        for id in self.hydentity_cf {
-            runners.push(
-                ContractRunner::new::<Hydentity>(
+    pub async fn build(&mut self, states: &mut States, client: &ApiHttpClient) -> Result<TxHash> {
+        for id in self.hydentity_cf.iter() {
+            self.runners.push(
+                ContractRunner::new(
                     "hydentity".into(),
                     self.identity.clone(),
-                    id.1 .0,
+                    id.1 .0.clone(),
                     self.blobs.clone(),
-                    id.2,
+                    id.2.clone(),
+                    states.hydentity.clone(),
                 )
                 .await?,
             );
         }
 
-        for cf in self.hyllar_cf {
-            runners.push(
-                ContractRunner::new::<HyllarToken>(
-                    cf.1,
+        for cf in self.hyllar_cf.iter() {
+            self.runners.push(
+                ContractRunner::new(
+                    cf.1.clone(),
                     self.identity.clone(),
                     BlobData(vec![]),
                     self.blobs.clone(),
-                    cf.2,
+                    cf.2.clone(),
+                    states.for_token(&cf.1)?.clone(),
                 )
                 .await?,
             );
         }
 
-        for cf in self.amm_cf {
-            runners.push(
+        for cf in self.amm_cf.iter() {
+            self.runners.push(
                 ContractRunner::new::<AmmState>(
                     "amm".into(),
                     self.identity.clone(),
                     BlobData(vec![]),
                     self.blobs.clone(),
-                    cf.1,
+                    cf.1.clone(),
+                    states.amm.clone(),
                 )
                 .await?,
             );
         }
 
-        for runner in runners.iter() {
-            runner.execute()?;
+        let exec_results = self.execute().await?;
+        states.from_exec_results(exec_results)?;
+
+        let tx_hash = self.broadcast_blobs(client).await?;
+
+        self.tx_hash = Some(tx_hash.clone());
+
+        Ok(tx_hash)
+    }
+
+    async fn execute(&self) -> Result<Vec<ExecutionResult>> {
+        let mut new_states = vec![];
+        for runner in self.runners.iter() {
+            let next_state = runner.execute()?;
+            new_states.push(ExecutionResult {
+                contract_name: runner.contract_name.clone(),
+                state_digest: next_state,
+            });
         }
 
-        let blob_tx_hash = send_blobs(&self.client, self.identity, self.blobs).await?;
+        Ok(new_states)
+    }
 
-        for runner in runners {
+    async fn broadcast_blobs(&self, client: &ApiHttpClient) -> Result<TxHash> {
+        let blob_tx_hash = send_blobs(client, self.identity.clone(), self.blobs.clone()).await?;
+
+        Ok(blob_tx_hash)
+    }
+
+    pub async fn prove(&self) -> Result<()> {
+        let blob_tx_hash = self.tx_hash.clone().unwrap();
+
+        for runner in self.runners.iter() {
             let proof = runner.prove().await?;
             runner.broadcast_proof(blob_tx_hash.clone(), proof).await?;
         }
 
-        Ok(blob_tx_hash)
+        Ok(())
     }
 }
 
@@ -215,10 +252,7 @@ pub async fn send_blobs(
     Ok(tx_hash)
 }
 
-async fn get_nonce(client: &ApiHttpClient, username: &str) -> Result<u32, AppError> {
-    let state: Hydentity =
-        crate::contract::fetch_current_state(client, &"hydentity".into()).await?;
-    info!("State fetched: {:?}", state);
+async fn get_nonce(state: &Hydentity, username: &str) -> Result<u32, AppError> {
     let info = state
         .get_identity_info(username)
         .map_err(|err| AppError(StatusCode::NOT_FOUND, anyhow::anyhow!(err)))?;
@@ -232,13 +266,11 @@ async fn get_nonce(client: &ApiHttpClient, username: &str) -> Result<u32, AppErr
 }
 
 async fn get_paired_amount(
-    client: &ApiHttpClient,
+    state: &AmmState,
     token_a: String,
     token_b: String,
     amount: u128,
 ) -> Result<u128, AppError> {
-    let state: AmmState = crate::contract::fetch_current_state(client, &"amm".into()).await?;
-    info!("State fetched: {:?}", state);
     let attr = state
         .get_paired_amount(token_a, token_b, amount)
         .ok_or_else(|| AppError(StatusCode::NOT_FOUND, anyhow::anyhow!("Key pair not found")))?;
