@@ -1,11 +1,14 @@
 use std::env;
 
+use amm::AmmState;
 use anyhow::{bail, Error, Result};
+use hydentity::Hydentity;
 use hyle::{
     indexer::model::ContractDb,
     model::{ProofData, ProofTransaction},
     rest::client::ApiHttpClient,
 };
+use hyllar::HyllarToken;
 use reqwest::{Client, Url};
 use sdk::{
     Blob, BlobData, BlobIndex, ContractInput, ContractName, Digestable, HyleOutput, Identity,
@@ -13,6 +16,8 @@ use sdk::{
 };
 use serde::Serialize;
 use tracing::info;
+
+use crate::transaction::ExecutionResult;
 
 static HYLLAR_BIN: &[u8] = include_bytes!("../../../../hyle/contracts/hyllar/hyllar.img");
 static HYDENTITY_BIN: &[u8] = include_bytes!("../../../../hyle/contracts/hydentity/hydentity.img");
@@ -27,9 +32,63 @@ fn get_binary(contract_name: ContractName) -> Result<&'static [u8]> {
     }
 }
 
+#[derive(Debug)]
+pub struct States {
+    pub hyllar: HyllarToken,
+    pub hyllar2: HyllarToken,
+    pub hydentity: Hydentity,
+    pub amm: AmmState,
+}
+
+impl States {
+    pub fn for_token<'a>(&'a self, token: &ContractName) -> Result<&'a HyllarToken> {
+        match token.0.as_str() {
+            "hyllar" => Ok(&self.hyllar),
+            "hyllar2" => Ok(&self.hyllar2),
+            _ => bail!("Invalid token"),
+        }
+    }
+
+    pub fn from_exec_results(&mut self, exec_result: Vec<ExecutionResult>) -> Result<()> {
+        let mut hyllar = self.hyllar.clone();
+        let mut hyllar2 = self.hyllar2.clone();
+        let mut hydentity = self.hydentity.clone();
+        let mut amm = self.amm.clone();
+
+        for result in exec_result {
+            match result.contract_name.0.as_str() {
+                "hyllar" => {
+                    hyllar = result.state_digest.try_into()?;
+                    info!("New Hyllar state: {:?}", hyllar);
+                }
+                "hyllar2" => {
+                    hyllar2 = result.state_digest.try_into()?;
+                    info!("New Hyllar2 state: {:?}", hyllar2);
+                }
+                "hydentity" => {
+                    hydentity = result.state_digest.try_into()?;
+                    info!("New Hydentity state: {:?}", hydentity);
+                }
+                "amm" => {
+                    amm = result.state_digest.try_into()?;
+                    info!("New Amm state: {:?}", amm);
+                }
+                _ => bail!("Invalid contract in execution result"),
+            }
+        }
+
+        self.hyllar = hyllar;
+        self.hyllar2 = hyllar2;
+        self.hydentity = hydentity;
+        self.amm = amm;
+
+        Ok(())
+    }
+}
+
 pub struct ContractRunner {
     client: ApiHttpClient,
-    contract_name: ContractName,
+    pub contract_name: ContractName,
     contract_input: Vec<u8>,
 }
 
@@ -40,19 +99,16 @@ impl ContractRunner {
         private_blob: BlobData,
         blobs: Vec<Blob>,
         index: BlobIndex,
+        initial_state: State,
     ) -> Result<Self>
     where
-        State: TryFrom<sdk::StateDigest, Error = Error> + std::fmt::Debug + Digestable + Serialize,
+        State: Digestable + Serialize,
     {
         let node_url = env::var("NODE_URL").unwrap_or_else(|_| "http://localhost:4321".to_string());
         let client = ApiHttpClient {
             url: Url::parse(node_url.as_str()).unwrap(),
             reqwest_client: Client::new(),
         };
-
-        let initial_state = fetch_current_state(&client, &contract_name).await?;
-
-        info!("Fetched current state: {:?}", initial_state);
 
         let contract_input = ContractInput::<State> {
             initial_state,
@@ -71,7 +127,7 @@ impl ContractRunner {
         })
     }
 
-    pub fn execute(&self) -> Result<()> {
+    pub fn execute(&self) -> Result<StateDigest> {
         info!("Checking transition for {}...", self.contract_name);
 
         let binary = get_binary(self.contract_name.clone())?;
@@ -84,7 +140,7 @@ impl ContractRunner {
                 program_error
             );
         }
-        Ok(())
+        Ok(output.next_state)
     }
 
     pub async fn prove(&self) -> Result<ProofData> {
@@ -161,7 +217,7 @@ fn execute(binary: &'static [u8], contract_input: &[u8]) -> Result<risc0_zkvm::S
         .unwrap();
 
     let prover = risc0_zkvm::default_executor();
-    Ok(prover.execute(env, binary).unwrap())
+    prover.execute(env, binary)
 }
 
 async fn send_proof(
