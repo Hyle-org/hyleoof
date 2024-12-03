@@ -19,9 +19,10 @@ use tracing::info;
 
 use crate::transaction::ExecutionResult;
 
-static HYLLAR_BIN: &[u8] = include_bytes!("../../../../hyle/contracts/hyllar/hyllar.img");
-static HYDENTITY_BIN: &[u8] = include_bytes!("../../../../hyle/contracts/hydentity/hydentity.img");
-static AMM_BIN: &[u8] = include_bytes!("../../../../hyle/contracts/amm/amm.img");
+pub static HYLLAR_BIN: &[u8] = include_bytes!("../../../../hyle/contracts/hyllar/hyllar.img");
+pub static HYDENTITY_BIN: &[u8] =
+    include_bytes!("../../../../hyle/contracts/hydentity/hydentity.img");
+pub static AMM_BIN: &[u8] = include_bytes!("../../../../hyle/contracts/amm/amm.img");
 
 fn get_binary(contract_name: ContractName) -> Result<&'static [u8]> {
     match contract_name.0.as_str() {

@@ -1,6 +1,6 @@
-use std::{env, sync::Arc};
+use std::{collections::BTreeMap, env, sync::Arc};
 
-use anyhow::Result;
+use anyhow::{bail, Result};
 use axum::{
     extract::{Json, State},
     http::Method,
@@ -9,19 +9,21 @@ use axum::{
     Router,
 };
 use contract::{fetch_current_state, States};
-use hyle::rest::client::ApiHttpClient;
+use hyle::{model::RegisterContractTransaction, rest::client::ApiHttpClient};
 use reqwest::{Client, Url};
-use sdk::{ContractName, Identity, TxHash};
+use risc0_zkvm::compute_image_id;
+use sdk::{ContractName, Digestable, Identity, TxHash};
 use serde::Deserialize;
 use task_manager::Prover;
 use tokio::sync::Mutex;
 use tower_http::cors::{Any, CorsLayer};
-use tracing::{info, level_filters::LevelFilter};
+use tracing::{error, info, level_filters::LevelFilter};
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt, EnvFilter, Layer};
 use transaction::TransactionBuilder;
 use utils::AppError;
 
 mod contract;
+mod init;
 mod task_manager;
 mod transaction;
 mod utils;
@@ -76,6 +78,14 @@ async fn main() {
         url: Url::parse(node_url.as_str()).unwrap(),
         reqwest_client: Client::new(),
     };
+
+    match init::init_node(&client).await {
+        Ok(_) => {}
+        Err(e) => {
+            error!("Error initializing node: {:?}", e);
+            return;
+        }
+    }
 
     let state = RouterCtx {
         states: Arc::new(Mutex::new(fetch_initial_states(&client).await)),
