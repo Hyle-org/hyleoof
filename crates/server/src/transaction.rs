@@ -155,69 +155,56 @@ impl TransactionBuilder {
     }
 
     pub async fn build(&mut self, states: &mut States, client: &ApiHttpClient) -> Result<TxHash> {
+        let mut new_states = states.clone();
         for id in self.hydentity_cf.iter() {
-            self.runners.push(
-                ContractRunner::new(
-                    "hydentity".into(),
-                    self.identity.clone(),
-                    id.1 .0.clone(),
-                    self.blobs.clone(),
-                    id.2.clone(),
-                    states.hydentity.clone(),
-                )
-                .await?,
-            );
+            let runner = ContractRunner::new(
+                "hydentity".into(),
+                self.identity.clone(),
+                id.1 .0.clone(),
+                self.blobs.clone(),
+                id.2.clone(),
+                new_states.hydentity.clone(),
+            )
+            .await?;
+            new_states.hydentity = runner.execute()?.try_into()?;
+            self.runners.push(runner);
         }
 
         for cf in self.hyllar_cf.iter() {
-            self.runners.push(
-                ContractRunner::new(
-                    cf.1.clone(),
-                    self.identity.clone(),
-                    BlobData(vec![]),
-                    self.blobs.clone(),
-                    cf.2.clone(),
-                    states.for_token(&cf.1)?.clone(),
-                )
-                .await?,
-            );
+            let runner = ContractRunner::new(
+                cf.1.clone(),
+                self.identity.clone(),
+                BlobData(vec![]),
+                self.blobs.clone(),
+                cf.2.clone(),
+                new_states.for_token(&cf.1)?.clone(),
+            )
+            .await?;
+            new_states.update_for_token(&cf.1, runner.execute()?.try_into()?)?;
+            self.runners.push(runner);
         }
 
         for cf in self.amm_cf.iter() {
-            self.runners.push(
-                ContractRunner::new::<AmmState>(
-                    "amm".into(),
-                    self.identity.clone(),
-                    BlobData(vec![]),
-                    self.blobs.clone(),
-                    cf.1.clone(),
-                    states.amm.clone(),
-                )
-                .await?,
-            );
+            let runner = ContractRunner::new::<AmmState>(
+                "amm".into(),
+                self.identity.clone(),
+                BlobData(vec![]),
+                self.blobs.clone(),
+                cf.1.clone(),
+                new_states.amm.clone(),
+            )
+            .await?;
+            new_states.amm = runner.execute()?.try_into()?;
+            self.runners.push(runner);
         }
 
-        let exec_results = self.execute().await?;
-        states.from_exec_results(exec_results)?;
+        *states = new_states;
 
         let tx_hash = self.broadcast_blobs(client).await?;
 
         self.tx_hash = Some(tx_hash.clone());
 
         Ok(tx_hash)
-    }
-
-    async fn execute(&self) -> Result<Vec<ExecutionResult>> {
-        let mut new_states = vec![];
-        for runner in self.runners.iter() {
-            let next_state = runner.execute()?;
-            new_states.push(ExecutionResult {
-                contract_name: runner.contract_name.clone(),
-                state_digest: next_state,
-            });
-        }
-
-        Ok(new_states)
     }
 
     async fn broadcast_blobs(&self, client: &ApiHttpClient) -> Result<TxHash> {

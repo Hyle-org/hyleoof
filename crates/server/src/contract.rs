@@ -33,7 +33,7 @@ fn get_binary(contract_name: ContractName) -> Result<&'static [u8]> {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct States {
     pub hyllar: HyllarToken,
     pub hyllar2: HyllarToken,
@@ -48,6 +48,15 @@ impl States {
             "hyllar2" => Ok(&self.hyllar2),
             _ => bail!("Invalid token"),
         }
+    }
+
+    pub fn update_for_token(&mut self, token: &ContractName, new_state: HyllarToken) -> Result<()> {
+        match token.0.as_str() {
+            "hyllar" => self.hyllar = new_state,
+            "hyllar2" => self.hyllar2 = new_state,
+            _ => bail!("Invalid token"),
+        }
+        Ok(())
     }
 
     pub fn from_exec_results(&mut self, exec_result: Vec<ExecutionResult>) -> Result<()> {

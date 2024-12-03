@@ -12,7 +12,7 @@ use contract::{fetch_current_state, States};
 use hyle::{model::RegisterContractTransaction, rest::client::ApiHttpClient};
 use reqwest::{Client, Url};
 use risc0_zkvm::compute_image_id;
-use sdk::{ContractName, Digestable, Identity, TxHash};
+use sdk::{erc20::ERC20, ContractName, Digestable, Identity, TxHash};
 use serde::Deserialize;
 use task_manager::Prover;
 use tokio::sync::Mutex;
