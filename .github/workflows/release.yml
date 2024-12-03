@@ -14,7 +14,9 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v4 
+        with:
+          fetch-depth: 0
 
       - name: Get tags
         run: git fetch --tags origin
