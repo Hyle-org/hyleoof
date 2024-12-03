@@ -19,9 +19,10 @@ use tracing::info;
 
 use crate::transaction::ExecutionResult;
 
-static HYLLAR_BIN: &[u8] = include_bytes!("../../../../hyle/contracts/hyllar/hyllar.img");
-static HYDENTITY_BIN: &[u8] = include_bytes!("../../../../hyle/contracts/hydentity/hydentity.img");
-static AMM_BIN: &[u8] = include_bytes!("../../../../hyle/contracts/amm/amm.img");
+pub static HYLLAR_BIN: &[u8] = include_bytes!("../../../../hyle/contracts/hyllar/hyllar.img");
+pub static HYDENTITY_BIN: &[u8] =
+    include_bytes!("../../../../hyle/contracts/hydentity/hydentity.img");
+pub static AMM_BIN: &[u8] = include_bytes!("../../../../hyle/contracts/amm/amm.img");
 
 fn get_binary(contract_name: ContractName) -> Result<&'static [u8]> {
     match contract_name.0.as_str() {
@@ -32,7 +33,7 @@ fn get_binary(contract_name: ContractName) -> Result<&'static [u8]> {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct States {
     pub hyllar: HyllarToken,
     pub hyllar2: HyllarToken,
@@ -47,6 +48,15 @@ impl States {
             "hyllar2" => Ok(&self.hyllar2),
             _ => bail!("Invalid token"),
         }
+    }
+
+    pub fn update_for_token(&mut self, token: &ContractName, new_state: HyllarToken) -> Result<()> {
+        match token.0.as_str() {
+            "hyllar" => self.hyllar = new_state,
+            "hyllar2" => self.hyllar2 = new_state,
+            _ => bail!("Invalid token"),
+        }
+        Ok(())
     }
 
     pub fn from_exec_results(&mut self, exec_result: Vec<ExecutionResult>) -> Result<()> {
