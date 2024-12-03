@@ -1,6 +1,6 @@
-use std::{collections::BTreeMap, env, sync::Arc};
+use std::{env, sync::Arc};
 
-use anyhow::{bail, Result};
+use anyhow::Result;
 use axum::{
     extract::{Json, State},
     http::Method,
@@ -8,18 +8,17 @@ use axum::{
     routing::{get, post},
     Router,
 };
-use contract::{fetch_current_state, States};
-use hyle::{model::RegisterContractTransaction, rest::client::ApiHttpClient};
+use contract::fetch_current_state;
+use hyle::rest::client::ApiHttpClient;
 use reqwest::{Client, Url};
-use risc0_zkvm::compute_image_id;
-use sdk::{erc20::ERC20, ContractName, Digestable, Identity, TxHash};
+use sdk::{ContractName, Identity, TxHash};
 use serde::Deserialize;
 use task_manager::Prover;
 use tokio::sync::Mutex;
 use tower_http::cors::{Any, CorsLayer};
 use tracing::{error, info, level_filters::LevelFilter};
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt, EnvFilter, Layer};
-use transaction::TransactionBuilder;
+use transaction::{States, TransactionBuilder};
 use utils::AppError;
 
 mod contract;
@@ -74,10 +73,10 @@ async fn main() {
     setup_tracing();
 
     let node_url = env::var("NODE_URL").unwrap_or_else(|_| "http://localhost:4321".to_string());
-    let client = ApiHttpClient {
+    let client = Arc::new(ApiHttpClient {
         url: Url::parse(node_url.as_str()).unwrap(),
         reqwest_client: Client::new(),
-    };
+    });
 
     match init::init_node(&client).await {
         Ok(_) => {}
@@ -89,8 +88,8 @@ async fn main() {
 
     let state = RouterCtx {
         states: Arc::new(Mutex::new(fetch_initial_states(&client).await)),
-        client: Arc::new(client),
-        prover: Arc::new(Prover::new()),
+        client: client.clone(),
+        prover: Arc::new(Prover::new(client.clone())),
     };
 
     info!("Fetched states: {:?}", state.states.lock().await);

@@ -1,5 +1,6 @@
 use std::sync::Arc;
 
+use hyle::rest::client::ApiHttpClient;
 use tokio::sync::{mpsc, Mutex};
 use tracing::{error, info};
 
@@ -10,14 +11,14 @@ pub struct Prover {
 }
 
 impl Prover {
-    pub fn new() -> Self {
+    pub fn new(client: Arc<ApiHttpClient>) -> Self {
         let (sender, receiver) = mpsc::unbounded_channel::<TransactionBuilder>();
         let receiver = Arc::new(Mutex::new(receiver));
 
         // Thread parallèle pour traiter les transactions
         tokio::spawn(async move {
             while let Some(tx) = receiver.lock().await.recv().await {
-                match tx.prove().await {
+                match tx.prove(&client).await {
                     Ok(_) => info!("Transaction proved"),
                     Err(e) => error!("Failed to prove transaction: {e}"),
                 }
@@ -31,11 +32,5 @@ impl Prover {
         if let Err(e) = self.sender.send(tx) {
             eprintln!("Failed to add transaction: {}", e);
         }
-    }
-}
-
-impl Default for Prover {
-    fn default() -> Self {
-        Self::new()
     }
 }

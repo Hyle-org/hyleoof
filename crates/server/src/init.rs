@@ -10,9 +10,8 @@ use tokio::time::timeout;
 use tracing::info;
 
 use crate::{
-    contract::{self, fetch_current_state, States},
-    do_transfer,
-    transaction::TransactionBuilder,
+    contract::fetch_current_state,
+    transaction::{States, TransactionBuilder, AMM_BIN, HYLLAR_BIN},
 };
 
 pub async fn init_node(client: &ApiHttpClient) -> Result<()> {
@@ -30,7 +29,7 @@ async fn init_amm(client: &ApiHttpClient) -> Result<()> {
         .await
     {
         Ok(contract) => {
-            let image_id = hex::encode(compute_image_id(contract::AMM_BIN)?);
+            let image_id = hex::encode(compute_image_id(AMM_BIN)?);
             let program_id = hex::encode(contract.program_id.as_slice());
             if program_id != image_id {
                 bail!(
@@ -41,7 +40,7 @@ async fn init_amm(client: &ApiHttpClient) -> Result<()> {
         }
         Err(_) => {
             info!("🚀 Registering AMM contract");
-            let image_id = hex::encode(compute_image_id(contract::AMM_BIN)?);
+            let image_id = hex::encode(compute_image_id(AMM_BIN)?);
             client
                 .send_tx_register_contract(&RegisterContractTransaction {
                     owner: "amm".into(),
@@ -70,7 +69,7 @@ async fn init_hyllar(client: &ApiHttpClient) -> Result<()> {
         .await
     {
         Ok(contract) => {
-            let image_id = hex::encode(compute_image_id(contract::HYLLAR_BIN)?);
+            let image_id = hex::encode(compute_image_id(HYLLAR_BIN)?);
             let program_id = hex::encode(contract.program_id.as_slice());
             if program_id != image_id {
                 bail!(
@@ -103,7 +102,7 @@ async fn init_hyllar(client: &ApiHttpClient) -> Result<()> {
                 transaction.transfer("hyllar".into(), "amm".into(), 1_000_000_000);
                 transaction.approve("hyllar".into(), "amm".into(), 1_000_000_000_000_000);
                 transaction.build(&mut states, client).await?;
-                transaction.prove().await?;
+                transaction.prove(client).await?;
 
                 timeout(Duration::from_secs(30), async {
                     loop {
@@ -146,7 +145,7 @@ async fn init_hyllar2(client: &ApiHttpClient) -> Result<()> {
         .await
     {
         Ok(contract) => {
-            let image_id = hex::encode(compute_image_id(contract::HYLLAR_BIN)?);
+            let image_id = hex::encode(compute_image_id(HYLLAR_BIN)?);
             let program_id = hex::encode(contract.program_id.as_slice());
             if program_id != image_id {
                 bail!(
@@ -157,7 +156,7 @@ async fn init_hyllar2(client: &ApiHttpClient) -> Result<()> {
         }
         Err(_) => {
             info!("🚀 Registering Hyllar2 contract");
-            let image_id = hex::encode(compute_image_id(contract::HYLLAR_BIN)?);
+            let image_id = hex::encode(compute_image_id(HYLLAR_BIN)?);
 
             let mut hyllar_token = hyllar::HyllarTokenContract::init(
                 hyllar::HyllarToken::new(100_000_000_000, "faucet.hydentity".to_string()),

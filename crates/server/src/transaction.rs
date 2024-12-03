@@ -1,23 +1,63 @@
 use amm::{AmmAction, AmmState};
-use anyhow::Result;
+use anyhow::{bail, Result};
 use axum::http::StatusCode;
 use hydentity::{AccountInfo, Hydentity};
-use hyle::{model::BlobTransaction, rest::client::ApiHttpClient};
+use hyle::{
+    model::{BlobTransaction, ProofData, ProofTransaction},
+    rest::client::ApiHttpClient,
+};
 use hyllar::HyllarToken;
-use reqwest::{Client, Url};
 use sdk::{
     erc20::ERC20Action,
     identity_provider::{IdentityAction, IdentityVerification},
-    Blob, BlobData, BlobIndex, ContractName, Identity, StateDigest, TxHash,
+    Blob, BlobData, BlobIndex, ContractName, Identity, TxHash,
 };
 use tracing::info;
 
-use crate::{
-    contract::{ContractRunner, States},
-    utils::AppError,
-};
+use crate::{contract::ContractRunner, utils::AppError};
 
 pub struct Password(BlobData);
+
+pub static HYLLAR_BIN: &[u8] = include_bytes!("../../../../hyle/contracts/hyllar/hyllar.img");
+pub static HYDENTITY_BIN: &[u8] =
+    include_bytes!("../../../../hyle/contracts/hydentity/hydentity.img");
+pub static AMM_BIN: &[u8] = include_bytes!("../../../../hyle/contracts/amm/amm.img");
+
+pub fn get_binary(contract_name: ContractName) -> Result<&'static [u8]> {
+    match contract_name.0.as_str() {
+        "hyllar" | "hyllar2" => Ok(HYLLAR_BIN),
+        "hydentity" => Ok(HYDENTITY_BIN),
+        "amm" => Ok(AMM_BIN),
+        _ => bail!("contract {} not supported", contract_name),
+    }
+}
+
+#[derive(Debug, Clone)]
+pub struct States {
+    pub hyllar: HyllarToken,
+    pub hyllar2: HyllarToken,
+    pub hydentity: Hydentity,
+    pub amm: AmmState,
+}
+
+impl States {
+    pub fn for_token<'a>(&'a self, token: &ContractName) -> Result<&'a HyllarToken> {
+        match token.0.as_str() {
+            "hyllar" => Ok(&self.hyllar),
+            "hyllar2" => Ok(&self.hyllar2),
+            _ => bail!("Invalid token"),
+        }
+    }
+
+    pub fn update_for_token(&mut self, token: &ContractName, new_state: HyllarToken) -> Result<()> {
+        match token.0.as_str() {
+            "hyllar" => self.hyllar = new_state,
+            "hyllar2" => self.hyllar2 = new_state,
+            _ => bail!("Invalid token"),
+        }
+        Ok(())
+    }
+}
 
 pub struct TransactionBuilder {
     identity: Identity,
@@ -27,11 +67,6 @@ pub struct TransactionBuilder {
     blobs: Vec<Blob>,
     runners: Vec<ContractRunner>,
     tx_hash: Option<TxHash>,
-}
-
-pub struct ExecutionResult {
-    pub contract_name: ContractName,
-    pub state_digest: StateDigest,
 }
 
 impl TransactionBuilder {
@@ -159,6 +194,7 @@ impl TransactionBuilder {
         for id in self.hydentity_cf.iter() {
             let runner = ContractRunner::new(
                 "hydentity".into(),
+                get_binary("hydentity".into())?,
                 self.identity.clone(),
                 id.1 .0.clone(),
                 self.blobs.clone(),
@@ -173,6 +209,7 @@ impl TransactionBuilder {
         for cf in self.hyllar_cf.iter() {
             let runner = ContractRunner::new(
                 cf.1.clone(),
+                get_binary(cf.1.clone())?,
                 self.identity.clone(),
                 BlobData(vec![]),
                 self.blobs.clone(),
@@ -187,6 +224,7 @@ impl TransactionBuilder {
         for cf in self.amm_cf.iter() {
             let runner = ContractRunner::new::<AmmState>(
                 "amm".into(),
+                get_binary("amm".into())?,
                 self.identity.clone(),
                 BlobData(vec![]),
                 self.blobs.clone(),
@@ -213,12 +251,18 @@ impl TransactionBuilder {
         Ok(blob_tx_hash)
     }
 
-    pub async fn prove(&self) -> Result<()> {
+    pub async fn prove(&self, client: &ApiHttpClient) -> Result<()> {
         let blob_tx_hash = self.tx_hash.clone().unwrap();
 
         for runner in self.runners.iter() {
             let proof = runner.prove().await?;
-            runner.broadcast_proof(blob_tx_hash.clone(), proof).await?;
+            send_proof(
+                client,
+                blob_tx_hash.clone(),
+                runner.contract_name.clone(),
+                proof,
+            )
+            .await?;
         }
 
         Ok(())
@@ -237,6 +281,27 @@ pub async fn send_blobs(
     info!("Blob sent successfully. Response: {}", tx_hash);
 
     Ok(tx_hash)
+}
+
+async fn send_proof(
+    client: &ApiHttpClient,
+    blob_tx_hash: TxHash,
+    contract_name: ContractName,
+    proof: ProofData,
+) -> Result<()> {
+    let res = client
+        .send_tx_proof(&ProofTransaction {
+            blob_tx_hash,
+            contract_name,
+            proof,
+        })
+        .await?;
+    assert!(res.status().is_success());
+
+    info!("Proof sent successfully");
+    info!("Response: {}", res.text().await?);
+
+    Ok(())
 }
 
 async fn get_nonce(state: &Hydentity, username: &str) -> Result<u32, AppError> {
