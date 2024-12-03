@@ -104,6 +104,30 @@ async fn init_hyllar(client: &ApiHttpClient) -> Result<()> {
                 transaction.approve("hyllar".into(), "amm".into(), 1_000_000_000_000_000);
                 transaction.build(&mut states, client).await?;
                 transaction.prove().await?;
+
+                timeout(Duration::from_secs(30), async {
+                    loop {
+                        if let Ok(contract) = client
+                            .get_indexer_contract(&"hyllar".into())
+                            .await
+                            .unwrap()
+                            .json::<ContractDb>()
+                            .await
+                        {
+                            let contract = hyllar::HyllarTokenContract::init(
+                                StateDigest(contract.state_digest).try_into().unwrap(),
+                                "faucet.hydentity".into(),
+                            );
+                            if contract.balance_of("amm") != Ok(1_000_000_000) {
+                                info!("⏰ Waiting for Hyllar contract state to be ready");
+                                tokio::time::sleep(Duration::from_millis(500)).await;
+                            } else {
+                                break;
+                            }
+                        }
+                    }
+                })
+                .await?;
             }
         }
         Err(_) => {
