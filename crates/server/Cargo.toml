@@ -9,7 +9,7 @@ hyllar = { git = "https://github.com/Hyle-org/hyle.git", package="hyllar", branc
 hydentity = { git = "https://github.com/Hyle-org/hyle.git", package="hydentity", branch = "main"  }
 amm = { git = "https://github.com/Hyle-org/hyle.git", package="amm", branch = "main"  }
 hyle = { git = "https://github.com/Hyle-org/hyle.git", package="hyle", branch = "main"  }
-bonsai_runner = { git = "https://github.com/Hyle-org/hyle.git", package="bonsai-runner", branch = "main"  }
+bonsai_runner = { git = "https://github.com/Hyle-org/hyle.git", package="bonsai-runner", features = [], branch = "main"  }
 
 # sdk = { path = "../../../hyle3/contract-sdk", package="hyle-contract-sdk"}
 # hyllar = { path = "../../../hyle3/contracts/hyllar/contract", package="hyllar" }

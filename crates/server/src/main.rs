@@ -34,15 +34,19 @@ pub struct RouterCtx {
     pub prover: Arc<Prover>,
 }
 
-async fn fetch_initial_states(client: &ApiHttpClient) -> States {
-    let hyllar = fetch_current_state(client, &"hyllar".into()).await.unwrap();
-    let hyllar2 = fetch_current_state(client, &"hyllar2".into())
+async fn fetch_initial_states(indexer_client: &ApiHttpClient) -> States {
+    let hyllar = fetch_current_state(indexer_client, &"hyllar".into())
         .await
         .unwrap();
-    let hydentity = fetch_current_state(client, &"hydentity".into())
+    let hyllar2 = fetch_current_state(indexer_client, &"hyllar2".into())
         .await
         .unwrap();
-    let amm = fetch_current_state(client, &"amm".into()).await.unwrap();
+    let hydentity = fetch_current_state(indexer_client, &"hydentity".into())
+        .await
+        .unwrap();
+    let amm = fetch_current_state(indexer_client, &"amm".into())
+        .await
+        .unwrap();
 
     States {
         hyllar,
@@ -73,12 +77,18 @@ async fn main() {
     setup_tracing();
 
     let node_url = env::var("NODE_URL").unwrap_or_else(|_| "http://localhost:4321".to_string());
-    let client = Arc::new(ApiHttpClient {
+    let indexer_url =
+        env::var("INDEXER_URL").unwrap_or_else(|_| "http://localhost:4321".to_string());
+    let node_client = Arc::new(ApiHttpClient {
         url: Url::parse(node_url.as_str()).unwrap(),
         reqwest_client: Client::new(),
     });
+    let indexer_client = Arc::new(ApiHttpClient {
+        url: Url::parse(indexer_url.as_str()).unwrap(),
+        reqwest_client: Client::new(),
+    });
 
-    match init::init_node(&client).await {
+    match init::init_node(&node_client, &indexer_client).await {
         Ok(_) => {}
         Err(e) => {
             error!("Error initializing node: {:?}", e);
@@ -87,9 +97,9 @@ async fn main() {
     }
 
     let state = RouterCtx {
-        states: Arc::new(Mutex::new(fetch_initial_states(&client).await)),
-        client: client.clone(),
-        prover: Arc::new(Prover::new(client.clone())),
+        states: Arc::new(Mutex::new(fetch_initial_states(&indexer_client).await)),
+        client: node_client.clone(),
+        prover: Arc::new(Prover::new(node_client.clone())),
     };
 
     info!("Fetched states: {:?}", state.states.lock().await);
