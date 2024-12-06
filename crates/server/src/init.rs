@@ -14,10 +14,10 @@ use crate::{
     transaction::{States, TransactionBuilder, AMM_BIN, HYLLAR_BIN},
 };
 
-pub async fn init_node(client: &ApiHttpClient) -> Result<()> {
-    init_amm(client).await?;
-    init_hyllar2(client).await?;
-    init_hyllar(client).await?;
+pub async fn init_node(node_client: &ApiHttpClient, indexer_client: &ApiHttpClient) -> Result<()> {
+    init_amm(indexer_client).await?;
+    init_hyllar2(indexer_client).await?;
+    init_hyllar(indexer_client, node_client).await?;
     Ok(())
 }
 
@@ -61,8 +61,8 @@ async fn init_amm(client: &ApiHttpClient) -> Result<()> {
     Ok(())
 }
 
-async fn init_hyllar(client: &ApiHttpClient) -> Result<()> {
-    match client
+async fn init_hyllar(indexer_client: &ApiHttpClient, node_client: &ApiHttpClient) -> Result<()> {
+    match indexer_client
         .get_indexer_contract(&"hyllar".into())
         .await?
         .json::<ContractDb>()
@@ -88,9 +88,9 @@ async fn init_hyllar(client: &ApiHttpClient) -> Result<()> {
 
                 let mut states = States {
                     hyllar: contract.state().clone(),
-                    hyllar2: fetch_current_state(client, &"hyllar2".into()).await?,
-                    hydentity: fetch_current_state(client, &"hydentity".into()).await?,
-                    amm: fetch_current_state(client, &"amm".into()).await?,
+                    hyllar2: fetch_current_state(indexer_client, &"hyllar2".into()).await?,
+                    hydentity: fetch_current_state(indexer_client, &"hydentity".into()).await?,
+                    amm: fetch_current_state(indexer_client, &"amm".into()).await?,
                 };
 
                 let mut transaction = TransactionBuilder::new("faucet.hydentity".into());
@@ -101,12 +101,12 @@ async fn init_hyllar(client: &ApiHttpClient) -> Result<()> {
                     .map_err(|e| e.1)?;
                 transaction.transfer("hyllar".into(), "amm".into(), 1_000_000_000);
                 transaction.approve("hyllar".into(), "amm".into(), 1_000_000_000_000_000);
-                transaction.build(&mut states, client).await?;
-                transaction.prove(client).await?;
+                transaction.build(&mut states, node_client).await?;
+                transaction.prove(node_client).await?;
 
                 timeout(Duration::from_secs(30), async {
                     loop {
-                        if let Ok(contract) = client
+                        if let Ok(contract) = indexer_client
                             .get_indexer_contract(&"hyllar".into())
                             .await
                             .unwrap()

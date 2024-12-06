@@ -9,7 +9,7 @@ hyllar = { git = "https://github.com/Hyle-org/hyle.git", package="hyllar", branc
 hydentity = { git = "https://github.com/Hyle-org/hyle.git", package="hydentity", branch = "main"  }
 amm = { git = "https://github.com/Hyle-org/hyle.git", package="amm", branch = "main"  }
 hyle = { git = "https://github.com/Hyle-org/hyle.git", package="hyle", branch = "main"  }
-bonsai_runner = { git = "https://github.com/Hyle-org/hyle.git", package="bonsai-runner", branch = "main"  }
+bonsai_runner = { git = "https://github.com/Hyle-org/hyle.git", package="bonsai-runner", features = [], branch = "main"  }
 
 # sdk = { path = "../../../hyle3/contract-sdk", package="hyle-contract-sdk"}
 # hyllar = { path = "../../../hyle3/contracts/hyllar/contract", package="hyllar" }
@@ -21,7 +21,7 @@ axum = "0.7"
 tokio = { version = "1", features = ["full"] }
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
-thiserror = "1.0"
+thiserror = "2.0"
 tower-http = { version = "0.3", features = ["cors"] }
 anyhow = "1.0.93"
 reqwest = { version = "0.12.9", features = ["json"] }

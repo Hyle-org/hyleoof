@@ -11,14 +11,14 @@ pub struct Prover {
 }
 
 impl Prover {
-    pub fn new(client: Arc<ApiHttpClient>) -> Self {
+    pub fn new(node_client: Arc<ApiHttpClient>) -> Self {
         let (sender, receiver) = mpsc::unbounded_channel::<TransactionBuilder>();
         let receiver = Arc::new(Mutex::new(receiver));
 
         // Thread parallèle pour traiter les transactions
         tokio::spawn(async move {
             while let Some(tx) = receiver.lock().await.recv().await {
-                match tx.prove(&client).await {
+                match tx.prove(&node_client).await {
                     Ok(_) => info!("Transaction proved"),
                     Err(e) => error!("Failed to prove transaction: {e}"),
                 }

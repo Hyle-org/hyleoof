@@ -95,13 +95,13 @@ impl ContractRunner {
 }
 
 pub async fn fetch_current_state<State>(
-    client: &ApiHttpClient,
+    indexer_client: &ApiHttpClient,
     contract_name: &ContractName,
 ) -> Result<State, Error>
 where
     State: TryFrom<sdk::StateDigest, Error = Error>,
 {
-    let resp = client
+    let resp = indexer_client
         .get_indexer_contract(contract_name)
         .await?
         .json::<ContractDb>()

@@ -119,7 +119,6 @@ impl TransactionBuilder {
             IdentityAction::VerifyIdentity {
                 account: self.identity.0.clone(),
                 nonce,
-                blobs_hash: vec!["".into()], // TODO: hash blob
             },
             password,
         );
@@ -160,7 +159,6 @@ impl TransactionBuilder {
         let swap_blob_index = self.blobs.len() as u32;
         self.add_amm_cf(
             AmmAction::Swap {
-                from: self.identity.clone(),
                 pair: (token_a.0.clone(), token_b.0.clone()),
             },
             vec![
@@ -189,7 +187,11 @@ impl TransactionBuilder {
         Ok(())
     }
 
-    pub async fn build(&mut self, states: &mut States, client: &ApiHttpClient) -> Result<TxHash> {
+    pub async fn build(
+        &mut self,
+        states: &mut States,
+        node_client: &ApiHttpClient,
+    ) -> Result<TxHash> {
         let mut new_states = states.clone();
         for id in self.hydentity_cf.iter() {
             let runner = ContractRunner::new(
@@ -238,26 +240,27 @@ impl TransactionBuilder {
 
         *states = new_states;
 
-        let tx_hash = self.broadcast_blobs(client).await?;
+        let tx_hash = self.broadcast_blobs(node_client).await?;
 
         self.tx_hash = Some(tx_hash.clone());
 
         Ok(tx_hash)
     }
 
-    async fn broadcast_blobs(&self, client: &ApiHttpClient) -> Result<TxHash> {
-        let blob_tx_hash = send_blobs(client, self.identity.clone(), self.blobs.clone()).await?;
+    async fn broadcast_blobs(&self, node_client: &ApiHttpClient) -> Result<TxHash> {
+        let blob_tx_hash =
+            send_blobs(node_client, self.identity.clone(), self.blobs.clone()).await?;
 
         Ok(blob_tx_hash)
     }
 
-    pub async fn prove(&self, client: &ApiHttpClient) -> Result<()> {
+    pub async fn prove(&self, node_client: &ApiHttpClient) -> Result<()> {
         let blob_tx_hash = self.tx_hash.clone().unwrap();
 
         for runner in self.runners.iter() {
             let proof = runner.prove().await?;
             send_proof(
-                client,
+                node_client,
                 blob_tx_hash.clone(),
                 runner.contract_name.clone(),
                 proof,
@@ -270,11 +273,11 @@ impl TransactionBuilder {
 }
 
 pub async fn send_blobs(
-    client: &ApiHttpClient,
+    node_client: &ApiHttpClient,
     identity: Identity,
     blobs: Vec<Blob>,
 ) -> Result<TxHash> {
-    let tx_hash = client
+    let tx_hash = node_client
         .send_tx_blob(&BlobTransaction { identity, blobs })
         .await?;
 
@@ -284,12 +287,12 @@ pub async fn send_blobs(
 }
 
 async fn send_proof(
-    client: &ApiHttpClient,
+    node_client: &ApiHttpClient,
     blob_tx_hash: TxHash,
     contract_name: ContractName,
     proof: ProofData,
 ) -> Result<()> {
-    let res = client
+    let res = node_client
         .send_tx_proof(&ProofTransaction {
             blob_tx_hash,
             contract_name,
