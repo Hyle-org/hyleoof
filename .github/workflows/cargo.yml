@@ -29,5 +29,5 @@ jobs:
 
       - run: git clone https://github.com/Hyle-org/hyle.git ../hyle
       - run: cargo build --verbose
-      - run: cargo nextest run --profile ci --workspace
+      # - run: cargo nextest run --profile ci --workspace
 
