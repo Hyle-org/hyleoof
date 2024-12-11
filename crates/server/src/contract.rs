@@ -1,8 +1,11 @@
 use anyhow::{bail, Error, Result};
-use hyle::{indexer::model::ContractDb, model::ProofData, rest::client::ApiHttpClient};
+use hyle::{
+    indexer::model::ContractDb,
+    model::{ContractName, ProofData},
+    rest::client::ApiHttpClient,
+};
 use sdk::{
-    Blob, BlobData, BlobIndex, ContractInput, ContractName, Digestable, HyleOutput, Identity,
-    StateDigest,
+    Blob, BlobData, BlobIndex, ContractInput, Digestable, HyleOutput, Identity, StateDigest,
 };
 use serde::Serialize;
 use tracing::info;

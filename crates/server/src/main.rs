@@ -120,15 +120,12 @@ async fn main() {
         .with_state(state)
         .layer(cors); // Appliquer le middleware CORS
 
-    let addr = env::var("HYLEOOF_HOST")
+    let addr: String = env::var("HYLEOOF_HOST")
         .unwrap_or_else(|_| "127.0.0.1:3000".to_string())
         .parse()
         .unwrap();
     info!("Server running on {}", addr);
-    axum::Server::bind(&addr)
-        .serve(app.into_make_service())
-        .await
-        .unwrap();
+    _ = axum::serve(tokio::net::TcpListener::bind(&addr).await.unwrap(), app).await;
 }
 
 async fn health() -> impl IntoResponse {

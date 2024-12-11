@@ -4,12 +4,12 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-sdk = { git = "https://github.com/Hyle-org/hyle.git", package="hyle-contract-sdk" , branch = "main" }
-hyllar = { git = "https://github.com/Hyle-org/hyle.git", package="hyllar", branch = "main"  }
-hydentity = { git = "https://github.com/Hyle-org/hyle.git", package="hydentity", branch = "main"  }
-amm = { git = "https://github.com/Hyle-org/hyle.git", package="amm", branch = "main"  }
-hyle = { git = "https://github.com/Hyle-org/hyle.git", package="hyle", branch = "main"  }
-bonsai_runner = { git = "https://github.com/Hyle-org/hyle.git", package="bonsai-runner", features = [], branch = "main"  }
+sdk = { git = "https://github.com/Hyle-org/hyle.git", package="hyle-contract-sdk" , branch = "update_axum_otel" }
+hyllar = { git = "https://github.com/Hyle-org/hyle.git", package="hyllar", branch = "update_axum_otel"  }
+hydentity = { git = "https://github.com/Hyle-org/hyle.git", package="hydentity", branch = "update_axum_otel"  }
+amm = { git = "https://github.com/Hyle-org/hyle.git", package="amm", branch = "update_axum_otel"  }
+hyle = { git = "https://github.com/Hyle-org/hyle.git", package="hyle", branch = "update_axum_otel"  }
+bonsai_runner = { git = "https://github.com/Hyle-org/hyle.git", package="bonsai-runner", features = [], branch = "update_axum_otel"  }
 
 # sdk = { path = "../../../hyle3/contract-sdk", package="hyle-contract-sdk"}
 # hyllar = { path = "../../../hyle3/contracts/hyllar/contract", package="hyllar" }
@@ -17,12 +17,12 @@ bonsai_runner = { git = "https://github.com/Hyle-org/hyle.git", package="bonsai-
 # amm = { path = "../../../hyle3/contracts/amm/contract", package="amm" }
 # hyle = { path = "../../../hyle3", package="hyle" }
 
-axum = "0.6"
+axum = "0.7.9"
 tokio = { version = "1", features = ["full"] }
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 thiserror = "2.0"
-tower-http = { version = "0.3", features = ["cors"] }
+tower-http = { version = "0.6.2", features = ["cors"] }
 anyhow = "1.0.93"
 reqwest = { version = "0.12.9", features = ["json"] }
 hex = "0.4.3"

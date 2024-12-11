@@ -160,6 +160,7 @@ impl TransactionBuilder {
         self.add_amm_cf(
             AmmAction::Swap {
                 pair: (token_a.0.clone(), token_b.0.clone()),
+                amounts: (amount, amount_b),
             },
             vec![
                 BlobIndex(swap_blob_index + 1),
