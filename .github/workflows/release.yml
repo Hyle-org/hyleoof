@@ -45,7 +45,7 @@ jobs:
 
       - name: "Write cargo.toml"
         env:
-          VERSION: ${{ steps.cargo-bump.outputs.new_version }}
+          VERSION: ${{ github.ref_name }}
         run: |
           # Strip 'v' from NEW_VERSION if it starts with it
           CLEAN_VERSION=$(echo "$VERSION" | sed 's/^v//')
