@@ -46,8 +46,6 @@ jobs:
       - name: Bump version
         id: cargo-bump
         uses: tj-actions/cargo-bump@v3
-        with: 
-          release_type: minor 
 
       - name: "Write cargo.toml"
         env:
