@@ -31,5 +31,34 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           body_path: RELEASE_NOTES.md
+  
+  bump-version:
+    runs-on: ubuntu-latest 
+    permissions:
+      contents: write
+    name: Test cargo-bump
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false 
+          fetch-depth: 0
 
+      - name: Bump version
+        id: cargo-bump
+        uses: tj-actions/cargo-bump@v3
+        with: 
+          release_type: minor 
 
+      - name: "Write cargo.toml"
+        env:
+          VERSION: ${{ steps.cargo-bump.outputs.new_version }}
+        run: |
+          git config --global user.name "${GITHUB_ACTOR}"
+          git config --global user.email "${GITHUB_ACTOR}@users.noreply.github.com"
+          git add .
+          git commit -m "🔖 Bump version to ${VERSION}" 
+      - name: Push changes
+        uses: ad-m/github-push-action@master
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          branch: ${{ github.ref }}
