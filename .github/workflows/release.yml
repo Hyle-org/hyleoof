@@ -36,21 +36,21 @@ jobs:
     runs-on: ubuntu-latest 
     permissions:
       contents: write
-    name: Test cargo-bump
+    name: Bump version
     steps:
       - uses: actions/checkout@v4
         with:
           persist-credentials: false 
           fetch-depth: 0
 
-      - name: Bump version
-        id: cargo-bump
-        uses: tj-actions/cargo-bump@v3
-
       - name: "Write cargo.toml"
         env:
           VERSION: ${{ steps.cargo-bump.outputs.new_version }}
         run: |
+          # Strip 'v' from NEW_VERSION if it starts with it
+          CLEAN_VERSION=$(echo "$VERSION" | sed 's/^v//')
+          sed -i "s/^version = \".*\"$/version = \"$CLEAN_VERSION\"/" Cargo.toml
+          cargo check
           git config --global user.name "${GITHUB_ACTOR}"
           git config --global user.email "${GITHUB_ACTOR}@users.noreply.github.com"
           git add .
