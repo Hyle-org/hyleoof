@@ -7,12 +7,13 @@ homepage = { workspace = true }
 repository = { workspace = true }
 
 [dependencies]
-sdk = { git = "https://github.com/Hyle-org/hyle.git", package="hyle-contract-sdk" , branch = "update_axum_otel" }
-hyllar = { git = "https://github.com/Hyle-org/hyle.git", package="hyllar", branch = "update_axum_otel"  }
-hydentity = { git = "https://github.com/Hyle-org/hyle.git", package="hydentity", branch = "update_axum_otel"  }
-amm = { git = "https://github.com/Hyle-org/hyle.git", package="amm", branch = "update_axum_otel"  }
-hyle = { git = "https://github.com/Hyle-org/hyle.git", package="hyle", branch = "update_axum_otel"  }
-bonsai_runner = { git = "https://github.com/Hyle-org/hyle.git", package="bonsai-runner", features = [], branch = "update_axum_otel"  }
+sdk = { git = "https://github.com/Hyle-org/hyle.git", package="hyle-contract-sdk", branch = "main" }
+hyllar = { git = "https://github.com/Hyle-org/hyle.git", package="hyllar", branch = "main"  }
+hydentity = { git = "https://github.com/Hyle-org/hyle.git", package="hydentity", branch = "main"  }
+amm = { git = "https://github.com/Hyle-org/hyle.git", package="amm", branch = "main"  }
+hyle = { git = "https://github.com/Hyle-org/hyle.git", package="hyle", branch = "main"  }
+hyle_contracts = { git = "https://github.com/Hyle-org/hyle.git", package="hyle-contracts", branch = "main"  }
+bonsai_runner = { git = "https://github.com/Hyle-org/hyle.git", package="bonsai-runner", features = [], branch = "main"  }
 
 # sdk = { path = "../../../hyle3/contract-sdk", package="hyle-contract-sdk"}
 # hyllar = { path = "../../../hyle3/contracts/hyllar/contract", package="hyllar" }
