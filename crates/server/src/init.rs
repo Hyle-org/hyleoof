@@ -5,7 +5,7 @@ use hyle::{
     indexer::model::ContractDb, model::RegisterContractTransaction, rest::client::ApiHttpClient,
 };
 use risc0_zkvm::compute_image_id;
-use sdk::{erc20::ERC20, ContractName, Digestable, StateDigest};
+use sdk::{erc20::ERC20, ContractName, Digestable, ProgramId, StateDigest};
 use tokio::time::timeout;
 use tracing::info;
 
@@ -21,8 +21,8 @@ pub async fn init_node(node_client: &ApiHttpClient, indexer_client: &ApiHttpClie
     Ok(())
 }
 
-async fn init_amm(client: &ApiHttpClient) -> Result<()> {
-    match client
+async fn init_amm(indexer_client: &ApiHttpClient) -> Result<()> {
+    match indexer_client
         .get_indexer_contract(&"amm".into())
         .await?
         .json::<ContractDb>()
@@ -41,11 +41,11 @@ async fn init_amm(client: &ApiHttpClient) -> Result<()> {
         Err(_) => {
             info!("🚀 Registering AMM contract");
             let image_id = hex::encode(compute_image_id(AMM_BIN)?);
-            client
+            indexer_client
                 .send_tx_register_contract(&RegisterContractTransaction {
                     owner: "amm".into(),
                     verifier: "risc0".into(),
-                    program_id: hex::decode(image_id)?,
+                    program_id: ProgramId(hex::decode(image_id)?),
                     state_digest: amm::AmmState::new(BTreeMap::from([(
                         amm::UnorderedTokenPair::new("hyllar".to_string(), "hyllar2".to_string()),
                         (1_000_000_000, 1_000_000_000),
@@ -54,7 +54,7 @@ async fn init_amm(client: &ApiHttpClient) -> Result<()> {
                     contract_name: "amm".into(),
                 })
                 .await?;
-            wait_contract_state(client, &"amm".into()).await?;
+            wait_contract_state(indexer_client, &"amm".into()).await?;
         }
     };
 
@@ -172,7 +172,7 @@ async fn init_hyllar2(client: &ApiHttpClient) -> Result<()> {
                 .send_tx_register_contract(&RegisterContractTransaction {
                     owner: "amm".into(),
                     verifier: "risc0".into(),
-                    program_id: hex::decode(image_id)?,
+                    program_id: ProgramId(hex::decode(image_id)?),
                     state_digest: hyllar_state.as_digest(),
                     contract_name: "hyllar2".into(),
                 })
@@ -185,12 +185,12 @@ async fn init_hyllar2(client: &ApiHttpClient) -> Result<()> {
 }
 
 pub async fn wait_contract_state(
-    client: &ApiHttpClient,
+    indexer_client: &ApiHttpClient,
     contract: &ContractName,
 ) -> anyhow::Result<()> {
     timeout(Duration::from_secs(30), async {
         loop {
-            let resp = client.get_indexer_contract(contract).await;
+            let resp = indexer_client.get_indexer_contract(contract).await;
             if resp.is_err() || resp.unwrap().json::<ContractDb>().await.is_err() {
                 info!("⏰ Waiting for contract {contract} state to be ready");
                 tokio::time::sleep(Duration::from_millis(500)).await;

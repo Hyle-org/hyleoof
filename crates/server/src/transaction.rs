@@ -18,10 +18,9 @@ use crate::{contract::ContractRunner, utils::AppError};
 
 pub struct Password(BlobData);
 
-pub static HYLLAR_BIN: &[u8] = include_bytes!("../../../../hyle/contracts/hyllar/hyllar.img");
-pub static HYDENTITY_BIN: &[u8] =
-    include_bytes!("../../../../hyle/contracts/hydentity/hydentity.img");
-pub static AMM_BIN: &[u8] = include_bytes!("../../../../hyle/contracts/amm/amm.img");
+pub static HYLLAR_BIN: &[u8] = hyle_contracts::HYLLAR_ELF;
+pub static HYDENTITY_BIN: &[u8] = hyle_contracts::HYDENTITY_ELF;
+pub static AMM_BIN: &[u8] = hyle_contracts::AMM_ELF;
 
 pub fn get_binary(contract_name: ContractName) -> Result<&'static [u8]> {
     match contract_name.0.as_str() {
@@ -84,7 +83,7 @@ impl TransactionBuilder {
 
     fn add_hydentity_cf(&mut self, action: IdentityAction, password: Password) {
         self.hydentity_cf
-            .push((action.clone(), password, BlobIndex(self.blobs.len() as u32)));
+            .push((action.clone(), password, BlobIndex(self.blobs.len())));
         self.blobs.push(action.as_blob("hydentity".into()));
     }
     fn add_hyllar_cf(
@@ -93,16 +92,13 @@ impl TransactionBuilder {
         action: ERC20Action,
         caller: Option<BlobIndex>,
     ) {
-        self.hyllar_cf.push((
-            action.clone(),
-            token.clone(),
-            BlobIndex(self.blobs.len() as u32),
-        ));
+        self.hyllar_cf
+            .push((action.clone(), token.clone(), BlobIndex(self.blobs.len())));
         self.blobs.push(action.as_blob(token, caller, None));
     }
     fn add_amm_cf(&mut self, action: AmmAction, callees: Vec<BlobIndex>) {
         self.amm_cf
-            .push((action.clone(), BlobIndex(self.blobs.len() as u32)));
+            .push((action.clone(), BlobIndex(self.blobs.len())));
         self.blobs
             .push(action.as_blob("amm".into(), None, Some(callees)));
     }
@@ -156,7 +152,7 @@ impl TransactionBuilder {
             get_paired_amount(state, token_a.0.clone(), token_b.0.clone(), amount).await?;
 
         info!("amount_b: {}", amount_b);
-        let swap_blob_index = self.blobs.len() as u32;
+        let swap_blob_index = self.blobs.len();
         self.add_amm_cf(
             AmmAction::Swap {
                 pair: (token_a.0.clone(), token_b.0.clone()),
