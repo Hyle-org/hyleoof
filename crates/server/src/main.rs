@@ -1,6 +1,7 @@
 use std::{env, sync::Arc};
 
-use anyhow::Result;
+use amm::AmmState;
+use anyhow::{bail, Result};
 use axum::{
     extract::{Json, State},
     http::Method,
@@ -8,45 +9,45 @@ use axum::{
     routing::{get, post},
     Router,
 };
-use contract::fetch_current_state;
-use hyle::rest::client::ApiHttpClient;
+use client_sdk::transaction_builder::{BuildResult, StateUpdater, TransactionBuilder};
+use hydentity::Hydentity;
+use hyle::{
+    model::BlobTransaction,
+    rest::client::{IndexerApiHttpClient, NodeApiHttpClient},
+};
+use hyllar::HyllarToken;
 use reqwest::{Client, Url};
-use sdk::{ContractName, Identity, TxHash};
+use sdk::{ContractName, Digestable, Identity, StateDigest, TxHash};
 use serde::Deserialize;
 use task_manager::Prover;
 use tokio::sync::Mutex;
 use tower_http::cors::{Any, CorsLayer};
 use tracing::{error, info, level_filters::LevelFilter};
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt, EnvFilter, Layer};
-use transaction::{States, TransactionBuilder};
 use utils::AppError;
 
-mod contract;
 mod init;
 mod task_manager;
-mod transaction;
 mod utils;
 
 #[derive(Clone)]
 pub struct RouterCtx {
     pub states: Arc<Mutex<States>>,
-    pub client: Arc<ApiHttpClient>,
+    pub client: Arc<NodeApiHttpClient>,
     pub prover: Arc<Prover>,
 }
 
-async fn fetch_initial_states(indexer_client: &ApiHttpClient) -> States {
-    let hyllar = fetch_current_state(indexer_client, &"hyllar".into())
+async fn fetch_initial_states(indexer: &IndexerApiHttpClient) -> States {
+    let hyllar = indexer.fetch_current_state(&"hyllar".into()).await.unwrap();
+    let hyllar2 = indexer
+        .fetch_current_state(&"hyllar2".into())
         .await
         .unwrap();
-    let hyllar2 = fetch_current_state(indexer_client, &"hyllar2".into())
+    let hydentity = indexer
+        .fetch_current_state(&"hydentity".into())
         .await
         .unwrap();
-    let hydentity = fetch_current_state(indexer_client, &"hydentity".into())
-        .await
-        .unwrap();
-    let amm = fetch_current_state(indexer_client, &"amm".into())
-        .await
-        .unwrap();
+    let amm = indexer.fetch_current_state(&"amm".into()).await.unwrap();
 
     States {
         hyllar,
@@ -79,11 +80,11 @@ async fn main() {
     let node_url = env::var("NODE_URL").unwrap_or_else(|_| "http://localhost:4321".to_string());
     let indexer_url =
         env::var("INDEXER_URL").unwrap_or_else(|_| "http://localhost:4321".to_string());
-    let node_client = Arc::new(ApiHttpClient {
+    let node_client = Arc::new(NodeApiHttpClient {
         url: Url::parse(node_url.as_str()).unwrap(),
         reqwest_client: Client::new(),
     });
-    let indexer_client = Arc::new(ApiHttpClient {
+    let indexer_client = Arc::new(IndexerApiHttpClient {
         url: Url::parse(indexer_url.as_str()).unwrap(),
         reqwest_client: Client::new(),
     });
@@ -277,12 +278,9 @@ async fn do_register(
     let mut states = ctx.states.lock_owned().await;
     let mut transaction = TransactionBuilder::new(username);
 
-    transaction.register_identity(password);
+    states.register_identity(&mut transaction, password)?;
 
-    let tx_hash = transaction.build(&mut states, &ctx.client).await?;
-    ctx.prover.add(transaction).await;
-
-    Ok(tx_hash)
+    send(transaction, &mut states, &ctx.client, &ctx.prover).await
 }
 
 async fn do_transfer(
@@ -296,15 +294,10 @@ async fn do_transfer(
     let mut states = ctx.states.lock_owned().await;
     let mut transaction = TransactionBuilder::new(identity);
 
-    transaction
-        .verify_identity(&states.hydentity, password)
-        .await?;
-    transaction.transfer(token, recipient, amount);
-    let tx_hash = transaction.build(&mut states, &ctx.client).await?;
+    states.verify_identity(&mut transaction, password)?;
+    states.transfer(&mut transaction, token, recipient, amount)?;
 
-    ctx.prover.add(transaction).await;
-
-    Ok(tx_hash)
+    send(transaction, &mut states, &ctx.client, &ctx.prover).await
 }
 
 async fn do_approve(
@@ -318,15 +311,11 @@ async fn do_approve(
     let mut states = ctx.states.lock_owned().await;
     let mut transaction = TransactionBuilder::new(identity);
 
-    transaction
-        .verify_identity(&states.hydentity, password)
-        .await?;
-    transaction.approve(token, spender, amount);
+    states.verify_identity(&mut transaction, password)?;
 
-    let tx_hash = transaction.build(&mut states, &ctx.client).await?;
+    states.approve(&mut transaction, token, spender, amount)?;
 
-    ctx.prover.add(transaction).await;
-    Ok(tx_hash)
+    send(transaction, &mut states, &ctx.client, &ctx.prover).await
 }
 
 async fn do_swap(
@@ -340,16 +329,195 @@ async fn do_swap(
     let mut states = ctx.states.lock_owned().await;
     let mut transaction = TransactionBuilder::new(identity);
 
-    transaction
-        .verify_identity(&states.hydentity, password)
-        .await?;
-    transaction
-        .swap(&states.amm, token_a, token_b, amount)
+    states.register_identity(&mut transaction, password)?;
+
+    states
+        .swap(&mut transaction, token_a, token_b, amount)
         .await?;
 
-    let tx_hash = transaction.build(&mut states, &ctx.client).await?;
+    send(transaction, &mut states, &ctx.client, &ctx.prover).await
+}
 
-    ctx.prover.add(transaction).await;
+async fn send(
+    mut transaction: TransactionBuilder,
+    states: &mut States,
+    client: &NodeApiHttpClient,
+    prover: &Arc<Prover>,
+) -> Result<TxHash, AppError> {
+    let BuildResult {
+        identity, blobs, ..
+    } = transaction.build(states)?;
+
+    let tx_hash = client
+        .send_tx_blob(&BlobTransaction { identity, blobs })
+        .await?;
+
+    prover.add(transaction, tx_hash.clone()).await;
 
     Ok(tx_hash)
+}
+
+#[derive(Debug, Clone)]
+pub struct States {
+    pub hyllar: HyllarToken,
+    pub hyllar2: HyllarToken,
+    pub hydentity: Hydentity,
+    pub amm: AmmState,
+}
+
+impl States {
+    fn register_identity(
+        &mut self,
+        transaction: &mut TransactionBuilder,
+        password: String,
+    ) -> Result<()> {
+        self.hydentity
+            .default_builder(transaction)
+            .register_identity(password)
+    }
+
+    fn verify_identity(
+        &mut self,
+        transaction: &mut TransactionBuilder,
+        password: String,
+    ) -> Result<()> {
+        self.hydentity
+            .default_builder(transaction)
+            .verify_identity(&self.hydentity, password)
+    }
+
+    fn transfer(
+        &mut self,
+        transaction: &mut TransactionBuilder,
+        token: ContractName,
+        recipient: String,
+        amount: u128,
+    ) -> Result<()> {
+        self.token_builder(token, transaction)
+            .transfer(recipient, amount)
+    }
+
+    fn approve(
+        &mut self,
+        transaction: &mut TransactionBuilder,
+        token: ContractName,
+        spender: String,
+        amount: u128,
+    ) -> Result<()> {
+        transaction.init_with(token.clone(), self.get(&token)?);
+        transaction.add_action(
+            token,
+            hyllar::metadata::HYLLAR_ELF,
+            sdk::erc20::ERC20Action::Approve { spender, amount },
+            None,
+            None,
+        )?;
+        Ok(())
+    }
+
+    pub async fn swap(
+        &mut self,
+        transaction: &mut TransactionBuilder,
+        token_a: ContractName,
+        token_b: ContractName,
+        amount: u128,
+    ) -> Result<()> {
+        self.amm_builder(transaction)
+            .swap(&self.amm, token_a, token_b, amount)
+    }
+
+    fn amm_builder<'b>(&self, builder: &'b mut TransactionBuilder) -> AmmBuilder<'b> {
+        builder.init_with("amm".into(), self.amm.as_digest());
+        AmmBuilder {
+            contract_name: "amm".into(),
+            builder,
+        }
+    }
+
+    fn token_builder<'b>(
+        &self,
+        token: ContractName,
+        builder: &'b mut TransactionBuilder,
+    ) -> hyllar::client::Builder<'b> {
+        match token.0.as_str() {
+            "hyllar" => self.hyllar.default_builder(builder),
+            "hyllar2" => self.hyllar2_builder(builder),
+            _ => panic!("Unknown token"),
+        }
+    }
+
+    fn hyllar2_builder<'b>(
+        &self,
+        builder: &'b mut TransactionBuilder,
+    ) -> hyllar::client::Builder<'b> {
+        builder.init_with("hyllar2".into(), self.hyllar2.as_digest());
+        hyllar::client::Builder {
+            contract_name: "hyllar2".into(),
+            builder,
+        }
+    }
+}
+
+struct AmmBuilder<'b> {
+    contract_name: ContractName,
+    builder: &'b mut TransactionBuilder,
+}
+
+impl AmmBuilder<'_> {
+    fn swap(
+        &mut self,
+        amm: &AmmState,
+        token_a: ContractName,
+        token_b: ContractName,
+        amount: u128,
+    ) -> Result<()> {
+        let amount_b = Self::get_paired_amount(amm, token_a.0.clone(), token_b.0.clone(), amount)?;
+
+        self.builder.add_action(
+            self.contract_name.clone(),
+            amm::metadata::AMM_ELF,
+            amm::AmmAction::Swap {
+                pair: (token_a.0.clone(), token_b.0.clone()),
+                amounts: (amount, amount_b),
+            },
+            None,
+            None,
+        )?;
+        Ok(())
+    }
+
+    fn get_paired_amount(
+        state: &AmmState,
+        token_a: String,
+        token_b: String,
+        amount: u128,
+    ) -> Result<u128> {
+        let attr = state
+            .get_paired_amount(token_a, token_b, amount)
+            .ok_or_else(|| anyhow::anyhow!("Key pair not found"))?;
+        Ok(attr)
+    }
+}
+
+impl StateUpdater for States {
+    fn update(&mut self, contract_name: &ContractName, new_state: StateDigest) -> Result<()> {
+        match contract_name.0.as_str() {
+            "hyllar" => self.hyllar = new_state.try_into()?,
+            "hyllar2" => self.hyllar2 = new_state.try_into()?,
+            "hydentity" => self.hydentity = new_state.try_into()?,
+            "amm" => self.amm = new_state.try_into()?,
+            _ => bail!("Unknown contract name"),
+        }
+        Ok(())
+    }
+
+    fn get(&self, contract_name: &ContractName) -> Result<StateDigest> {
+        Ok(match contract_name.0.as_str() {
+            "hyllar" => self.hyllar.as_digest(),
+            "hyllar2" => self.hyllar2.as_digest(),
+            "hydentity" => self.hydentity.as_digest(),
+            "amm" => self.amm.as_digest(),
+            _ => bail!("Unknown contract name"),
+        })
+    }
 }

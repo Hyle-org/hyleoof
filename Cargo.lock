@@ -73,11 +73,11 @@ checksum = "683d7910e743518b0e34f1186f92494becacb047c7b6bf616c96772180fef923"
 [[package]]
 name = "amm"
 version = "0.4.0"
-source = "git+https://github.com/Hyle-org/hyle.git?branch=main#6f6d8249b5ab23f107b8025f2459d6bb1bb780cc"
+source = "git+https://github.com/Hyle-org/hyle.git?branch=fix_amm_contract#96f1ea942ea5eb9102d3f27c1e4b9c522c90e1ee"
 dependencies = [
  "anyhow",
  "bincode 2.0.0-rc.3",
- "hyle-contract-sdk",
+ "hyle-contract-sdk 0.4.0 (git+https://github.com/Hyle-org/hyle.git?branch=fix_amm_contract)",
  "serde",
 ]
 
@@ -781,7 +781,7 @@ dependencies = [
 [[package]]
 name = "bonsai-runner"
 version = "0.4.0"
-source = "git+https://github.com/Hyle-org/hyle.git?branch=main#6f6d8249b5ab23f107b8025f2459d6bb1bb780cc"
+source = "git+https://github.com/Hyle-org/hyle.git?branch=fix_amm_contract#96f1ea942ea5eb9102d3f27c1e4b9c522c90e1ee"
 dependencies = [
  "anyhow",
  "axum",
@@ -1026,14 +1026,14 @@ checksum = "f46ad14479a25103f283c0f10005961cf086d8dc42205bb44c46ac563475dca6"
 [[package]]
 name = "client-sdk"
 version = "0.4.0"
-source = "git+https://github.com/Hyle-org/hyle.git?branch=main#6f6d8249b5ab23f107b8025f2459d6bb1bb780cc"
+source = "git+https://github.com/Hyle-org/hyle.git?branch=fix_amm_contract#96f1ea942ea5eb9102d3f27c1e4b9c522c90e1ee"
 dependencies = [
  "anyhow",
  "base64 0.22.1",
  "bincode 2.0.0-rc.3",
  "bonsai-runner",
  "borsh",
- "hyle-contract-sdk",
+ "hyle-contract-sdk 0.4.0 (git+https://github.com/Hyle-org/hyle.git?branch=fix_amm_contract)",
  "risc0-zkvm",
  "serde",
 ]
@@ -2744,13 +2744,13 @@ checksum = "df3b46402a9d5adb4c86a0cf463f42e19994e3ee891101b1841f30a545cb49a9"
 [[package]]
 name = "hydentity"
 version = "0.4.0"
-source = "git+https://github.com/Hyle-org/hyle.git?branch=main#6f6d8249b5ab23f107b8025f2459d6bb1bb780cc"
+source = "git+https://github.com/Hyle-org/hyle.git?branch=fix_amm_contract#96f1ea942ea5eb9102d3f27c1e4b9c522c90e1ee"
 dependencies = [
  "anyhow",
  "bincode 2.0.0-rc.3",
  "client-sdk",
  "hex",
- "hyle-contract-sdk",
+ "hyle-contract-sdk 0.4.0 (git+https://github.com/Hyle-org/hyle.git?branch=fix_amm_contract)",
  "serde",
  "serde_json",
  "sha2 0.10.8 (git+https://github.com/risc0/RustCrypto-hashes?tag=sha2-v0.10.8)",
@@ -2759,7 +2759,7 @@ dependencies = [
 [[package]]
 name = "hyle"
 version = "0.4.0"
-source = "git+https://github.com/Hyle-org/hyle.git?branch=main#6f6d8249b5ab23f107b8025f2459d6bb1bb780cc"
+source = "git+https://github.com/Hyle-org/hyle.git?branch=fix_amm_contract#96f1ea942ea5eb9102d3f27c1e4b9c522c90e1ee"
 dependencies = [
  "anyhow",
  "anymap",
@@ -2781,9 +2781,9 @@ dependencies = [
  "futures",
  "hex",
  "hydentity",
- "hyle-contract-sdk",
+ "hyle-contract-sdk 0.4.0 (git+https://github.com/Hyle-org/hyle.git?branch=fix_amm_contract)",
  "hyle-contracts",
- "hyllar",
+ "hyllar 0.4.0 (git+https://github.com/Hyle-org/hyle.git?branch=fix_amm_contract)",
  "indexmap 2.7.0",
  "opentelemetry",
  "opentelemetry-prometheus",
@@ -2815,7 +2815,7 @@ dependencies = [
 [[package]]
 name = "hyle-contract-sdk"
 version = "0.4.0"
-source = "git+https://github.com/Hyle-org/hyle.git?branch=main#6f6d8249b5ab23f107b8025f2459d6bb1bb780cc"
+source = "git+https://github.com/Hyle-org/hyle.git?branch=fix_amm_contract#96f1ea942ea5eb9102d3f27c1e4b9c522c90e1ee"
 dependencies = [
  "anyhow",
  "bincode 2.0.0-rc.3",
@@ -2825,11 +2825,35 @@ dependencies = [
 ]
 
 [[package]]
-name = "hyle-contracts"
+name = "hyle-contract-sdk"
 version = "0.4.0"
 source = "git+https://github.com/Hyle-org/hyle.git?branch=main#6f6d8249b5ab23f107b8025f2459d6bb1bb780cc"
 dependencies = [
- "hyle-contract-sdk",
+ "anyhow",
+ "bincode 2.0.0-rc.3",
+ "hex",
+ "serde",
+]
+
+[[package]]
+name = "hyle-contracts"
+version = "0.4.0"
+source = "git+https://github.com/Hyle-org/hyle.git?branch=fix_amm_contract#96f1ea942ea5eb9102d3f27c1e4b9c522c90e1ee"
+dependencies = [
+ "hyle-contract-sdk 0.4.0 (git+https://github.com/Hyle-org/hyle.git?branch=fix_amm_contract)",
+]
+
+[[package]]
+name = "hyllar"
+version = "0.4.0"
+source = "git+https://github.com/Hyle-org/hyle.git?branch=fix_amm_contract#96f1ea942ea5eb9102d3f27c1e4b9c522c90e1ee"
+dependencies = [
+ "anyhow",
+ "bincode 2.0.0-rc.3",
+ "client-sdk",
+ "hyle-contract-sdk 0.4.0 (git+https://github.com/Hyle-org/hyle.git?branch=fix_amm_contract)",
+ "serde",
+ "serde_with",
 ]
 
 [[package]]
@@ -2839,8 +2863,7 @@ source = "git+https://github.com/Hyle-org/hyle.git?branch=main#6f6d8249b5ab23f10
 dependencies = [
  "anyhow",
  "bincode 2.0.0-rc.3",
- "client-sdk",
- "hyle-contract-sdk",
+ "hyle-contract-sdk 0.4.0 (git+https://github.com/Hyle-org/hyle.git?branch=main)",
  "serde",
  "serde_with",
 ]
@@ -5285,9 +5308,9 @@ dependencies = [
 [[package]]
 name = "risc0-recursion"
 version = "0.4.0"
-source = "git+https://github.com/Hyle-org/hyle.git?branch=main#6f6d8249b5ab23f107b8025f2459d6bb1bb780cc"
+source = "git+https://github.com/Hyle-org/hyle.git?branch=fix_amm_contract#96f1ea942ea5eb9102d3f27c1e4b9c522c90e1ee"
 dependencies = [
- "hyle-contract-sdk",
+ "hyle-contract-sdk 0.4.0 (git+https://github.com/Hyle-org/hyle.git?branch=fix_amm_contract)",
  "serde",
 ]
 
@@ -5830,12 +5853,13 @@ dependencies = [
  "axum",
  "bonsai-runner",
  "borsh",
+ "client-sdk",
  "hex",
  "hydentity",
  "hyle",
- "hyle-contract-sdk",
+ "hyle-contract-sdk 0.4.0 (git+https://github.com/Hyle-org/hyle.git?branch=fix_amm_contract)",
  "hyle-contracts",
- "hyllar",
+ "hyllar 0.4.0 (git+https://github.com/Hyle-org/hyle.git?branch=fix_amm_contract)",
  "reqwest 0.12.9",
  "risc0-zkvm",
  "serde",
@@ -6608,13 +6632,13 @@ checksum = "a8f112729512f8e442d81f95a8a7ddf2b7c6b8a1a6f509a95864142b30cab2d3"
 [[package]]
 name = "staking"
 version = "0.4.0"
-source = "git+https://github.com/Hyle-org/hyle.git?branch=main#6f6d8249b5ab23f107b8025f2459d6bb1bb780cc"
+source = "git+https://github.com/Hyle-org/hyle.git?branch=fix_amm_contract#96f1ea942ea5eb9102d3f27c1e4b9c522c90e1ee"
 dependencies = [
  "anyhow",
  "bincode 2.0.0-rc.3",
  "client-sdk",
  "hex",
- "hyle-contract-sdk",
+ "hyle-contract-sdk 0.4.0 (git+https://github.com/Hyle-org/hyle.git?branch=fix_amm_contract)",
  "serde",
  "sha2 0.10.8 (git+https://github.com/risc0/RustCrypto-hashes?tag=sha2-v0.10.8)",
 ]
@@ -7345,8 +7369,8 @@ version = "0.3.7"
 dependencies = [
  "anyhow",
  "futures",
- "hyle-contract-sdk",
- "hyllar",
+ "hyle-contract-sdk 0.4.0 (git+https://github.com/Hyle-org/hyle.git?branch=main)",
+ "hyllar 0.4.0 (git+https://github.com/Hyle-org/hyle.git?branch=main)",
  "js-sys",
  "reqwest 0.12.9",
  "serde",

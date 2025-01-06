@@ -7,13 +7,14 @@ homepage = { workspace = true }
 repository = { workspace = true }
 
 [dependencies]
-sdk = { git = "https://github.com/Hyle-org/hyle.git", package="hyle-contract-sdk", branch = "main" }
-hyllar = { git = "https://github.com/Hyle-org/hyle.git", package="hyllar", branch = "main"  }
-hydentity = { git = "https://github.com/Hyle-org/hyle.git", package="hydentity", branch = "main"  }
-amm = { git = "https://github.com/Hyle-org/hyle.git", package="amm", branch = "main"  }
-hyle = { git = "https://github.com/Hyle-org/hyle.git", package="hyle", branch = "main"  }
-hyle_contracts = { git = "https://github.com/Hyle-org/hyle.git", package="hyle-contracts", branch = "main"  }
-bonsai_runner = { git = "https://github.com/Hyle-org/hyle.git", package="bonsai-runner", features = [], branch = "main"  }
+sdk = { git = "https://github.com/Hyle-org/hyle.git", package="hyle-contract-sdk", branch = "fix_amm_contract" }
+client-sdk = { git = "https://github.com/Hyle-org/hyle.git", package="client-sdk", branch = "fix_amm_contract" }
+hyllar = { git = "https://github.com/Hyle-org/hyle.git", package="hyllar", branch = "fix_amm_contract"  }
+hydentity = { git = "https://github.com/Hyle-org/hyle.git", package="hydentity", branch = "fix_amm_contract"  }
+amm = { git = "https://github.com/Hyle-org/hyle.git", package="amm", branch = "fix_amm_contract"  }
+hyle = { git = "https://github.com/Hyle-org/hyle.git", package="hyle", branch = "fix_amm_contract"  }
+hyle_contracts = { git = "https://github.com/Hyle-org/hyle.git", package="hyle-contracts", branch = "fix_amm_contract"  }
+bonsai_runner = { git = "https://github.com/Hyle-org/hyle.git", package="bonsai-runner", features = [], branch = "fix_amm_contract"  }
 
 # sdk = { path = "../../../hyle3/contract-sdk", package="hyle-contract-sdk"}
 # hyllar = { path = "../../../hyle3/contracts/hyllar/contract", package="hyllar" }
