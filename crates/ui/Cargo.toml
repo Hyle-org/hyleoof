@@ -22,4 +22,4 @@ web-sys = { version = "0.3", features = ["Event","EventTarget","InputEvent","Htm
 wasm-bindgen = "0.2"
 reqwest =  { version = "0.12.8", features = ["json"] }
 anyhow = "1.0.93"
-serde_json = "1.0.133"
+serde_json = "1.0.134"
