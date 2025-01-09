@@ -17,7 +17,7 @@ use hyle::{
 };
 use hyllar::HyllarToken;
 use reqwest::{Client, Url};
-use sdk::{ContractName, Digestable, Identity, StateDigest, TxHash};
+use sdk::{BlobIndex, ContractName, Digestable, Identity, StateDigest, TxHash};
 use serde::Deserialize;
 use task_manager::Prover;
 use tokio::sync::Mutex;
@@ -429,6 +429,8 @@ impl States {
 
     fn amm_builder<'b>(&self, builder: &'b mut TransactionBuilder) -> AmmBuilder<'b> {
         builder.init_with("amm".into(), self.amm.as_digest());
+        builder.init_with("hyllar".into(), self.hyllar.as_digest());
+        builder.init_with("hyllar2".into(), self.hyllar2.as_digest());
         AmmBuilder {
             contract_name: "amm".into(),
             builder,
@@ -474,6 +476,8 @@ impl AmmBuilder<'_> {
     ) -> Result<()> {
         let amount_b = Self::get_paired_amount(amm, token_a.0.clone(), token_b.0.clone(), amount)?;
 
+        let blob_index = self.builder.blobs.len();
+
         self.builder.add_action(
             self.contract_name.clone(),
             amm::metadata::AMM_ELF,
@@ -483,6 +487,29 @@ impl AmmBuilder<'_> {
                 amounts: (amount, amount_b),
             },
             None,
+            Some(vec![BlobIndex(blob_index + 1), BlobIndex(blob_index + 2)]),
+        )?;
+        self.builder.add_action(
+            token_a,
+            hyllar::metadata::HYLLAR_ELF,
+            client_sdk::helpers::Prover::Risc0Prover,
+            sdk::erc20::ERC20Action::TransferFrom {
+                sender: self.builder.identity.0.clone(),
+                recipient: self.contract_name.0.clone(),
+                amount,
+            },
+            Some(BlobIndex(blob_index)),
+            None,
+        )?;
+        self.builder.add_action(
+            token_b,
+            hyllar::metadata::HYLLAR_ELF,
+            client_sdk::helpers::Prover::Risc0Prover,
+            sdk::erc20::ERC20Action::Transfer {
+                recipient: self.builder.identity.0.clone(),
+                amount: amount_b,
+            },
+            Some(BlobIndex(blob_index)),
             None,
         )?;
         Ok(())
