@@ -13,7 +13,7 @@ use client_sdk::transaction_builder::{BuildResult, StateUpdater, TransactionBuil
 use hydentity::Hydentity;
 use hyle::{
     model::BlobTransaction,
-    rest::client::{IndexerApiHttpClient, NodeApiHttpClient},
+    tools::rest_api_client::{IndexerApiHttpClient, NodeApiHttpClient},
 };
 use hyllar::HyllarToken;
 use reqwest::{Client, Url};
@@ -408,6 +408,7 @@ impl States {
         transaction.add_action(
             token,
             hyllar::metadata::HYLLAR_ELF,
+            client_sdk::helpers::Prover::Risc0Prover,
             sdk::erc20::ERC20Action::Approve { spender, amount },
             None,
             None,
@@ -476,6 +477,7 @@ impl AmmBuilder<'_> {
         self.builder.add_action(
             self.contract_name.clone(),
             amm::metadata::AMM_ELF,
+            client_sdk::helpers::Prover::Risc0Prover,
             amm::AmmAction::Swap {
                 pair: (token_a.0.clone(), token_b.0.clone()),
                 amounts: (amount, amount_b),

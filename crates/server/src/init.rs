@@ -4,13 +4,13 @@ use anyhow::{bail, Result};
 use client_sdk::transaction_builder::{BuildResult, TransactionBuilder};
 use hyle::{
     model::{indexer::ContractDb, BlobTransaction, RegisterContractTransaction},
-    rest::client::{IndexerApiHttpClient, NodeApiHttpClient},
+    tools::rest_api_client::{IndexerApiHttpClient, NodeApiHttpClient},
 };
 use hyllar::metadata::HYLLAR_ELF;
 use risc0_zkvm::compute_image_id;
 use sdk::{erc20::ERC20, ContractName, Digestable, ProgramId, StateDigest};
 use tokio::time::timeout;
-use tracing::{debug, field::debug, info};
+use tracing::{debug, info};
 
 use crate::States;
 

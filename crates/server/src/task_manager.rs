@@ -1,7 +1,7 @@
 use std::sync::Arc;
 
 use client_sdk::transaction_builder::TransactionBuilder;
-use hyle::rest::client::NodeApiHttpClient;
+use hyle::tools::rest_api_client::NodeApiHttpClient;
 use sdk::TxHash;
 use tokio::sync::{mpsc, Mutex};
 use tracing::error;
