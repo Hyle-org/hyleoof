@@ -352,7 +352,7 @@ async fn send(
         .send_tx_blob(&BlobTransaction { identity, blobs })
         .await?;
 
-    prover.add(transaction, tx_hash.clone()).await;
+    prover.add(transaction).await;
 
     Ok(tx_hash)
 }
