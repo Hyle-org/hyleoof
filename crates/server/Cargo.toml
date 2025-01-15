@@ -7,14 +7,13 @@ homepage = { workspace = true }
 repository = { workspace = true }
 
 [dependencies]
-sdk = { git = "https://github.com/Hyle-org/hyle.git", package="hyle-contract-sdk", branch = "main" }
-client-sdk = { git = "https://github.com/Hyle-org/hyle.git", package="client-sdk", default-features = false, features = ["risc0"], branch = "main" }
-hyllar = { git = "https://github.com/Hyle-org/hyle.git", package="hyllar", features = ["client"], branch = "main"  }
-hydentity = { git = "https://github.com/Hyle-org/hyle.git", package="hydentity", features = ["client"], branch = "main"  }
-amm = { git = "https://github.com/Hyle-org/hyle.git", package="amm", branch = "main"  }
-hyle = { git = "https://github.com/Hyle-org/hyle.git", default-features = false, package="hyle", branch = "main"  }
-hyle_contracts = { git = "https://github.com/Hyle-org/hyle.git", package="hyle-contracts", branch = "main"  }
-bonsai_runner = { git = "https://github.com/Hyle-org/hyle.git", package="bonsai-runner", features = [], branch = "main"  }
+sdk = { git = "https://github.com/Hyle-org/hyle.git", package="hyle-contract-sdk", branch = "api_clients" }
+client-sdk = { git = "https://github.com/Hyle-org/hyle.git", package="client-sdk", default-features = false, features = ["risc0"], branch = "api_clients" }
+hyllar = { git = "https://github.com/Hyle-org/hyle.git", package="hyllar", features = ["client"], branch = "api_clients"  }
+hydentity = { git = "https://github.com/Hyle-org/hyle.git", package="hydentity", features = ["client"], branch = "api_clients"  }
+amm = { git = "https://github.com/Hyle-org/hyle.git", package="amm", branch = "api_clients"  }
+hyle_contracts = { git = "https://github.com/Hyle-org/hyle.git", package="hyle-contracts", branch = "api_clients"  }
+bonsai_runner = { git = "https://github.com/Hyle-org/hyle.git", package="bonsai-runner", features = [], branch = "api_clients"  }
 
 # sdk = { path = "../../../hyle3/contract-sdk", package="hyle-contract-sdk"}
 # hyllar = { path = "../../../hyle3/contracts/hyllar/contract", package="hyllar" }

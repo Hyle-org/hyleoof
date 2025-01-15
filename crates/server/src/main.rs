@@ -340,11 +340,10 @@ async fn do_swap(
 
 async fn send(
     mut transaction: TransactionBuilder,
-    states: &mut BuilderTxContext<States>,
+    states: &mut States,
     client: &NodeApiHttpClient,
     prover: &Arc<Prover>,
 ) -> Result<TxHash, AppError> {
-    state.process
     let BuildResult {
         identity, blobs, ..
     } = transaction.build(states)?;
@@ -372,7 +371,9 @@ impl States {
         transaction: &mut TransactionBuilder,
         password: String,
     ) -> Result<()> {
-        register_identity(cn, transaction, password)
+        self.hydentity
+            .default_builder(transaction)
+            .register_identity(password)
     }
 
     fn verify_identity(
