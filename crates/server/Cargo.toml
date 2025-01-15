@@ -8,7 +8,7 @@ repository = { workspace = true }
 
 [dependencies]
 sdk = { git = "https://github.com/Hyle-org/hyle.git", package="hyle-contract-sdk", branch = "main" }
-client-sdk = { git = "https://github.com/Hyle-org/hyle.git", package="client-sdk", branch = "main" }
+client-sdk = { git = "https://github.com/Hyle-org/hyle.git", package="client-sdk", default-features = false, features = ["risc0"], branch = "main" }
 hyllar = { git = "https://github.com/Hyle-org/hyle.git", package="hyllar", features = ["client"], branch = "main"  }
 hydentity = { git = "https://github.com/Hyle-org/hyle.git", package="hydentity", features = ["client"], branch = "main"  }
 amm = { git = "https://github.com/Hyle-org/hyle.git", package="amm", branch = "main"  }
@@ -22,7 +22,7 @@ bonsai_runner = { git = "https://github.com/Hyle-org/hyle.git", package="bonsai-
 # amm = { path = "../../../hyle3/contracts/amm/contract", package="amm" }
 # hyle = { path = "../../../hyle3", package="hyle" }
 
-axum = "0.7.9"
+axum = "0.8.1"
 tokio = { version = "1", features = ["full"] }
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"

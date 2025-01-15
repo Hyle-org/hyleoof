@@ -123,7 +123,6 @@ async fn init_hyllar(node: &NodeApiHttpClient, indexer: &IndexerApiHttpClient) -
                     node.send_tx_proof(&hyle::model::ProofTransaction {
                         proof,
                         contract_name,
-                        tx_hashes: vec![tx_hash.clone()],
                     })
                     .await
                     .unwrap();

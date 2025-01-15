@@ -12,7 +12,7 @@ pub fn spawn_fetch_state(state_cb: Callback<HyllarToken>) {
     // Spawn a background task that will fetch state and send it to the component.
     spawn_local(async move {
         let url = get_node_url();
-        let client = hyle::tools::rest_api_client::IndexerApiHttpClient::new(url);
+        let client = hyle::tools::rest_api_client::IndexerApiHttpClient::new(url).unwrap();
         loop {
             let state = match client.fetch_current_state(&"hyllar".into()).await {
                 Ok(it) => it,

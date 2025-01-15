@@ -72,8 +72,8 @@ checksum = "683d7910e743518b0e34f1186f92494becacb047c7b6bf616c96772180fef923"
 
 [[package]]
 name = "amm"
-version = "0.4.0"
-source = "git+https://github.com/Hyle-org/hyle.git?branch=main#5483bc61901fed535e83da9f5dda32c68e314760"
+version = "0.6.0"
+source = "git+https://github.com/Hyle-org/hyle.git?branch=main#69a7d0958e75eab1433d2ef29cc26fbe23a8687d"
 dependencies = [
  "anyhow",
  "bincode 2.0.0-rc.3",
@@ -397,8 +397,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "edca88bc138befd0323b20752846e6587272d3b03b0343c8ea28a6f819e6e71f"
 dependencies = [
  "async-trait",
- "axum-core",
- "axum-macros",
+ "axum-core 0.4.5",
  "bytes",
  "futures-util",
  "http 1.2.0",
@@ -407,7 +406,42 @@ dependencies = [
  "hyper",
  "hyper-util",
  "itoa",
- "matchit",
+ "matchit 0.7.3",
+ "memchr",
+ "mime",
+ "percent-encoding",
+ "pin-project-lite",
+ "rustversion",
+ "serde",
+ "serde_json",
+ "serde_path_to_error",
+ "serde_urlencoded",
+ "sync_wrapper",
+ "tokio",
+ "tower",
+ "tower-layer",
+ "tower-service",
+ "tracing",
+]
+
+[[package]]
+name = "axum"
+version = "0.8.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "6d6fd624c75e18b3b4c6b9caf42b1afe24437daaee904069137d8bab077be8b8"
+dependencies = [
+ "axum-core 0.5.0",
+ "axum-macros",
+ "bytes",
+ "form_urlencoded",
+ "futures-util",
+ "http 1.2.0",
+ "http-body",
+ "http-body-util",
+ "hyper",
+ "hyper-util",
+ "itoa",
+ "matchit 0.8.4",
  "memchr",
  "mime",
  "percent-encoding",
@@ -447,10 +481,30 @@ dependencies = [
 ]
 
 [[package]]
-name = "axum-macros"
-version = "0.4.2"
+name = "axum-core"
+version = "0.5.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "57d123550fa8d071b7255cb0cc04dc302baa6c8c4a79f55701552684d8399bce"
+checksum = "df1362f362fd16024ae199c1970ce98f9661bf5ef94b9808fee734bc3698b733"
+dependencies = [
+ "bytes",
+ "futures-util",
+ "http 1.2.0",
+ "http-body",
+ "http-body-util",
+ "mime",
+ "pin-project-lite",
+ "rustversion",
+ "sync_wrapper",
+ "tower-layer",
+ "tower-service",
+ "tracing",
+]
+
+[[package]]
+name = "axum-macros"
+version = "0.5.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "604fde5e028fea851ce1d8570bbdc034bec850d157f7569d10f347d06808c05c"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -640,11 +694,11 @@ dependencies = [
 
 [[package]]
 name = "bonsai-runner"
-version = "0.4.0"
-source = "git+https://github.com/Hyle-org/hyle.git?branch=main#5483bc61901fed535e83da9f5dda32c68e314760"
+version = "0.6.0"
+source = "git+https://github.com/Hyle-org/hyle.git?branch=main#69a7d0958e75eab1433d2ef29cc26fbe23a8687d"
 dependencies = [
  "anyhow",
- "axum",
+ "axum 0.8.1",
  "bincode 1.3.3",
  "bonsai-sdk",
  "bytemuck",
@@ -898,17 +952,20 @@ checksum = "f46ad14479a25103f283c0f10005961cf086d8dc42205bb44c46ac563475dca6"
 
 [[package]]
 name = "client-sdk"
-version = "0.4.0"
-source = "git+https://github.com/Hyle-org/hyle.git?branch=main#5483bc61901fed535e83da9f5dda32c68e314760"
+version = "0.6.0"
+source = "git+https://github.com/Hyle-org/hyle.git?branch=main#69a7d0958e75eab1433d2ef29cc26fbe23a8687d"
 dependencies = [
  "anyhow",
  "base64",
  "bincode 2.0.0-rc.3",
  "bonsai-runner",
  "borsh",
+ "derive_more 1.0.0",
+ "hex",
  "hyle-contract-sdk",
  "risc0-zkvm",
  "serde",
+ "sha3",
  "sp1-sdk",
 ]
 
@@ -1777,9 +1834,9 @@ dependencies = [
 
 [[package]]
 name = "generic-array"
-version = "1.1.1"
+version = "1.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "2cb8bc4c28d15ade99c7e90b219f30da4be5c88e586277e8cbe886beeb868ab2"
+checksum = "96512db27971c2c3eece70a1e106fbe6c87760234e31e8f7e5634912fe52794a"
 dependencies = [
  "serde",
  "typenum",
@@ -2389,8 +2446,8 @@ checksum = "df3b46402a9d5adb4c86a0cf463f42e19994e3ee891101b1841f30a545cb49a9"
 
 [[package]]
 name = "hydentity"
-version = "0.4.0"
-source = "git+https://github.com/Hyle-org/hyle.git?branch=main#5483bc61901fed535e83da9f5dda32c68e314760"
+version = "0.6.0"
+source = "git+https://github.com/Hyle-org/hyle.git?branch=main#69a7d0958e75eab1433d2ef29cc26fbe23a8687d"
 dependencies = [
  "anyhow",
  "bincode 2.0.0-rc.3",
@@ -2404,8 +2461,8 @@ dependencies = [
 
 [[package]]
 name = "hyle"
-version = "0.4.0"
-source = "git+https://github.com/Hyle-org/hyle.git?branch=main#5483bc61901fed535e83da9f5dda32c68e314760"
+version = "0.6.0"
+source = "git+https://github.com/Hyle-org/hyle.git?branch=main#69a7d0958e75eab1433d2ef29cc26fbe23a8687d"
 dependencies = [
  "anyhow",
  "bincode 2.0.0-rc.3",
@@ -2427,8 +2484,8 @@ dependencies = [
 
 [[package]]
 name = "hyle-contract-sdk"
-version = "0.4.0"
-source = "git+https://github.com/Hyle-org/hyle.git?branch=main#5483bc61901fed535e83da9f5dda32c68e314760"
+version = "0.6.0"
+source = "git+https://github.com/Hyle-org/hyle.git?branch=main#69a7d0958e75eab1433d2ef29cc26fbe23a8687d"
 dependencies = [
  "anyhow",
  "bincode 2.0.0-rc.3",
@@ -2438,16 +2495,16 @@ dependencies = [
 
 [[package]]
 name = "hyle-contracts"
-version = "0.4.0"
-source = "git+https://github.com/Hyle-org/hyle.git?branch=main#5483bc61901fed535e83da9f5dda32c68e314760"
+version = "0.6.0"
+source = "git+https://github.com/Hyle-org/hyle.git?branch=main#69a7d0958e75eab1433d2ef29cc26fbe23a8687d"
 dependencies = [
  "hyle-contract-sdk",
 ]
 
 [[package]]
 name = "hyllar"
-version = "0.4.0"
-source = "git+https://github.com/Hyle-org/hyle.git?branch=main#5483bc61901fed535e83da9f5dda32c68e314760"
+version = "0.6.0"
+source = "git+https://github.com/Hyle-org/hyle.git?branch=main#69a7d0958e75eab1433d2ef29cc26fbe23a8687d"
 dependencies = [
  "anyhow",
  "bincode 2.0.0-rc.3",
@@ -3035,6 +3092,12 @@ name = "matchit"
 version = "0.7.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "0e7465ac9959cc2b1404e8e2367b43684a6d13790fe23056cc8c6c5a6b7bcb94"
+
+[[package]]
+name = "matchit"
+version = "0.8.4"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "47e1ffaa40ddd1f3ed91f717a33c8c0ee23fff369e3aa8772b9605cc1d22f4c3"
 
 [[package]]
 name = "matrixmultiply"
@@ -4963,7 +5026,7 @@ version = "0.3.7"
 dependencies = [
  "amm",
  "anyhow",
- "axum",
+ "axum 0.8.1",
  "bonsai-runner",
  "borsh",
  "client-sdk",
@@ -5098,9 +5161,9 @@ dependencies = [
 
 [[package]]
 name = "sp1-build"
-version = "4.0.0-rc.9"
+version = "4.0.0-rc.11"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a70dee1303b07e841abdf52a8e72e209b0327ec7f5c2d538df4d61a4e76de5bf"
+checksum = "b1a0466de2063deb545dba0723821df15e06992a05fce2981ee6334310f6ae0c"
 dependencies = [
  "anyhow",
  "cargo_metadata",
@@ -5111,9 +5174,9 @@ dependencies = [
 
 [[package]]
 name = "sp1-core-executor"
-version = "4.0.0-rc.9"
+version = "4.0.0-rc.11"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "da54b4972102d0b92d497c2960509761e52b3df72698163de6dbad2402fd62f0"
+checksum = "2232f1fac622da63a98893bb6014cbc8169955355999a038d4c95b0fb18a41c9"
 dependencies = [
  "bincode 1.3.3",
  "bytemuck",
@@ -5150,16 +5213,16 @@ dependencies = [
 
 [[package]]
 name = "sp1-core-machine"
-version = "4.0.0-rc.9"
+version = "4.0.0-rc.11"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c0fc5c4c88c858c6e5a3d6f27d0891cc00279db8ab93674f5b247edd467be897"
+checksum = "80bf55c47af18c3e4b369c0becd104883ef69f4bef23ce98854784247af9ae00"
 dependencies = [
  "bincode 1.3.3",
  "cbindgen",
  "cc",
  "cfg-if",
  "elliptic-curve",
- "generic-array 1.1.1",
+ "generic-array 1.1.0",
  "glob",
  "hashbrown 0.14.5",
  "hex",
@@ -5207,9 +5270,9 @@ dependencies = [
 
 [[package]]
 name = "sp1-cuda"
-version = "4.0.0-rc.9"
+version = "4.0.0-rc.11"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "6beed9b7b05764a14a4b0b678fcc7f361ce78dcff4878e02e838052f05944b9b"
+checksum = "29ab934478c06447ed2f5d069df063913ae6cd1b7d09efc4ceebcf95b609c1ad"
 dependencies = [
  "bincode 1.3.3",
  "ctrlc",
@@ -5224,14 +5287,14 @@ dependencies = [
 
 [[package]]
 name = "sp1-curves"
-version = "4.0.0-rc.9"
+version = "4.0.0-rc.11"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c201b0af8b2714171fcaa6dedba177e56cb5bcf080ce9d201cceaa97d7a1c298"
+checksum = "c73ba59503249c055a44f97f895186ce6a429d856a50ac0938d4ccdeef966858"
 dependencies = [
  "cfg-if",
  "dashu",
  "elliptic-curve",
- "generic-array 1.1.1",
+ "generic-array 1.1.0",
  "itertools 0.13.0",
  "k256",
  "num",
@@ -5246,9 +5309,9 @@ dependencies = [
 
 [[package]]
 name = "sp1-derive"
-version = "4.0.0-rc.9"
+version = "4.0.0-rc.11"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f380cb8468eb2ea5d32a89a9eed123cbfb0cfd1ce8f373603e69296e2bb4b11f"
+checksum = "37ca695c6394f4c1d7b1e7cbdddb306c62d6cad669b5ba815ff7b77699c072bd"
 dependencies = [
  "quote",
  "syn 1.0.109",
@@ -5256,9 +5319,9 @@ dependencies = [
 
 [[package]]
 name = "sp1-primitives"
-version = "4.0.0-rc.9"
+version = "4.0.0-rc.11"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "dbc1c2b768a3f34a5d352e47f5e119961544322d79b37e74c454cfebc629ded5"
+checksum = "08954e37cc693c59f6132db6f250b2d6b36d69a82827725ba2c00de1e8884d3f"
 dependencies = [
  "bincode 1.3.3",
  "hex",
@@ -5274,9 +5337,9 @@ dependencies = [
 
 [[package]]
 name = "sp1-prover"
-version = "4.0.0-rc.9"
+version = "4.0.0-rc.11"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "96f8c9f160d1aea850e879a384d8431ee5a2b5a5440421c478829553f1e44e1f"
+checksum = "9d4d59bef922b73b9b406c6bd39dcdfef66433beb04ec859b8f2bb19b6e5732c"
 dependencies = [
  "anyhow",
  "bincode 1.3.3",
@@ -5317,9 +5380,9 @@ dependencies = [
 
 [[package]]
 name = "sp1-recursion-circuit"
-version = "4.0.0-rc.9"
+version = "4.0.0-rc.11"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a4c7c84d29986a9a80c1b66d232a9778e4cd8b08ce41057501c020667d060d3c"
+checksum = "6c5d9ac385a59197465717c0687b04e6564a1d5d2e91459c61599a1902e7f720"
 dependencies = [
  "hashbrown 0.14.5",
  "itertools 0.13.0",
@@ -5351,9 +5414,9 @@ dependencies = [
 
 [[package]]
 name = "sp1-recursion-compiler"
-version = "4.0.0-rc.9"
+version = "4.0.0-rc.11"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ff9c4e487b620829f2d47959fc946e80de5941ae83aff0cf6068f2c5fbf3949d"
+checksum = "c792857d97ee7012814c7919d8b4b5ec3d78f0632debdca3f565fa4afe48c312"
 dependencies = [
  "backtrace",
  "itertools 0.13.0",
@@ -5373,9 +5436,9 @@ dependencies = [
 
 [[package]]
 name = "sp1-recursion-core"
-version = "4.0.0-rc.9"
+version = "4.0.0-rc.11"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "badc0833a5a1efd27350ebe18a656ce1664ed37f0d6d9b408a1c866538edfb18"
+checksum = "b3cf090783787865fa2e123395309e0366256977c9aeb1f20c66455244dd95df"
 dependencies = [
  "backtrace",
  "cbindgen",
@@ -5416,9 +5479,9 @@ dependencies = [
 
 [[package]]
 name = "sp1-recursion-derive"
-version = "4.0.0-rc.9"
+version = "4.0.0-rc.11"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "529bdae45a2f67af20f1e8fdf8cc8756f4e7d9dcbd501b6774ea529b0a90675e"
+checksum = "67b6b96b27d38b57e3c0541fa549016fe89c3fd8806b534dd37fe5df8e00adf1"
 dependencies = [
  "quote",
  "syn 1.0.109",
@@ -5426,9 +5489,9 @@ dependencies = [
 
 [[package]]
 name = "sp1-recursion-gnark-ffi"
-version = "4.0.0-rc.9"
+version = "4.0.0-rc.11"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c6bcbca09ae033391e0ede93cc7044ce6653a84ff683076fa9309576b499ab74"
+checksum = "39677668adde207270b803d72f65d329acf7cace8167c7592d6fb3c3c991c9ab"
 dependencies = [
  "anyhow",
  "bincode 1.3.3",
@@ -5452,9 +5515,9 @@ dependencies = [
 
 [[package]]
 name = "sp1-sdk"
-version = "4.0.0-rc.9"
+version = "4.0.0-rc.11"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f6e2dc9d893b032f84d3177fb53e7e248ea9043624de5d4ff473c5521ba2b966"
+checksum = "c5a369b012b852c0bbe13527573f13c7d3d7b5816221832c62bdd8b1024a5f6d"
 dependencies = [
  "anyhow",
  "async-trait",
@@ -5489,9 +5552,9 @@ dependencies = [
 
 [[package]]
 name = "sp1-stark"
-version = "4.0.0-rc.9"
+version = "4.0.0-rc.11"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "613291f39f6ac82e9fb0bcfbb9625567cab310fc3b891a6790ccacc97976f088"
+checksum = "d7fbf0a5d98aaa723ed3f675f1057eb674576dac85656aaeb37d9f15279abfdc"
 dependencies = [
  "arrayref",
  "hashbrown 0.14.5",
@@ -5556,8 +5619,8 @@ checksum = "a8f112729512f8e442d81f95a8a7ddf2b7c6b8a1a6f509a95864142b30cab2d3"
 
 [[package]]
 name = "staking"
-version = "0.4.0"
-source = "git+https://github.com/Hyle-org/hyle.git?branch=main#5483bc61901fed535e83da9f5dda32c68e314760"
+version = "0.6.0"
+source = "git+https://github.com/Hyle-org/hyle.git?branch=main#69a7d0958e75eab1433d2ef29cc26fbe23a8687d"
 dependencies = [
  "anyhow",
  "bincode 2.0.0-rc.3",
@@ -6112,7 +6175,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "27dfcc06b8d9262bc2d4b8d1847c56af9971a52dd8a0076876de9db763227d0d"
 dependencies = [
  "async-trait",
- "axum",
+ "axum 0.7.9",
  "futures",
  "http 1.2.0",
  "http-body-util",
