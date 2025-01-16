@@ -1,8 +1,7 @@
 use std::sync::Arc;
 
-use client_sdk::transaction_builder::TransactionBuilder;
-use hyle::tools::rest_api_client::NodeApiHttpClient;
-use sdk::TxHash;
+use client_sdk::{rest_client::NodeApiHttpClient, transaction_builder::TransactionBuilder};
+use sdk::ProofTransaction;
 use tokio::sync::{mpsc, Mutex};
 use tracing::error;
 
@@ -22,7 +21,7 @@ impl Prover {
                     match proof.await {
                         Ok(proof) => {
                             node_client
-                                .send_tx_proof(&hyle::model::ProofTransaction {
+                                .send_tx_proof(&ProofTransaction {
                                     proof,
                                     contract_name,
                                 })
