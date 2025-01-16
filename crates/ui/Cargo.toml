@@ -8,8 +8,8 @@ repository = { workspace = true }
 
 [dependencies]
 sdk = { git = "https://github.com/Hyle-org/hyle.git", package="hyle-contract-sdk", branch = "main"  }
+client-sdk = { git = "https://github.com/Hyle-org/hyle.git", package="client-sdk", default-features = false, features = ["rest"], branch = "main" }
 hyllar = { git = "https://github.com/Hyle-org/hyle.git", package="hyllar", default-features = false, branch = "main"  }
-hyle = { git = "https://github.com/Hyle-org/hyle.git", package="hyle", default-features = false, branch = "main"  }
 
 serde = { version = "1.0", default-features = false, features = [
     "derive",
