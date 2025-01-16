@@ -1,14 +1,16 @@
 use std::{collections::BTreeMap, time::Duration};
 
 use anyhow::{bail, Result};
-use client_sdk::transaction_builder::{BuildResult, TransactionBuilder};
-use hyle::{
-    model::{indexer::ContractDb, BlobTransaction, RegisterContractTransaction},
-    tools::rest_api_client::{IndexerApiHttpClient, NodeApiHttpClient},
+use client_sdk::{
+    rest_client::{IndexerApiHttpClient, NodeApiHttpClient},
+    transaction_builder::{BuildResult, TransactionBuilder},
 };
 use hyllar::metadata::HYLLAR_ELF;
 use risc0_zkvm::compute_image_id;
-use sdk::{erc20::ERC20, ContractName, Digestable, ProgramId, StateDigest};
+use sdk::{
+    erc20::ERC20, BlobTransaction, ContractName, Digestable, ProgramId, ProofTransaction,
+    RegisterContractTransaction, StateDigest,
+};
 use tokio::time::timeout;
 use tracing::{debug, info};
 
@@ -22,12 +24,7 @@ pub async fn init_node(node: &NodeApiHttpClient, indexer: &IndexerApiHttpClient)
 }
 
 async fn init_amm(node: &NodeApiHttpClient, indexer: &IndexerApiHttpClient) -> Result<()> {
-    match indexer
-        .get_indexer_contract(&"amm".into())
-        .await?
-        .json::<ContractDb>()
-        .await
-    {
+    match indexer.get_indexer_contract(&"amm".into()).await {
         Ok(contract) => {
             let image_id = hex::encode(compute_image_id(amm::metadata::AMM_ELF)?);
             let program_id = hex::encode(contract.program_id.as_slice());
@@ -61,12 +58,7 @@ async fn init_amm(node: &NodeApiHttpClient, indexer: &IndexerApiHttpClient) -> R
 }
 
 async fn init_hyllar(node: &NodeApiHttpClient, indexer: &IndexerApiHttpClient) -> Result<()> {
-    match indexer
-        .get_indexer_contract(&"hyllar".into())
-        .await?
-        .json::<ContractDb>()
-        .await
-    {
+    match indexer.get_indexer_contract(&"hyllar".into()).await {
         Ok(contract) => {
             let image_id = hex::encode(compute_image_id(HYLLAR_ELF)?);
             let program_id = hex::encode(contract.program_id.as_slice());
@@ -120,10 +112,9 @@ async fn init_hyllar(node: &NodeApiHttpClient, indexer: &IndexerApiHttpClient) -
 
                 for (proof, contract_name) in transaction.iter_prove() {
                     let proof = proof.await.unwrap();
-                    node.send_tx_proof(&hyle::model::ProofTransaction {
+                    node.send_tx_proof(&ProofTransaction {
                         proof,
                         contract_name,
-                        tx_hashes: vec![tx_hash.clone()],
                     })
                     .await
                     .unwrap();
@@ -161,12 +152,7 @@ async fn init_hyllar(node: &NodeApiHttpClient, indexer: &IndexerApiHttpClient) -
 }
 
 async fn init_hyllar2(node: &NodeApiHttpClient, indexer: &IndexerApiHttpClient) -> Result<()> {
-    match indexer
-        .get_indexer_contract(&"hyllar2".into())
-        .await?
-        .json::<ContractDb>()
-        .await
-    {
+    match indexer.get_indexer_contract(&"hyllar2".into()).await {
         Ok(contract) => {
             let image_id = hex::encode(compute_image_id(HYLLAR_ELF)?);
             let program_id = hex::encode(contract.program_id.as_slice());
@@ -213,7 +199,7 @@ pub async fn wait_contract_state(
     timeout(Duration::from_secs(30), async {
         loop {
             let resp = indexer.get_indexer_contract(contract).await;
-            if resp.is_err() || resp.unwrap().json::<ContractDb>().await.is_err() {
+            if resp.is_err() {
                 info!("⏰ Waiting for contract {contract} state to be ready");
                 tokio::time::sleep(Duration::from_millis(500)).await;
             } else {

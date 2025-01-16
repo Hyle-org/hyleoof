@@ -9,15 +9,14 @@ use axum::{
     routing::{get, post},
     Router,
 };
-use client_sdk::transaction_builder::{BuildResult, StateUpdater, TransactionBuilder};
-use hydentity::Hydentity;
-use hyle::{
-    model::BlobTransaction,
-    tools::rest_api_client::{IndexerApiHttpClient, NodeApiHttpClient},
+use client_sdk::{
+    rest_client::{IndexerApiHttpClient, NodeApiHttpClient},
+    transaction_builder::{BuildResult, StateUpdater, TransactionBuilder},
 };
+use hydentity::Hydentity;
 use hyllar::HyllarToken;
 use reqwest::{Client, Url};
-use sdk::{BlobIndex, ContractName, Digestable, Identity, StateDigest, TxHash};
+use sdk::{BlobIndex, BlobTransaction, ContractName, Digestable, Identity, StateDigest, TxHash};
 use serde::Deserialize;
 use task_manager::Prover;
 use tokio::sync::Mutex;
@@ -352,7 +351,7 @@ async fn send(
         .send_tx_blob(&BlobTransaction { identity, blobs })
         .await?;
 
-    prover.add(transaction, tx_hash.clone()).await;
+    prover.add(transaction).await;
 
     Ok(tx_hash)
 }
