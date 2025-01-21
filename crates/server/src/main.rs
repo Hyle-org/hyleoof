@@ -337,8 +337,7 @@ async fn do_swap(
     let mut app = ctx.app.lock_owned().await;
     let mut transaction = ProvableBlobTx::new(identity);
 
-    app.register_identity(&mut transaction, password)?;
-
+    app.verify_identity(&mut transaction, password)?;
     app.swap(&mut transaction, token_a, token_b, amount).await?;
 
     app.send(transaction).await
