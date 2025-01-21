@@ -148,7 +148,7 @@ impl Component for Approve {
                 </div>
                 <div class="readout">
                     <button onclick={ctx.link().callback(|_| Msg::Transfer)} class="submit-button">
-                        {"Transfer "} {self.amount.clone()} {" "} { self.selected_token.clone() } {" from "} {Self::display_name(&self.username)} {" to "} {Self::display_name(&self.spender)}
+                        {"Approve "} {self.amount.clone()} {" "} { self.selected_token.clone() } {" from "} {Self::display_name(&self.username)} {" to "} {&self.spender}
 
                     </button>
                 </div>

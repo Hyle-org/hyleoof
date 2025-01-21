@@ -11,11 +11,9 @@ use crate::{
     text_input::TextInput,
 };
 
-pub const TEN_SECS: Duration = Duration::from_secs(10);
-
 pub enum Msg {
     SetUserName(String),
-    SetPassword(String),
+    //SetPassword(String),
     SetProgress(String),
     ContractStateUpdate(HyllarToken),
     Faucet,
@@ -25,7 +23,7 @@ pub enum Msg {
 #[derive(Default)]
 pub struct Faucet {
     username: String,
-    password: String,
+    //password: String,
     progress: String,
     selected_token: String,
     state: Option<HyllarTokenContract>,
@@ -70,7 +68,7 @@ impl Component for Faucet {
     fn update(&mut self, ctx: &Context<Self>, msg: Self::Message) -> bool {
         match msg {
             Msg::SetUserName(next_username) => self.username = next_username,
-            Msg::SetPassword(next_password) => self.password = next_password,
+            //Msg::SetPassword(next_password) => self.password = next_password,
             Msg::SetProgress(progress) => self.progress = progress,
             Msg::Faucet => Self::faucet(ctx, self.display_name(), self.selected_token.clone()),
             Msg::ContractStateUpdate(state) => {

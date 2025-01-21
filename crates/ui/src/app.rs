@@ -23,7 +23,7 @@ impl Component for App {
 
     fn create(_ctx: &Context<Self>) -> Self {
         Self {
-            active_tab: Tab::Approve, // Onglet par défaut
+            active_tab: Tab::Faucet, // Onglet par défaut
         }
     }
 
