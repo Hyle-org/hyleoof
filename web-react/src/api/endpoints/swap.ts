@@ -22,7 +22,7 @@ export default async function swap({
       password,
       token_a: fromToken,
       token_b: toToken,
-      amount,
+      amount: Number(amount),
     },
   })();
 }

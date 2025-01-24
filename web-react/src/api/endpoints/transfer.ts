@@ -22,7 +22,7 @@ export default async function transfer({
       password,
       recipient,
       token,
-      amount,
+      amount: Number(amount),
     },
   })();
 }

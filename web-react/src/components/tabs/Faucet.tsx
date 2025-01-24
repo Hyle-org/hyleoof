@@ -2,25 +2,35 @@ import { useState } from "react";
 import Button from "@/components/ui/Button";
 import Input from "@/components/ui/Input";
 import TokenSelector from "@/components/TokenSelector";
+import faucet from "@/api/endpoints/faucet";
+import { useFormSubmission } from "@/hooks/useFormSubmission";
+
+const FAUCET_AMOUNT = 10;
 
 export default function Faucet() {
-  const [hydentity, setHydentity] = useState("");
+  const [username, setUsername] = useState("");
+  const [token, setToken] = useState("hyllar");
+  const [tokenSupply, setTokenSupply] = useState(100000000000);
+  // const [userBalance, setUserBalance] = useState();
+  const { handleSubmit } = useFormSubmission(faucet, {});
+
   return (
     <>
-      <form>
-        <TokenSelector />
+      <form onSubmit={handleSubmit}>
+        <TokenSelector token={token} onTokenChange={setToken} />
         <Input
           type="text"
           labelText="Username"
           suffixText=".hydentity"
-          value={hydentity}
-          onChange={(e) => setHydentity(e.target.value)}
+          value={username}
+          name="username"
+          onChange={(e) => setUsername(e.target.value)}
         />
 
-        <Button type="submit">{`Faucet 10 hyllar to ${hydentity}.hydentity`}</Button>
+        <Button type="submit">{`Faucet ${FAUCET_AMOUNT} hyllar to ${username}.hydentity`}</Button>
       </form>
       <div className="state">
-        <p>Total supply: 100000000000</p>
+        <p>{`Token supply: ${tokenSupply}`}</p>
         <p>Balance: Account .hydentity not found</p>
       </div>
     </>

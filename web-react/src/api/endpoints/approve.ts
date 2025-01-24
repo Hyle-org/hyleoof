@@ -22,7 +22,7 @@ export default async function approve({
       password,
       token,
       spender,
-      amount,
+      amount: Number(amount),
     },
   })();
 }
