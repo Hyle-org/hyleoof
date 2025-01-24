@@ -1,0 +1,35 @@
+.inputWrapper {
+  position: relative;
+  margin: 10px 0;
+}
+
+/* Input styles */
+.inputText {
+  width: 100%;
+  padding: 12px;
+  margin: 10px 0;
+  border: 1px solid var(--input-border);
+  border-radius: 5px;
+  background-color: var(--container-bg-darker);
+  color: var(--text-color);
+  font-size: 16px;
+  outline: none;
+  transition: all 0.3s ease;
+  max-width: -webkit-fill-available;
+}
+
+.inputText:focus {
+  border-color: var(--accent-color);
+  box-shadow: 0 0 5px var(--accent-color);
+}
+
+/* Suffix */
+.inputSuffix {
+  position: absolute;
+  top: 50%;
+  right: 12px;
+  transform: translateY(-50%);
+  color: var(--suffix-color);
+  font-size: 16px;
+  pointer-events: none;
+}

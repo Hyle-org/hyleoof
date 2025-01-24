@@ -1,0 +1,74 @@
+/* styles.css */
+:root {
+  --background-color: #121212;
+  --container-bg: #1e1e1e;
+  --text-color: #e0e0e0;
+  --accent-color: #76c7c0;
+  --hover-color: #5ab2a4;
+  --input-border: #444;
+  --suffix-color: #888;
+  --container-bg-darker: #161616;
+}
+
+/* Global styles */
+body {
+  margin: 0;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  font-family: "Arial", sans-serif;
+  background-color: var(--background-color);
+  color: var(--text-color);
+}
+
+/* Container styles */
+.container {
+  text-align: center;
+  background: var(--container-bg);
+  padding: 30px 40px;
+  border-radius: 10px;
+  box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.5);
+  max-width: 400px;
+  width: 100%;
+}
+
+.container h1 {
+  font-size: 24px;
+  margin-bottom: 20px;
+  color: var(--accent-color);
+}
+
+/* Tabs */
+.tabs {
+  display: flex;
+  justify-content: space-between;
+  background-color: var(--container-bg-darker);
+  border-bottom: 1px solid var(--input-border);
+  border-radius: 10px 10px 0 0;
+  margin-bottom: 20px;
+}
+
+.tab {
+  flex: 1;
+  text-align: center;
+  padding: 10px;
+  font-size: 16px;
+  color: var(--text-color);
+  background: none;
+  border: none;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.tab.active {
+  background-color: var(--container-bg);
+  color: var(--accent-color);
+  font-weight: bold;
+  border-bottom: 2px solid var(--accent-color);
+}
+
+.tab:hover {
+  background-color: var(--container-bg-darker);
+}
