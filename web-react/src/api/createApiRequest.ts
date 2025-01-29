@@ -1,20 +1,22 @@
 type HttpMethod = "GET" | "POST" | "PUT" | "DELETE";
 
 interface ApiRequestConfig {
+  baseUrl: string;
   endpoint: string;
   method?: HttpMethod;
   body?: Record<string, any>;
 }
 
-const BASE_URL = import.meta.env.VITE_SERVER_URL;
+
 
 export function createApiRequest<T>({
+  baseUrl,
   endpoint,
   method = "GET",
   body,
 }: ApiRequestConfig) {
   return async (): Promise<T> => {
-    const response = await fetch(`${BASE_URL}${endpoint}`, {
+    const response = await fetch(`${baseUrl}${endpoint}`, {
       method,
       headers: {
         "Content-Type": "application/json",

@@ -1,3 +1,4 @@
+import { SERVER_URL } from "../constants";
 import { createApiRequest } from "../createApiRequest";
 
 interface FaucetParams {
@@ -7,6 +8,7 @@ interface FaucetParams {
 
 export default async function faucet({ username, token }: FaucetParams) {
   return createApiRequest({
+    baseUrl: SERVER_URL,
     endpoint: "/faucet",
     method: "POST",
     body: {

@@ -1,5 +1,5 @@
 import { createApiRequest } from "../createApiRequest";
-import { AuthParams } from "../common";
+import { AuthParams, SERVER_URL } from "../constants";
 
 interface SwapParams extends AuthParams {
   fromToken: string;
@@ -15,6 +15,7 @@ export default async function swap({
   amount,
 }: SwapParams) {
   return createApiRequest({
+    baseUrl: SERVER_URL,
     endpoint: "/swap",
     method: "POST",
     body: {

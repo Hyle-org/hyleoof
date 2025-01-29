@@ -1,5 +1,5 @@
 import { createApiRequest } from "../createApiRequest";
-import { AuthParams } from "../common";
+import { AuthParams, SERVER_URL } from "../constants";
 
 interface TransferParams extends AuthParams {
   recipient: string;
@@ -15,6 +15,7 @@ export default async function transfer({
   amount,
 }: TransferParams) {
   return createApiRequest({
+    baseUrl: SERVER_URL,
     endpoint: "/transfer",
     method: "POST",
     body: {

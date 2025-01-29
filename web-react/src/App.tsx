@@ -5,6 +5,7 @@ import Transfer from "@/components/tabs/Transfer";
 import Approve from "@/components/tabs/Approve";
 import Swap from "@/components/tabs/Swap";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { useHyllar } from "./hooks/useHyllar";
 
 enum TabOption {
   Register = "Register",
@@ -27,6 +28,9 @@ const queryClient = new QueryClient();
 function App() {
   const [activeTab, setActiveTab] = useState<TabOption>(TabOption.Approve);
   const ActiveComponent = TabComponents[activeTab];
+  const hyllar = useHyllar();
+
+  console.log(hyllar);
 
   return (
     <QueryClientProvider client={queryClient}>

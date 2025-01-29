@@ -1,5 +1,5 @@
 import { createApiRequest } from "../createApiRequest";
-import { AuthParams } from "../common";
+import { AuthParams, SERVER_URL } from "../constants";
 
 interface ApproveParams extends AuthParams {
   spender: string;
@@ -15,6 +15,7 @@ export default async function approve({
   amount,
 }: ApproveParams) {
   return createApiRequest({
+    baseUrl: SERVER_URL,
     endpoint: "/approve",
     method: "POST",
     body: {
