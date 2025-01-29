@@ -59,7 +59,7 @@ export default function Swap() {
         onChange={(e) => setFromTokenAmount(Number(e.target.value))}
       />
 
-      <p>{`Balance: ${getHydentityBalance(username) || 0}`}</p>
+<p>{`Balance: ${getHydentityBalance(username) || `Account ${username}.hydentity not found`}`}</p>
       <Button type="submit">{`Swap ${fromTokenAmount} from ${fromToken} to ${toToken}`}</Button>
       <p>{message}</p>
     </form>

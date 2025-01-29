@@ -53,7 +53,7 @@ export default function Transfer() {
         onChange={(e) => setAmount(Number(e.target.value))}
       />
 
-      <p>{`Your balance: ${getHydentityBalance(username) || 0}`}</p>
+      <p>{`Balance: ${getHydentityBalance(username) || `Account ${username}.hydentity not found`}`}</p>
 
       <Button type="submit">
         {`Transfer ${amount} ${token} from ${username}.hydentity to ${recipient}.hydentity`}

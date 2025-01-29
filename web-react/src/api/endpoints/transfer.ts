@@ -19,7 +19,7 @@ export default async function transfer({
     endpoint: "/transfer",
     method: "POST",
     body: {
-      username,
+      username: username + ".hydentity",
       password,
       recipient,
       token,

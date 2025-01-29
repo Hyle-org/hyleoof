@@ -44,7 +44,8 @@ export default function Approve() {
         type="text"
         labelText="Spender"
         name="spender"
-        suffixText=".hydentity"
+        value="amm"
+        disabled={true}
         onChange={(e) => setSpender(e.target.value)}
       />
       <Input
@@ -55,7 +56,7 @@ export default function Approve() {
         onChange={(e) => setAmount(Number(e.target.value))}
       />
 
-      <p>{`Balance: ${getHydentityBalance(username) || 0}`}</p>
+      <p>{`Balance: ${getHydentityBalance(username) || `Account ${username}.hydentity not found`}`}</p>
       <Button type="submit">
         {`Approve ${amount} ${token} from ${username}.hydentity to ${spender}.hydentity`}
       </Button>

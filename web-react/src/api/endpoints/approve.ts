@@ -10,7 +10,7 @@ interface ApproveParams extends AuthParams {
 export default async function approve({
   username,
   password,
-  spender,
+  spender = "amm",
   token,
   amount,
 }: ApproveParams) {
@@ -19,7 +19,7 @@ export default async function approve({
     endpoint: "/approve",
     method: "POST",
     body: {
-      username,
+      username: username + ".hydentity",
       password,
       token,
       spender,

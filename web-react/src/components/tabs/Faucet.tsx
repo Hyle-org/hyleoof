@@ -45,7 +45,7 @@ export default function Faucet() {
       <div className="state">
         <p>{message}</p>
         <p>{`Token supply: ${getTotalSupply() || "Loading..."}`}</p>
-        <p>{`Balance: ${getHydentityBalance(username) || "Account .hydentity not found"}`}</p>
+        <p>{`Balance: ${getHydentityBalance(username) || `Account ${username}.hydentity not found`}`}</p>
       </div>
     </>
   );

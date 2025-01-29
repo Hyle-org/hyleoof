@@ -9,7 +9,7 @@ export default async function register({ username, password }: RegisterParams) {
     endpoint: "/register",
     method: "POST",
     body: {
-      username,
+      username: username + ".hydentity",
       password,
     },
   })();

@@ -19,7 +19,7 @@ export default async function swap({
     endpoint: "/swap",
     method: "POST",
     body: {
-      username,
+      username: username + ".hydentity",
       password,
       token_a: fromToken,
       token_b: toToken,
