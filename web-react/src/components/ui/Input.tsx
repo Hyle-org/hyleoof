@@ -6,8 +6,6 @@ interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
   suffixText?: string;
 }
 
-console.log("Styles object:", styles);
-
 export default function Input({
   labelText,
   suffixText,
