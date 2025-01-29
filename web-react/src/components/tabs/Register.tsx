@@ -4,14 +4,20 @@ import Input from "@/components/ui/Input";
 import register from "@/api/endpoints/register";
 import { useFormSubmission } from "@/hooks/useFormSubmission";
 
-// type Progress = "ready" | "registering" | "success" | "failed";
-
 export default function Register() {
   const [username, setUsername] = useState("");
-  // const [progress, setProgress] = useState<Progress>("ready");
+  const [message, setMessage] = useState("");
+
   const { handleSubmit } = useFormSubmission(register, {
-    onError: (error) => {},
-    onSuccess: (data) => {},
+    onMutate: () => {
+      setMessage("Registering...");
+    },
+    onError: (error) => {
+      setMessage(`Failed to register: ${error.message}`);
+    },
+    onSuccess: () => {
+      setMessage(`Register successful for user ${username}.hydentity`);
+    },
   });
 
   return (
@@ -26,8 +32,9 @@ export default function Register() {
       />
       <Input type="password" labelText="Password" name="password" />
 
-      {/* <p>{`Progress: ${progress}`}</p> */}
+      
       <Button>{`Register ${username}.hydentity`}</Button>
+      <p>{message}</p>
     </form>
   );
 }

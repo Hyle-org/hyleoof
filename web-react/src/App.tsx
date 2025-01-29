@@ -28,7 +28,7 @@ const queryClient = new QueryClient();
 function App() {
   const [activeTab, setActiveTab] = useState<TabOption>(TabOption.Approve);
   const ActiveComponent = TabComponents[activeTab];
-  const hyllar = useHyllar();
+  const hyllar = useHyllar({ contractName: "hyllar" });
 
   console.log(hyllar);
 

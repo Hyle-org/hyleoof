@@ -7,7 +7,10 @@ interface ApiRequestConfig {
   body?: Record<string, any>;
 }
 
-
+interface ApiError {
+  message: string;
+  status: number;
+}
 
 export function createApiRequest<T>({
   baseUrl,
@@ -25,7 +28,12 @@ export function createApiRequest<T>({
     });
 
     if (!response.ok) {
-      throw new Error("Network response was not ok");
+      const error: ApiError = {
+        message: await response.text(),
+        status: response.status,
+      };
+
+      throw error;
     }
 
     return response.json();
