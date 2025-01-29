@@ -8,7 +8,7 @@ interface GetContractStateParams {
 export interface GetContractStateResponse {
   total_supply: number;
   balances: { [key: string]: number };
-  allowances: [[ number, [string]]];
+  allowances: [[ number, string[]]];
 }
 
 export async function getContractState({ contractName }: GetContractStateParams) {
