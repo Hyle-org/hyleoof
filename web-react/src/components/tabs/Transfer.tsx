@@ -4,13 +4,27 @@ import Button from "@/components/ui/Button";
 import { useState } from "react";
 import transfer from "@/api/endpoints/transfer";
 import { useFormSubmission } from "@/hooks/useFormSubmission";
+import { useHyllar } from "@/hooks/useHyllar";
 
 export default function Transfer() {
   const [username, setUsername] = useState("");
   const [recipient, setRecipient] = useState("");
   const [amount, setAmount] = useState(0);
   const [token, setToken] = useState("hyllar");
-  const { handleSubmit } = useFormSubmission(transfer, {});
+  const [message, setMessage] = useState("");
+  const { getHydentityBalance } = useHyllar({ contractName: token });
+
+  const { handleSubmit } = useFormSubmission(transfer, {
+    onMutate: () => {
+      setMessage("Transferring...");
+    },
+    onError: (error) => {
+      setMessage(`Failed to transfer: ${error.message}`);
+    },
+    onSuccess: () => {
+      setMessage(`Transfer successful from ${username}.hydentity to ${recipient}.hydentity`);
+    },
+  });
 
   return (
     <form onSubmit={handleSubmit}>
@@ -39,11 +53,13 @@ export default function Transfer() {
         onChange={(e) => setAmount(Number(e.target.value))}
       />
 
-      <p>Your balance: 0</p>
+      <p>{`Your balance: ${getHydentityBalance(username) || 0}`}</p>
 
       <Button type="submit">
         {`Transfer ${amount} ${token} from ${username}.hydentity to ${recipient}.hydentity`}
       </Button>
+
+      <p>{message}</p>
     </form>
   );
 }

@@ -4,15 +4,27 @@ import Input from "@/components/ui/Input";
 import TokenSelector from "@/components/TokenSelector";
 import faucet from "@/api/endpoints/faucet";
 import { useFormSubmission } from "@/hooks/useFormSubmission";
+import { useHyllar } from "@/hooks/useHyllar";
 
 const FAUCET_AMOUNT = 10;
 
 export default function Faucet() {
   const [username, setUsername] = useState("");
   const [token, setToken] = useState("hyllar");
-  const [tokenSupply, setTokenSupply] = useState(100000000000);
-  // const [userBalance, setUserBalance] = useState();
-  const { handleSubmit } = useFormSubmission(faucet, {});
+  const [message, setMessage] = useState("");
+  const { getTotalSupply, getHydentityBalance } = useHyllar({ contractName: token });
+
+  const { handleSubmit } = useFormSubmission(faucet, {
+    onMutate: () => {
+      setMessage("Fauceting...");
+    },
+    onError: (error) => {
+      setMessage(`Failed to faucet: ${error.message}`);
+    },
+    onSuccess: () => {
+      setMessage(`Faucet successful for user ${username}.hydentity, token ${token}`);
+    },
+  });
 
   return (
     <>
@@ -29,9 +41,11 @@ export default function Faucet() {
 
         <Button type="submit">{`Faucet ${FAUCET_AMOUNT} hyllar to ${username}.hydentity`}</Button>
       </form>
+
       <div className="state">
-        <p>{`Token supply: ${tokenSupply}`}</p>
-        <p>Balance: Account .hydentity not found</p>
+        <p>{message}</p>
+        <p>{`Token supply: ${getTotalSupply()}`}</p>
+        <p>{`Balance: ${getHydentityBalance(username) || "Account .hydentity not found"}`}</p>
       </div>
     </>
   );

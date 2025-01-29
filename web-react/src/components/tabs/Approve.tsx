@@ -4,13 +4,29 @@ import { useState } from "react";
 import Button from "../ui/Button";
 import { useFormSubmission } from "@/hooks/useFormSubmission";
 import approve from "@/api/endpoints/approve";
+import { useHyllar } from "@/hooks/useHyllar";
 
 export default function Approve() {
   const [username, setUsername] = useState("");
   const [spender, setSpender] = useState("");
   const [amount, setAmount] = useState(0);
   const [token, setToken] = useState("hyllar");
-  const { handleSubmit } = useFormSubmission(approve, {});
+  const [message, setMessage] = useState("");
+  const { getHydentityBalance } = useHyllar({ contractName: token });
+
+  const { handleSubmit } = useFormSubmission(approve, {
+    onMutate: () => {
+      setMessage("Approving...");
+    },
+    onError: (error) => {
+      setMessage(`Failed to approve: ${error.message}`);
+    },
+    onSuccess: () => {
+      setMessage(
+        `Approve successful for user ${username}.hydentity`
+      );
+    },
+  });
 
   return (
     <form onSubmit={handleSubmit}>
@@ -39,9 +55,11 @@ export default function Approve() {
         onChange={(e) => setAmount(Number(e.target.value))}
       />
 
+      <p>{`Balance: ${getHydentityBalance(username) || 0}`}</p>
       <Button type="submit">
         {`Approve ${amount} ${token} from ${username}.hydentity to ${spender}.hydentity`}
       </Button>
+      <p>{message}</p>
     </form>
   );
 }

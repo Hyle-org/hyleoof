@@ -4,20 +4,39 @@ import { useState } from "react";
 import Button from "../ui/Button";
 import { useFormSubmission } from "@/hooks/useFormSubmission";
 import swap from "@/api/endpoints/swap";
+import { useHyllar } from "@/hooks/useHyllar";
 
 export default function Swap() {
+  const [username, setUsername] = useState("");
   const [fromToken, setFromToken] = useState("hyllar");
   const [toToken, setToToken] = useState("hyllar");
   const [fromTokenAmount, setFromTokenAmount] = useState(0);
-  const { handleSubmit } = useFormSubmission(swap, {});
+  const [message, setMessage] = useState("");
+  const { getHydentityBalance } = useHyllar({ contractName: fromToken });
+
+  const { handleSubmit } = useFormSubmission(swap, {
+    onMutate: () => {
+      setMessage("Approving...");
+    },
+    onError: (error) => {
+      setMessage(`Failed to approve: ${error.message}`);
+    },
+    onSuccess: () => {
+      setMessage(
+        `Approve successful for user ${username}.hydentity`
+      );
+    },
+  });
 
   return (
     <form onSubmit={handleSubmit}>
       <Input
         type="text"
         labelText="Username:"
+        value={username}
         name="username"
         suffixText=".hydentity"
+        onChange={(e) => setUsername(e.target.value)}
       />
       <Input type="password" labelText="Password" name="password" />
 
@@ -40,7 +59,9 @@ export default function Swap() {
         onChange={(e) => setFromTokenAmount(Number(e.target.value))}
       />
 
+      <p>{`Balance: ${getHydentityBalance(username) || 0}`}</p>
       <Button type="submit">{`Swap ${fromTokenAmount} from ${fromToken} to ${toToken}`}</Button>
+      <p>{message}</p>
     </form>
   );
 }

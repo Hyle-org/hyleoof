@@ -32,7 +32,8 @@ export function useHyllar({ contractName }: UseHyllarParams) {
     }
   };
 
-  const getHydentityBalance = (hydentity: string) => {
+  const getHydentityBalance = (username: string) => {
+    const hydentity = `${username}.hydentity`;
     const balance = hyllarState?.balances[hydentity];
     return balance;
   }
