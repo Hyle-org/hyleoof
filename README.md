@@ -25,20 +25,30 @@ That's it, we're done!
 
 ### Running
 
-The frontend runs with:
+#### Frontend
+
+- **React (Vite):**
+
+```bash
+cd web-react/
+pnpm install
+pnpm run dev
+```
+
+- **Rust (Yew) [DEPRECATED]:**
+
 ```bash
 cd crates/ui
 trunk serve
 ```
 
-
 Rebuilds the app whenever a change is detected and runs a local server to host it.
 
 There's also the `trunk watch` command which does the same thing but without hosting it.
 
-And the backend
+#### Backend
 
-```sh 
+```sh
 cargo run -p server
 ```
 
