@@ -1,0 +1,7 @@
+{
+  "name": "hyleoof",
+  "private": true,
+  "workspaces": [
+    "web-react"
+  ]
+}

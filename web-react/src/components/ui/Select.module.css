@@ -1,0 +1,15 @@
+.tokenSelector {
+  margin: 10px 0;
+}
+
+.tokenDropdown {
+  margin-left: 10px;
+  padding: 5px;
+  font-size: 16px;
+}
+
+.tokenSelector p {
+  margin-top: 10px;
+  color: var(--input-border);
+  font-size: 14px;
+}
