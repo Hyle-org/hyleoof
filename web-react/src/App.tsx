@@ -25,7 +25,7 @@ const TabComponents: Record<TabOption, React.FC> = {
 const queryClient = new QueryClient();
 
 function App() {
-  const [activeTab, setActiveTab] = useState<TabOption>(TabOption.Approve);
+  const [activeTab, setActiveTab] = useState<TabOption>(TabOption.Faucet);
   const ActiveComponent = TabComponents[activeTab];
 
   return (

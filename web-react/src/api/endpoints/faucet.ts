@@ -12,7 +12,7 @@ export default async function faucet({ username, token }: FaucetParams) {
     endpoint: "/faucet",
     method: "POST",
     body: {
-      username,
+      username: username + ".hydentity",
       token,
     },
   })();

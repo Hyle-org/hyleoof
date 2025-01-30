@@ -16,14 +16,14 @@ export default function Swap() {
 
   const { handleSubmit } = useFormSubmission(swap, {
     onMutate: () => {
-      setMessage("Approving...");
+      setMessage("Swaping...");
     },
     onError: (error) => {
-      setMessage(`Failed to approve: ${error.message}`);
+      setMessage(`Failed to swap: ${error.message}`);
     },
     onSuccess: () => {
       setMessage(
-        `Approve successful for user ${username}.hydentity`
+        `Swap successful for user ${username}.hydentity`
       );
     },
   });
