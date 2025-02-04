@@ -18,7 +18,7 @@ use hydentity::Hydentity;
 use hyllar::HyllarToken;
 use reqwest::{Client, Url};
 use sdk::BlobTransaction;
-use sdk::{ContractName, Digestable, Identity, StateDigest, TxHash};
+use sdk::{ContractName, Identity, TxHash};
 use serde::Deserialize;
 use task_manager::Prover;
 use tokio::sync::Mutex;
@@ -51,12 +51,13 @@ async fn build_app_context(
         .unwrap();
     let amm = indexer.fetch_current_state(&"amm".into()).await.unwrap();
 
-    let executor = TxExecutorBuilder::default().with_state(States {
+    let executor = TxExecutorBuilder::new(States {
         hyllar,
         hyllar2,
         hydentity,
         amm,
-    });
+    })
+    .build();
 
     HyleOofCtx {
         executor,

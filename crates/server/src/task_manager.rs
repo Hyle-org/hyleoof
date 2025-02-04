@@ -1,7 +1,6 @@
 use std::sync::Arc;
 
 use client_sdk::{rest_client::NodeApiHttpClient, transaction_builder::ProofTxBuilder};
-use sdk::ProofTransaction;
 use tokio::sync::{mpsc, Mutex};
 use tracing::error;
 
@@ -16,19 +15,13 @@ impl Prover {
 
         tokio::spawn(async move {
             while let Some(tx) = receiver.lock().await.recv().await {
-                for (proof, contract_name) in tx.iter_prove() {
+                for proof in tx.iter_prove() {
                     match proof.await {
                         Ok(proof) => {
-                            node_client
-                                .send_tx_proof(&ProofTransaction {
-                                    proof,
-                                    contract_name,
-                                })
-                                .await
-                                .unwrap();
+                            node_client.send_tx_proof(&proof).await.unwrap();
                         }
                         Err(e) => {
-                            error!("failed to prove transaction for {contract_name}: {e}");
+                            error!("failed to prove transaction: {e}");
                             continue;
                         }
                     };

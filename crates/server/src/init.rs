@@ -5,11 +5,11 @@ use client_sdk::{
     rest_client::{IndexerApiHttpClient, NodeApiHttpClient},
     transaction_builder::{ProvableBlobTx, TxExecutorBuilder},
 };
-use hyllar::metadata::HYLLAR_ELF;
+use hyllar::client::metadata::HYLLAR_ELF;
 use risc0_zkvm::compute_image_id;
 use sdk::{
-    erc20::ERC20, BlobTransaction, ContractName, Digestable, ProgramId, ProofTransaction,
-    RegisterContractTransaction, StateDigest,
+    api::APIRegisterContract, erc20::ERC20, BlobTransaction, ContractName, Digestable, ProgramId,
+    StateDigest,
 };
 use tokio::time::timeout;
 use tracing::{debug, info};
@@ -29,7 +29,7 @@ pub async fn init_node(
 async fn init_amm(node: &NodeApiHttpClient, indexer: &IndexerApiHttpClient) -> Result<()> {
     match indexer.get_indexer_contract(&"amm".into()).await {
         Ok(contract) => {
-            let image_id = hex::encode(compute_image_id(amm::metadata::AMM_ELF)?);
+            let image_id = hex::encode(compute_image_id(amm::client::metadata::AMM_ELF)?);
             let program_id = hex::encode(contract.program_id.as_slice());
             if program_id != image_id {
                 bail!(
@@ -40,9 +40,8 @@ async fn init_amm(node: &NodeApiHttpClient, indexer: &IndexerApiHttpClient) -> R
         }
         Err(_) => {
             info!("🚀 Registering AMM contract");
-            let image_id = hex::encode(compute_image_id(amm::metadata::AMM_ELF)?);
-            node.send_tx_register_contract(&RegisterContractTransaction {
-                owner: "amm".into(),
+            let image_id = hex::encode(compute_image_id(amm::client::metadata::AMM_ELF)?);
+            node.register_contract(&APIRegisterContract {
                 verifier: "risc0".into(),
                 program_id: ProgramId(hex::decode(image_id)?),
                 state_digest: amm::AmmState::new(BTreeMap::from([(
@@ -83,12 +82,13 @@ async fn init_hyllar(
             if contract.balance_of("amm").is_err() {
                 info!("🚀 Initializing Hyllar contract state");
 
-                let executor = TxExecutorBuilder::default().with_state(States {
+                let executor = TxExecutorBuilder::new(States {
                     hyllar: contract.state().clone(),
                     hyllar2: indexer.fetch_current_state(&"hyllar2".into()).await?,
                     hydentity: indexer.fetch_current_state(&"hydentity".into()).await?,
                     amm: indexer.fetch_current_state(&"amm".into()).await?,
-                });
+                })
+                .build();
                 let mut app = HyleOofCtx {
                     executor,
                     client: node.clone(),
@@ -123,14 +123,9 @@ async fn init_hyllar(
 
                 info!("🚀 Proving blobs for {tx_hash}");
 
-                for (proof, contract_name) in proof_tx_builder.iter_prove() {
+                for proof in proof_tx_builder.iter_prove() {
                     let proof = proof.await.unwrap();
-                    node.send_tx_proof(&ProofTransaction {
-                        proof,
-                        contract_name,
-                    })
-                    .await
-                    .unwrap();
+                    node.send_tx_proof(&proof).await.unwrap();
                 }
 
                 timeout(Duration::from_secs(30), async {
@@ -190,8 +185,7 @@ async fn init_hyllar2(node: &NodeApiHttpClient, indexer: &IndexerApiHttpClient) 
                                                                          // déplacer ses fonds
             let hyllar_state = hyllar_token.state();
 
-            node.send_tx_register_contract(&RegisterContractTransaction {
-                owner: "amm".into(),
+            node.register_contract(&APIRegisterContract {
                 verifier: "risc0".into(),
                 program_id: ProgramId(hex::decode(image_id)?),
                 state_digest: hyllar_state.as_digest(),
