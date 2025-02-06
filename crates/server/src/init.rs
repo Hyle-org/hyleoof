@@ -14,7 +14,7 @@ use sdk::{
 use tokio::time::timeout;
 use tracing::{debug, info};
 
-use crate::{task_manager::Prover, HyleOofCtx, States};
+use crate::{app::HyleOofCtx, app::States, task_manager::Prover};
 
 pub async fn init_node(
     node: Arc<NodeApiHttpClient>,
