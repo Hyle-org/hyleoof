@@ -67,7 +67,6 @@ impl Module for AppModule {
             .route("/api/faucet", post(faucet))
             .route("/api/transfer", post(transfer))
             .route("/api/register", post(register))
-            .route("/api/approve", post(approve))
             .route("/api/swap", post(swap))
             .with_state(state)
             .layer(cors); // Appliquer le middleware CORS
@@ -189,35 +188,6 @@ async fn transfer(
 }
 
 // --------------------------------------------------------
-//    Approve
-// --------------------------------------------------------
-
-#[derive(Deserialize)]
-struct ApproveRequest {
-    username: String,
-    password: String,
-    spender: String,
-    token: String,
-    amount: u128,
-}
-
-async fn approve(
-    State(ctx): State<RouterCtx>,
-    Json(payload): Json<ApproveRequest>,
-) -> Result<impl IntoResponse, AppError> {
-    let tx_hash = do_approve(
-        ctx,
-        payload.username.into(),
-        payload.password,
-        payload.spender,
-        payload.token.into(),
-        payload.amount,
-    )
-    .await?;
-    Ok(Json(tx_hash))
-}
-
-// --------------------------------------------------------
 //   Swap
 // --------------------------------------------------------
 
@@ -299,24 +269,6 @@ async fn do_transfer(
     app.send(transaction).await
 }
 
-async fn do_approve(
-    ctx: RouterCtx,
-    identity: Identity,
-    password: String,
-    spender: String,
-    token: ContractName,
-    amount: u128,
-) -> Result<TxHash, AppError> {
-    let mut app = ctx.app.lock_owned().await;
-    let mut transaction = ProvableBlobTx::new(identity);
-
-    app.verify_identity(&mut transaction, password)?;
-
-    app.approve(&mut transaction, token, spender, amount)?;
-
-    app.send(transaction).await
-}
-
 async fn do_swap(
     ctx: RouterCtx,
     identity: Identity,
@@ -329,7 +281,8 @@ async fn do_swap(
     let mut transaction = ProvableBlobTx::new(identity);
 
     app.verify_identity(&mut transaction, password)?;
-    app.swap(&mut transaction, token_a, token_b, amount).await?;
+    app.approve(&mut transaction, token_a.clone(), "amm".to_string(), amount)?;
+    app.swap(&mut transaction, token_a, token_b, amount)?;
 
     app.send(transaction).await
 }
@@ -408,7 +361,7 @@ impl HyleOofCtx {
         hyllar::client::approve(transaction, token, spender, amount)
     }
 
-    pub(crate) async fn swap(
+    pub(crate) fn swap(
         &mut self,
         transaction: &mut ProvableBlobTx,
         token_a: ContractName,

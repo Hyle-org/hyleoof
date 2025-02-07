@@ -3,9 +3,13 @@ use app::{AppModule, AppModuleCtx};
 use axum::Router;
 use clap::Parser;
 use client_sdk::rest_client::{IndexerApiHttpClient, NodeApiHttpClient};
+use hydentity::Hydentity;
 use hyle::{
     bus::{metrics::BusMetrics, SharedMessageBus},
-    indexer::da_listener::{DAListener, DAListenerCtx},
+    indexer::{
+        contract_state_indexer::{ContractStateIndexer, ContractStateIndexerCtx},
+        da_listener::{DAListener, DAListenerCtx},
+    },
     model::{api::NodeInfo, CommonRunContext},
     rest::{RestApi, RestApiRunContext},
     utils::{
@@ -14,6 +18,7 @@ use hyle::{
         modules::ModulesHandler,
     },
 };
+use hyllar::HyllarToken;
 use std::{
     env,
     sync::{Arc, Mutex},
@@ -92,24 +97,18 @@ async fn main() -> Result<()> {
         })
         .await?;
 
-    //handler
-    //    .build_module::<ContractStateIndexer<HyllarToken>>(ContractStateIndexerCtx {
-    //        contract_name: "hyllar".into(),
-    //        common: ctx.clone(),
-    //    })
-    //    .await?;
-    //handler
-    //    .build_module::<ContractStateIndexer<HyllarToken>>(ContractStateIndexerCtx {
-    //        contract_name: "hyllar2".into(),
-    //        common: ctx.clone(),
-    //    })
-    //    .await?;
-    //handler
-    //    .build_module::<ContractStateIndexer<Hydentity>>(ContractStateIndexerCtx {
-    //        contract_name: "hydentity".into(),
-    //        common: ctx.clone(),
-    //    })
-    //    .await?;
+    handler
+        .build_module::<ContractStateIndexer<HyllarToken>>(ContractStateIndexerCtx {
+            contract_name: "hyllar".into(),
+            common: ctx.clone(),
+        })
+        .await?;
+    handler
+        .build_module::<ContractStateIndexer<HyllarToken>>(ContractStateIndexerCtx {
+            contract_name: "hyllar2".into(),
+            common: ctx.clone(),
+        })
+        .await?;
 
     handler
         .build_module::<DAListener>(DAListenerCtx {

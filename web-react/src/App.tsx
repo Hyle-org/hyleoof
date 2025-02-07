@@ -2,7 +2,6 @@ import { useState } from "react";
 import Register from "@/components/tabs/Register";
 import Faucet from "@/components/tabs/Faucet";
 import Transfer from "@/components/tabs/Transfer";
-import Approve from "@/components/tabs/Approve";
 import Swap from "@/components/tabs/Swap";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
@@ -10,7 +9,6 @@ enum TabOption {
   Register = "Register",
   Faucet = "Faucet",
   Transfer = "Transfer",
-  Approve = "Approve",
   Swap = "Swap",
 }
 
@@ -18,7 +16,6 @@ const TabComponents: Record<TabOption, React.FC> = {
   [TabOption.Register]: () => <Register />,
   [TabOption.Faucet]: () => <Faucet />,
   [TabOption.Transfer]: () => <Transfer />,
-  [TabOption.Approve]: () => <Approve />,
   [TabOption.Swap]: () => <Swap />,
 };
 
