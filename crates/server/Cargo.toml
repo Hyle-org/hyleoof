@@ -11,7 +11,7 @@ sdk = { git = "https://github.com/Hyle-org/hyle.git", package="hyle-contract-sdk
 client-sdk = { git = "https://github.com/Hyle-org/hyle.git", package="client-sdk", default-features = false, features = ["risc0", "rest"], tag = "v0.9.0" }
 hyllar = { git = "https://github.com/Hyle-org/hyle.git", package="hyllar", features = ["client"], tag = "v0.9.0"  }
 hydentity = { git = "https://github.com/Hyle-org/hyle.git", package="hydentity", features = ["client"], tag = "v0.9.0"  }
-amm = { git = "https://github.com/Hyle-org/hyle.git", package="amm", features = ["client"], tag = "v0.9.0"  }
+amm = { git = "https://github.com/Hyle-org/hyle.git", package="amm", features = ["client"], tag = "v0.10.0"  }
 hyle_contracts = { git = "https://github.com/Hyle-org/hyle.git", package="hyle-contracts", tag = "v0.9.0"  }
 bonsai_runner = { git = "https://github.com/Hyle-org/hyle.git", package="bonsai-runner", features = [], tag = "v0.9.0"  }
 
