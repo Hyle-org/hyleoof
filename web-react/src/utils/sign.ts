@@ -1,9 +1,15 @@
+import { Blob } from "@/model/hyle";
 import { getSnapsProvider } from "./metamask";
+import { idContractName } from "@/config";
 
-export async function signMessage(message: string) {
+export async function signMessage(blobs: Array<Blob>) {
+  // TODO: fetch nonce
+  const message = {
+    nonce: 0,
+    blobs,
+  };
   const ethereum = await getSnapsProvider();
-  const hexMessage = toHexMessage(message); // Convert message to hex
-  console.log(hexMessage);
+  const hexMessage = toHexMessage(JSON.stringify(message));
   const ethAddr = await ethereum.request({
     method: "eth_requestAccounts",
   });
@@ -14,7 +20,10 @@ export async function signMessage(message: string) {
     params: [hexMessage, ethAddr[0]],
   });
 
-  return signature;
+  const account = `${ethAddr[0]}.${idContractName}`;
+  const { nonce } = message;
+
+  return { signature, account, nonce };
 }
 // Convert message to hex format
 export function toHexMessage(message: string): string {

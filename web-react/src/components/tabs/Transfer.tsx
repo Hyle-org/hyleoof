@@ -9,6 +9,8 @@ import { useInvokeSnap, useMetaMask } from "@/hooks";
 import { signMessage } from "@/utils/sign";
 import { idContractName } from "@/config";
 import { HYLE_PROVER_URL } from "@/config/contract";
+import { Blob } from "@/model/hyle";
+import { useSendBlobTransaction } from "@/hooks/useSendBlobTransaction";
 
 export type TxHash = string;
 export type BlockHeight = number;
@@ -30,7 +32,7 @@ export default function Transfer() {
   const [token, setToken] = useState("hyllar");
   const [message, setMessage] = useState("");
   const { getBalance } = useHyllar({ contractName: token });
-  const invokeSnap = useInvokeSnap();
+  const sendBlobTransaction = useSendBlobTransaction();
 
   const { handleSubmit } = useFormSubmission(transfer, {
     onMutate: () => {
@@ -39,30 +41,12 @@ export default function Transfer() {
     onError: (error) => {
       setMessage(`Failed to transfer: ${error.message}`);
     },
-    onSuccess: async (txHash: string) => {
-      setMessage(`Blob tx sequenced, pending signature`);
-      console.log("blob tx hash:", txHash);
-      const signature = await signMessage(txHash);
+    onSuccess: async (blobs: Array<Blob>) => {
+      setMessage(`Pending signature`);
 
-      // Create proof
-      const proof: Proof = {
-        tx_hash: txHash,
-        contract_name: idContractName,
-        identity: account + "." + idContractName,
-        signature: signature,
-      };
+      await sendBlobTransaction(blobs);
 
-      // Send proof transaction
-      const responseProof = await fetch(`${HYLE_PROVER_URL}/prove`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(proof),
-      });
-
-      const generatedProof = await responseProof.text();
-      console.log("generated proof:", generatedProof);
-
-      setMessage(`Transfer successful`);
+      setMessage(`Transaction sent ✅`);
     },
   });
 

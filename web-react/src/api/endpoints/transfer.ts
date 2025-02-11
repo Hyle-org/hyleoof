@@ -1,6 +1,7 @@
-import { createApiRequest } from "../createApiRequest";
-import { AuthParams, SERVER_URL } from "../constants";
-import { idContractName } from "@/config/contract";
+import { AuthParams } from "../constants";
+import { Blob } from "@/model/hyle";
+import { buildIdentityBlob } from "@/model/mmid";
+import { buildTransferBlob } from "@/model/token";
 
 interface TransferParams extends AuthParams {
   recipient: string;
@@ -9,20 +10,11 @@ interface TransferParams extends AuthParams {
 }
 
 export default async function transfer({
-  account,
   recipient,
   token,
   amount,
-}: TransferParams) {
-  return createApiRequest({
-    baseUrl: SERVER_URL,
-    endpoint: "/transfer",
-    method: "POST",
-    body: {
-      account: account + "." + idContractName,
-      recipient,
-      token,
-      amount: Number(amount),
-    },
-  })();
+}: TransferParams): Promise<Array<Blob>> {
+  const transfer: Blob = buildTransferBlob(recipient, token, amount);
+
+  return [transfer];
 }

@@ -14,6 +14,7 @@
   "dependencies": {
     "@metamask/providers": "^20.0.0",
     "@tanstack/react-query": "^4.36.1",
+    "borsher": "^3.6.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "styled-components": "^6.1.15"
