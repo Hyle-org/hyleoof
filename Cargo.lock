@@ -77,7 +77,7 @@ dependencies = [
  "anyhow",
  "borsh",
  "client-sdk",
- "hyle-contract-sdk 0.8.0",
+ "hyle-contract-sdk",
  "serde",
 ]
 
@@ -622,25 +622,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "bincode"
-version = "2.0.0-rc.3"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f11ea1a0346b94ef188834a65c068a03aec181c94896d481d7a0a40d85b0ce95"
-dependencies = [
- "bincode_derive",
- "serde",
-]
-
-[[package]]
-name = "bincode_derive"
-version = "2.0.0-rc.3"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "7e30759b3b99a1b802a7a3aa21c85c3ded5c28e1c83170d82d70f08bbf7f3e4c"
-dependencies = [
- "virtue",
-]
-
-[[package]]
 name = "bindgen"
 version = "0.70.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -803,7 +784,7 @@ version = "0.8.0"
 dependencies = [
  "anyhow",
  "axum 0.8.1",
- "bincode 1.3.3",
+ "bincode",
  "bonsai-sdk",
  "bytemuck",
  "hex",
@@ -901,9 +882,9 @@ dependencies = [
 
 [[package]]
 name = "byteview"
-version = "0.5.1"
+version = "0.5.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "df559a101a77b0b6f034ca9e5747dfd267a0b54ee29d6c227768deda0b153a99"
+checksum = "b9f101f5d5ac7c27fa7e664bbdc2697b2627f24c701e1309564840c67554dbcc"
 
 [[package]]
 name = "camino"
@@ -1062,7 +1043,7 @@ dependencies = [
  "bonsai-runner",
  "borsh",
  "futures",
- "hyle-contract-sdk 0.8.0",
+ "hyle-contract-sdk",
  "reqwest",
  "risc0-zkvm",
  "serde",
@@ -1133,12 +1114,14 @@ checksum = "7c74b8349d32d297c9134b8c88677813a227df8f779daa29bfc29c183fe3dca6"
 [[package]]
 name = "contract-identity"
 version = "0.1.0"
-source = "git+https://github.com/Hyle-org/hackathons.git#468c6276ea4eda8596041edfa619c401b0bf449c"
 dependencies = [
- "bincode 2.0.0-rc.3",
+ "anyhow",
+ "borsh",
+ "client-sdk",
  "hex",
- "hyle-contract-sdk 0.6.0",
+ "hyle-contract-sdk",
  "k256",
+ "methods-identity",
  "serde",
  "serde_json",
  "sha2 0.10.8 (git+https://github.com/risc0/RustCrypto-hashes?tag=sha2-v0.10.8)",
@@ -1880,11 +1863,12 @@ dependencies = [
 
 [[package]]
 name = "fjall"
-version = "2.5.0"
+version = "2.6.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "80910a26e4fb5e5393ff64d293602ac1ade56cf4d14d244c02a7d4ddcd5f10bc"
+checksum = "0ddab3925ea1ed59863d246305c7bc113dc2e12b691405d2d02e429cfa0c87a5"
 dependencies = [
  "byteorder",
+ "byteview",
  "dashmap",
  "log",
  "lsm-tree",
@@ -2399,7 +2383,7 @@ dependencies = [
  "borsh",
  "client-sdk",
  "hex",
- "hyle-contract-sdk 0.8.0",
+ "hyle-contract-sdk",
  "serde",
  "serde_json",
  "sha2 0.10.8 (git+https://github.com/risc0/RustCrypto-hashes?tag=sha2-v0.10.8)",
@@ -2425,9 +2409,9 @@ dependencies = [
  "futures",
  "hex",
  "hydentity",
- "hyle-contract-sdk 0.8.0",
+ "hyle-contract-sdk",
  "hyle-contracts",
- "hyle-model 0.8.0",
+ "hyle-model",
  "hyle-verifiers",
  "hyllar",
  "indexmap 2.7.1",
@@ -2460,20 +2444,10 @@ dependencies = [
 
 [[package]]
 name = "hyle-contract-sdk"
-version = "0.6.0"
-source = "git+https://github.com/hyle-org/hyle?tag=v0.7.2#68026ffc88d44d2b184a6e1cc019d5593b2c40c7"
-dependencies = [
- "bincode 2.0.0-rc.3",
- "hyle-model 0.6.0",
- "serde",
-]
-
-[[package]]
-name = "hyle-contract-sdk"
 version = "0.8.0"
 dependencies = [
  "borsh",
- "hyle-model 0.8.0",
+ "hyle-model",
  "serde",
  "tracing",
 ]
@@ -2482,17 +2456,7 @@ dependencies = [
 name = "hyle-contracts"
 version = "0.8.0"
 dependencies = [
- "hyle-contract-sdk 0.8.0",
-]
-
-[[package]]
-name = "hyle-model"
-version = "0.6.0"
-source = "git+https://github.com/hyle-org/hyle?tag=v0.7.2#68026ffc88d44d2b184a6e1cc019d5593b2c40c7"
-dependencies = [
- "bincode 2.0.0-rc.3",
- "hex",
- "serde",
+ "hyle-contract-sdk",
 ]
 
 [[package]]
@@ -2519,9 +2483,9 @@ name = "hyle-verifiers"
 version = "0.8.0"
 dependencies = [
  "anyhow",
- "bincode 1.3.3",
+ "bincode",
  "borsh",
- "hyle-model 0.8.0",
+ "hyle-model",
  "rand 0.9.0",
  "risc0-zkvm",
  "serde_json",
@@ -2536,7 +2500,7 @@ dependencies = [
  "anyhow",
  "borsh",
  "client-sdk",
- "hyle-contract-sdk 0.8.0",
+ "hyle-contract-sdk",
  "serde",
  "serde_with",
 ]
@@ -3141,15 +3105,16 @@ dependencies = [
 
 [[package]]
 name = "lsm-tree"
-version = "2.5.0"
+version = "2.6.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "4d858efa63a32a286a06aa3968f3ed09811d556697e9f9804aa72ea679ed3b83"
+checksum = "2880324e429cd3285e56d0382c025b3d9336d672bbf344e3fde9783a5623f0f6"
 dependencies = [
  "byteorder",
  "crossbeam-skiplist",
  "double-ended-peekable",
  "enum_dispatch",
  "guardian",
+ "interval-heap",
  "log",
  "lz4_flex",
  "path-absolutize",
@@ -3274,6 +3239,13 @@ dependencies = [
  "log",
  "objc",
  "paste",
+]
+
+[[package]]
+name = "methods-identity"
+version = "0.1.0"
+dependencies = [
+ "risc0-build",
 ]
 
 [[package]]
@@ -4950,7 +4922,7 @@ dependencies = [
 name = "risc0-recursion"
 version = "0.8.0"
 dependencies = [
- "hyle-contract-sdk 0.8.0",
+ "hyle-contract-sdk",
  "serde",
 ]
 
@@ -5002,7 +4974,7 @@ checksum = "6700c4875b90726b7bf9e981fccbde4ea11b3593d3b2ac6fa09c96f6de166152"
 dependencies = [
  "addr2line 0.22.0",
  "anyhow",
- "bincode 1.3.3",
+ "bincode",
  "bonsai-sdk",
  "borsh",
  "bytemuck",
@@ -5516,7 +5488,7 @@ dependencies = [
  "hex",
  "hydentity",
  "hyle",
- "hyle-contract-sdk 0.8.0",
+ "hyle-contract-sdk",
  "hyle-contracts",
  "hyllar",
  "reqwest",
@@ -5684,7 +5656,7 @@ version = "4.0.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "bb8ec5621fba6c50f6ec4e0e963227d1ab2229840b0e210a57e1f18428bbcbc8"
 dependencies = [
- "bincode 1.3.3",
+ "bincode",
  "bytemuck",
  "clap",
  "elf",
@@ -5723,7 +5695,7 @@ version = "4.0.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "fe96b1962e6c10ac8321c9ea16161467ca27b43a75c02f42c82310d5e05768f5"
 dependencies = [
- "bincode 1.3.3",
+ "bincode",
  "cbindgen",
  "cc",
  "cfg-if",
@@ -5780,7 +5752,7 @@ version = "4.0.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "d2a78f87a3606de46272d2a153408768bf9b1897a37e231aa084425977fe8532"
 dependencies = [
- "bincode 1.3.3",
+ "bincode",
  "ctrlc",
  "prost",
  "serde",
@@ -5829,7 +5801,7 @@ version = "4.0.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "09b25a09b455dfae9c688da05718b205e8bd4afab36cd912d54639f5d4035815"
 dependencies = [
- "bincode 1.3.3",
+ "bincode",
  "hex",
  "lazy_static",
  "num-bigint 0.4.6",
@@ -5848,7 +5820,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "40d5713392e803b1e609d626256015ddb5464e2f435fc55fa8f383bae111a4af"
 dependencies = [
  "anyhow",
- "bincode 1.3.3",
+ "bincode",
  "clap",
  "dirs",
  "downloader",
@@ -6000,7 +5972,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "b39cc97057e5240a2ab3062234a60d6ee6dbdb852ef02ea5fe5f943f910f6c9e"
 dependencies = [
  "anyhow",
- "bincode 1.3.3",
+ "bincode",
  "bindgen",
  "cc",
  "cfg-if",
@@ -6027,7 +5999,7 @@ checksum = "5a6d0773e4cc5f8c2dfea65cbf003d6d6c8fb8f2671d3edb48b5873627f27d20"
 dependencies = [
  "anyhow",
  "async-trait",
- "bincode 1.3.3",
+ "bincode",
  "cfg-if",
  "dirs",
  "futures",
@@ -6324,7 +6296,7 @@ dependencies = [
  "anyhow",
  "borsh",
  "client-sdk",
- "hyle-contract-sdk 0.8.0",
+ "hyle-contract-sdk",
  "serde",
  "sha2 0.10.8 (git+https://github.com/risc0/RustCrypto-hashes?tag=sha2-v0.10.8)",
 ]
@@ -7274,9 +7246,9 @@ checksum = "ba73ea9cf16a25df0c8caa16c51acb937d5712a8429db78a3ee29d5dcacd3a65"
 
 [[package]]
 name = "value-log"
-version = "1.5.0"
+version = "1.5.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "addf12a5bb88dbd4a006b59c2da6d5091c6e4440ab9e8e9e6cc4b2357b43a842"
+checksum = "5589fb4f51f528b0cca7fdd03ec63a67f447bdcd313b09cdf9d2fc519149c02a"
 dependencies = [
  "byteorder",
  "byteview",
@@ -7328,12 +7300,6 @@ name = "version_check"
 version = "0.9.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "0b928f33d975fc6ad9f86c8f283853ad26bdd5b10b7f1542aa2fa15e2289105a"
-
-[[package]]
-name = "virtue"
-version = "0.0.13"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "9dcc60c0624df774c82a0ef104151231d37da4962957d691c011c852b2473314"
 
 [[package]]
 name = "walkdir"

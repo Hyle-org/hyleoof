@@ -1,5 +1,6 @@
 import { createApiRequest } from "../createApiRequest";
 import { AuthParams, SERVER_URL } from "../constants";
+import { idContractName } from "@/config/contract";
 
 interface TransferParams extends AuthParams {
   recipient: string;
@@ -8,8 +9,7 @@ interface TransferParams extends AuthParams {
 }
 
 export default async function transfer({
-  username,
-  password,
+  account,
   recipient,
   token,
   amount,
@@ -19,8 +19,7 @@ export default async function transfer({
     endpoint: "/transfer",
     method: "POST",
     body: {
-      username: username + ".hydentity",
-      password,
+      account: account + "." + idContractName,
       recipient,
       token,
       amount: Number(amount),

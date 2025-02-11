@@ -23,12 +23,16 @@ use hyle::{
     utils::modules::{module_bus_client, Module},
 };
 
+use hyle_metamask::IdentityContractState;
 use hyllar::HyllarToken;
-use sdk::BlobTransaction;
+use sdk::{identity_provider::IdentityAction, BlobTransaction};
 use sdk::{ContractName, Identity, TxHash};
 use serde::Deserialize;
 use tokio::sync::Mutex;
 use tower_http::cors::{Any, CorsLayer};
+use tracing::info;
+
+pub const MMID_CN: &str = "mmid";
 
 pub struct AppModule {
     bus: AppModuleBusClient,
@@ -108,12 +112,14 @@ async fn build_app_context(
         .fetch_current_state(&"hydentity".into())
         .await
         .unwrap();
+    let mm_identity = indexer.fetch_current_state(&MMID_CN.into()).await.unwrap();
     let amm = indexer.fetch_current_state(&"amm".into()).await.unwrap();
 
     let executor = TxExecutorBuilder::new(States {
         hyllar,
         hyllar2,
         hydentity,
+        mmid: mm_identity,
         amm,
     })
     .build();
@@ -137,7 +143,7 @@ async fn health() -> impl IntoResponse {
 
 #[derive(Deserialize)]
 struct FaucetRequest {
-    username: String,
+    account: String,
     token: ContractName,
 }
 
@@ -145,15 +151,7 @@ async fn faucet(
     State(ctx): State<RouterCtx>,
     Json(payload): Json<FaucetRequest>,
 ) -> Result<impl IntoResponse, AppError> {
-    let tx_hash = do_transfer(
-        ctx,
-        "faucet.hydentity".into(),
-        "password".into(),
-        payload.username,
-        payload.token,
-        10,
-    )
-    .await?;
+    let tx_hash = do_faucet(ctx, payload.account, payload.token, 10).await?;
 
     Ok(Json(tx_hash))
 }
@@ -164,8 +162,7 @@ async fn faucet(
 
 #[derive(Deserialize)]
 struct TransferRequest {
-    username: String,
-    password: String,
+    account: String,
     recipient: String,
     token: ContractName,
     amount: u128,
@@ -177,8 +174,7 @@ async fn transfer(
 ) -> Result<impl IntoResponse, AppError> {
     let tx_hash = do_transfer(
         ctx,
-        payload.username.into(),
-        payload.password,
+        payload.account.into(),
         payload.recipient,
         payload.token,
         payload.amount,
@@ -193,8 +189,7 @@ async fn transfer(
 
 #[derive(Deserialize)]
 struct SwapRequest {
-    username: Identity,
-    password: String,
+    account: Identity,
     token_a: ContractName,
     token_b: ContractName,
     amount: u128,
@@ -205,14 +200,13 @@ async fn swap(
     Json(payload): Json<SwapRequest>,
 ) -> Result<impl IntoResponse, AppError> {
     let SwapRequest {
-        username,
-        password,
+        account,
         token_a,
         token_b,
         amount,
     } = payload;
 
-    let tx_hash = do_swap(ctx, username, password, token_a, token_b, amount).await?;
+    let tx_hash = do_swap(ctx, account, token_a, token_b, amount).await?;
     Ok(Json(tx_hash))
 }
 
@@ -222,32 +216,43 @@ async fn swap(
 
 #[derive(Deserialize)]
 struct RegisterRequest {
-    username: Identity,
-    password: String,
+    account: Identity,
 }
 
 async fn register(
     State(ctx): State<RouterCtx>,
     Json(payload): Json<RegisterRequest>,
 ) -> Result<impl IntoResponse, AppError> {
-    let RegisterRequest { username, password } = payload;
+    let RegisterRequest { account } = payload;
 
-    let tx_hash = do_register(ctx, username, password).await?;
+    let tx_hash = do_register(ctx, account).await?;
     Ok(Json(tx_hash))
 }
 
 // --------------------------------------------------------
 // --------------------------------------------------------
 
-async fn do_register(
+async fn do_register(ctx: RouterCtx, account: Identity) -> Result<TxHash, AppError> {
+    let mut app = ctx.app.lock_owned().await;
+    let mut transaction = ProvableBlobTx::new(account);
+
+    todo!();
+    //app.register_identity(&mut transaction)?;
+
+    app.send(transaction).await
+}
+
+async fn do_faucet(
     ctx: RouterCtx,
-    username: Identity,
-    password: String,
+    recipient: String,
+    token: ContractName,
+    amount: u128,
 ) -> Result<TxHash, AppError> {
     let mut app = ctx.app.lock_owned().await;
-    let mut transaction = ProvableBlobTx::new(username);
+    let mut transaction = ProvableBlobTx::new("faucet.hydentity".into());
 
-    app.register_identity(&mut transaction, password)?;
+    app.verify_hydentity(&mut transaction, "password".into())?;
+    app.transfer(&mut transaction, token, recipient, amount)?;
 
     app.send(transaction).await
 }
@@ -255,7 +260,6 @@ async fn do_register(
 async fn do_transfer(
     ctx: RouterCtx,
     identity: Identity,
-    password: String,
     recipient: String,
     token: ContractName,
     amount: u128,
@@ -263,7 +267,7 @@ async fn do_transfer(
     let mut app = ctx.app.lock_owned().await;
     let mut transaction = ProvableBlobTx::new(identity);
 
-    app.verify_identity(&mut transaction, password)?;
+    app.verify_identity(&mut transaction)?;
     app.transfer(&mut transaction, token, recipient, amount)?;
 
     app.send(transaction).await
@@ -272,7 +276,6 @@ async fn do_transfer(
 async fn do_swap(
     ctx: RouterCtx,
     identity: Identity,
-    password: String,
     token_a: ContractName,
     token_b: ContractName,
     amount: u128,
@@ -280,7 +283,7 @@ async fn do_swap(
     let mut app = ctx.app.lock_owned().await;
     let mut transaction = ProvableBlobTx::new(identity);
 
-    app.verify_identity(&mut transaction, password)?;
+    app.verify_identity(&mut transaction)?;
     app.approve(&mut transaction, token_a.clone(), "amm".to_string(), amount)?;
     app.swap(&mut transaction, token_a, token_b, amount)?;
 
@@ -292,6 +295,7 @@ contract_states!(
         pub hyllar: HyllarToken,
         pub hyllar2: HyllarToken,
         pub hydentity: Hydentity,
+        pub mmid: IdentityContractState,
         pub amm: AmmState,
     }
 );
@@ -325,10 +329,31 @@ impl HyleOofCtx {
         transaction: &mut ProvableBlobTx,
         password: String,
     ) -> Result<()> {
-        hydentity::client::register_identity(transaction, self.hydentity_cn.clone(), password)
+        todo!()
+        //hydentity::client::register_identity(transaction, self.hydentity_cn.clone(), password)
     }
 
-    pub(crate) fn verify_identity(
+    pub(crate) fn verify_identity(&mut self, transaction: &mut ProvableBlobTx) -> Result<()> {
+        let account = transaction.identity.0.clone();
+        let state: &IdentityContractState = &self.executor.mmid;
+
+        info!("State: {:?}", state);
+
+        let nonce = state
+            .get_nonce(&account)
+            .map_err(|_| anyhow::anyhow!("Account not found"))?;
+
+        transaction.add_action(
+            MMID_CN.into(),
+            IdentityAction::VerifyIdentity { account, nonce },
+            None,
+            None,
+        )?;
+
+        Ok(())
+    }
+
+    pub(crate) fn verify_hydentity(
         &mut self,
         transaction: &mut ProvableBlobTx,
         password: String,

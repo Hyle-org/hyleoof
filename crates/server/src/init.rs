@@ -14,7 +14,10 @@ use sdk::{
 use tokio::time::timeout;
 use tracing::{debug, info};
 
-use crate::{app::HyleOofCtx, app::States, task_manager::Prover};
+use crate::{
+    app::{HyleOofCtx, States, MMID_CN},
+    task_manager::Prover,
+};
 
 pub async fn init_node(
     node: Arc<NodeApiHttpClient>,
@@ -86,6 +89,7 @@ async fn init_hyllar(
                     hyllar: contract.state().clone(),
                     hyllar2: indexer.fetch_current_state(&"hyllar2".into()).await?,
                     hydentity: indexer.fetch_current_state(&"hydentity".into()).await?,
+                    mmid: indexer.fetch_current_state(&MMID_CN.into()).await?,
                     amm: indexer.fetch_current_state(&"amm".into()).await?,
                 })
                 .build();
@@ -98,7 +102,7 @@ async fn init_hyllar(
                 };
                 let mut transaction = ProvableBlobTx::new("faucet.hydentity".into());
 
-                app.verify_identity(&mut transaction, "password".into())?;
+                app.verify_hydentity(&mut transaction, "password".into())?;
                 app.transfer(
                     &mut transaction,
                     "hyllar".into(),

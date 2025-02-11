@@ -1,39 +1,34 @@
-import { useState } from "react";
+import { FormEvent, useState } from "react";
 import Button from "@/components/ui/Button";
 import Input from "@/components/ui/Input";
 import register from "@/api/endpoints/register";
 import { useFormSubmission } from "@/hooks/useFormSubmission";
+import { useInvokeSnap, useMetaMask } from "@/hooks";
 
 export default function Register() {
-  const [username, setUsername] = useState("");
+  const { account } = useMetaMask();
   const [message, setMessage] = useState("");
+  const invokeSnap = useInvokeSnap();
 
-  const { handleSubmit } = useFormSubmission(register, {
-    onMutate: () => {
-      setMessage("Registering...");
-    },
-    onError: (error) => {
-      setMessage(`Failed to register: ${error.message}`);
-    },
-    onSuccess: () => {
-      setMessage(`Register successful for user ${username}.hydentity`);
-    },
-  });
+  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    await invokeSnap({
+      method: "register_account"
+    })
+  };
 
   return (
     <form onSubmit={handleSubmit}>
       <Input
         type="text"
-        labelText="Username"
-        suffixText=".hydentity"
-        value={username}
-        name="username"
-        onChange={(e) => setUsername(e.target.value)}
+        labelText="Account"
+        suffixText=""
+        value={account}
+        name="account"
+        readOnly
       />
-      <Input type="password" labelText="Password" name="password" />
 
-      
-      <Button>{`Register ${username}.hydentity`}</Button>
+      <Button>{`Register`}</Button>
       <p>{message}</p>
     </form>
   );

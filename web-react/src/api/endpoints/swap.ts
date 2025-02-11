@@ -1,5 +1,6 @@
 import { createApiRequest } from "../createApiRequest";
 import { AuthParams, SERVER_URL } from "../constants";
+import { idContractName } from "@/config/contract";
 
 interface SwapParams extends AuthParams {
   fromToken: string;
@@ -8,8 +9,7 @@ interface SwapParams extends AuthParams {
 }
 
 export default async function swap({
-  username,
-  password,
+  account,
   fromToken,
   toToken,
   amount,
@@ -19,8 +19,7 @@ export default async function swap({
     endpoint: "/swap",
     method: "POST",
     body: {
-      username: username + ".hydentity",
-      password,
+      account: account + "." + idContractName,
       token_a: fromToken,
       token_b: toToken,
       amount: Number(amount),

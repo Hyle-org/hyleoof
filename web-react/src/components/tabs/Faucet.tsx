@@ -5,14 +5,15 @@ import TokenSelector from "@/components/TokenSelector";
 import faucet from "@/api/endpoints/faucet";
 import { useFormSubmission } from "@/hooks/useFormSubmission";
 import { useHyllar } from "@/hooks/useHyllar";
+import { useMetaMask } from "@/hooks";
 
 const FAUCET_AMOUNT = 10;
 
 export default function Faucet() {
-  const [username, setUsername] = useState("");
+  const { account } = useMetaMask();
   const [token, setToken] = useState("hyllar");
   const [message, setMessage] = useState("");
-  const { getTotalSupply, getHydentityBalance } = useHyllar({ contractName: token });
+  const { getBalance: getBalance } = useHyllar({ contractName: token });
 
   const { handleSubmit } = useFormSubmission(faucet, {
     onMutate: () => {
@@ -22,7 +23,7 @@ export default function Faucet() {
       setMessage(`Failed to faucet: ${error.message}`);
     },
     onSuccess: () => {
-      setMessage(`Faucet successful for user ${username}.hydentity, token ${token}`);
+      setMessage(`Faucet successful, token ${token}`);
     },
   });
 
@@ -32,20 +33,19 @@ export default function Faucet() {
         <TokenSelector token={token} onTokenChange={setToken} />
         <Input
           type="text"
-          labelText="Username"
-          suffixText=".hydentity"
-          value={username}
-          name="username"
-          onChange={(e) => setUsername(e.target.value)}
+          labelText=""
+          suffixText=""
+          value={account}
+          name="account"
+          readOnly
         />
 
-        <Button type="submit">{`Faucet ${FAUCET_AMOUNT} hyllar to ${username}.hydentity`}</Button>
+        <Button type="submit">{`Faucet ${FAUCET_AMOUNT} hyllar`}</Button>
       </form>
 
       <div className="state">
         <p>{message}</p>
-        <p>{`Token supply: ${getTotalSupply() || "Loading..."}`}</p>
-        <p>{`Balance: ${getHydentityBalance(username) || `Account ${username}.hydentity not found`}`}</p>
+        <p>{`Balance: ${getBalance(account) || `0`}`}</p>
       </div>
     </>
   );

@@ -16,7 +16,7 @@ repository = { workspace = true }
 # bonsai_runner = { git = "https://github.com/Hyle-org/hyle.git", package="bonsai-runner", features = [], branch = "main"  }
 # hyle = { git = "https://github.com/Hyle-org/hyle.git", package="hyle", features = [], branch = "main"  }
 
-hyle_metamask = { git = "https://github.com/Hyle-org/hackathons.git", package="contract-identity" }
+hyle_metamask = { path = "/home/bertrand/workspace/hackathons/metamask-identity/metamask-contract/contract", package="contract-identity", features = ["client"] }
 
 risc0-zkvm = { version = "1.2.2", features = ["prove"] }
 

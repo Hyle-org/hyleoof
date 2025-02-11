@@ -5,14 +5,15 @@ import Button from "../ui/Button";
 import { useFormSubmission } from "@/hooks/useFormSubmission";
 import swap from "@/api/endpoints/swap";
 import { useHyllar } from "@/hooks/useHyllar";
+import { useMetaMask } from "@/hooks";
 
 export default function Swap() {
-  const [username, setUsername] = useState("");
+  const { account } = useMetaMask();
   const [fromToken, setFromToken] = useState("hyllar");
-  const [toToken, setToToken] = useState("hyllar");
+  const [toToken, setToToken] = useState("hyllar2");
   const [fromTokenAmount, setFromTokenAmount] = useState(0);
   const [message, setMessage] = useState("");
-  const { getHydentityBalance } = useHyllar({ contractName: fromToken });
+  const { getBalance } = useHyllar({ contractName: fromToken });
 
   const { handleSubmit } = useFormSubmission(swap, {
     onMutate: () => {
@@ -23,7 +24,7 @@ export default function Swap() {
     },
     onSuccess: () => {
       setMessage(
-        `Swap successful for user ${username}.hydentity`
+        `Swap successful`
       );
     },
   });
@@ -32,13 +33,12 @@ export default function Swap() {
     <form onSubmit={handleSubmit}>
       <Input
         type="text"
-        labelText="Username:"
-        value={username}
-        name="username"
-        suffixText=".hydentity"
-        onChange={(e) => setUsername(e.target.value)}
+        labelText="Account:"
+        value={account}
+        name="account"
+        suffixText=""
+        readOnly
       />
-      <Input type="password" labelText="Password" name="password" />
 
       <TokenSelector
         token={fromToken}
@@ -59,7 +59,7 @@ export default function Swap() {
         onChange={(e) => setFromTokenAmount(Number(e.target.value))}
       />
 
-<p>{`Balance: ${getHydentityBalance(username) || `Account ${username}.hydentity not found`}`}</p>
+      <p>{`Balance: ${getBalance(account) || `0`}`}</p>
       <Button type="submit">{`Swap ${fromTokenAmount} from ${fromToken} to ${toToken}`}</Button>
       <p>{message}</p>
     </form>

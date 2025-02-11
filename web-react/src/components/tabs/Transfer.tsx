@@ -1,18 +1,36 @@
 import TokenSelector from "@/components/TokenSelector";
 import Input from "@/components/ui/Input";
 import Button from "@/components/ui/Button";
-import { useState } from "react";
+import { FormEvent, useState } from "react";
 import transfer from "@/api/endpoints/transfer";
 import { useFormSubmission } from "@/hooks/useFormSubmission";
 import { useHyllar } from "@/hooks/useHyllar";
+import { useInvokeSnap, useMetaMask } from "@/hooks";
+import { signMessage } from "@/utils/sign";
+import { idContractName } from "@/config";
+import { HYLE_PROVER_URL } from "@/config/contract";
+
+export type TxHash = string;
+export type BlockHeight = number;
+export type ContractName = string;
+export type StateDigest = string;
+export type Identity = string;
+
+export interface Proof {
+  tx_hash: TxHash;
+  contract_name: ContractName;
+  identity: Identity;
+  signature: string;
+}
 
 export default function Transfer() {
-  const [username, setUsername] = useState("");
+  const { account } = useMetaMask();
   const [recipient, setRecipient] = useState("");
   const [amount, setAmount] = useState(0);
   const [token, setToken] = useState("hyllar");
   const [message, setMessage] = useState("");
-  const { getHydentityBalance } = useHyllar({ contractName: token });
+  const { getBalance } = useHyllar({ contractName: token });
+  const invokeSnap = useInvokeSnap();
 
   const { handleSubmit } = useFormSubmission(transfer, {
     onMutate: () => {
@@ -21,10 +39,33 @@ export default function Transfer() {
     onError: (error) => {
       setMessage(`Failed to transfer: ${error.message}`);
     },
-    onSuccess: () => {
-      setMessage(`Transfer successful from ${username}.hydentity to ${recipient}.hydentity`);
+    onSuccess: async (txHash: string) => {
+      setMessage(`Blob tx sequenced, pending signature`);
+      console.log("blob tx hash:", txHash);
+      const signature = await signMessage(txHash);
+
+      // Create proof
+      const proof: Proof = {
+        tx_hash: txHash,
+        contract_name: idContractName,
+        identity: account + "." + idContractName,
+        signature: signature,
+      };
+
+      // Send proof transaction
+      const responseProof = await fetch(`${HYLE_PROVER_URL}/prove`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(proof),
+      });
+
+      const generatedProof = await responseProof.text();
+      console.log("generated proof:", generatedProof);
+
+      setMessage(`Transfer successful`);
     },
   });
+
 
   return (
     <form onSubmit={handleSubmit}>
@@ -32,17 +73,18 @@ export default function Transfer() {
 
       <Input
         type="text"
-        labelText="Username"
-        name="username"
-        suffixText=".hydentity"
-        onChange={(e) => setUsername(e.target.value)}
+        labelText="From"
+        name="account"
+        value={account}
+        suffixText=""
+        readOnly
       />
-      <Input name="password" type="password" labelText="Password" />
       <Input
         type="text"
         name="recipient"
-        labelText="Recipient"
-        suffixText=".hydentity"
+        labelText="To"
+        value={recipient}
+        suffixText=""
         onChange={(e) => setRecipient(e.target.value)}
       />
       <Input
@@ -53,13 +95,14 @@ export default function Transfer() {
         onChange={(e) => setAmount(Number(e.target.value))}
       />
 
-      <p>{`Balance: ${getHydentityBalance(username) || `Account ${username}.hydentity not found`}`}</p>
+      <p>{`Balance: ${getBalance(account) || `0`}`}</p>
 
       <Button type="submit">
-        {`Transfer ${amount} ${token} from ${username}.hydentity to ${recipient}.hydentity`}
+        {`Transfer ${amount} ${token}`}
       </Button>
 
       <p>{message}</p>
     </form>
   );
 }
+
