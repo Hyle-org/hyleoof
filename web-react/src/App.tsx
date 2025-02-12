@@ -36,6 +36,7 @@ function App() {
   const { isFlask, snapsDetected, installedSnap, account, setAccount } = useMetaMask();
   const requestSnap = useRequestSnap();
   const request = useRequest();
+  const [autoconnect, setAutoconnect] = useState(true);
 
   const isMetaMaskReady = isLocalSnap(defaultSnapOrigin)
     ? isFlask
@@ -49,12 +50,13 @@ function App() {
   };
 
   const getAccount = async () => {
+    setAutoconnect(false);
     const ethAccounts = await request({ method: "eth_requestAccounts" }) as string[];
     console.log(ethAccounts);
     setAccount(ethAccounts[0]);
   };
 
-  if (installedSnap && !account) { getAccount(); }
+  if (installedSnap && autoconnect) { getAccount(); }
 
   const [activeTab, setActiveTab] = useState<TabOption>(TabOption.Faucet);
   const ActiveComponent = TabComponents[activeTab];
