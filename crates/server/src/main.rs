@@ -18,6 +18,7 @@ use hyle::{
     },
 };
 use hyllar::HyllarToken;
+use prover::ProverModule;
 use std::{
     env,
     sync::{Arc, Mutex},
@@ -27,6 +28,7 @@ use tracing::{error, info, warn};
 
 mod app;
 mod init;
+mod prover;
 mod task_manager;
 mod utils;
 
@@ -88,26 +90,30 @@ async fn main() -> Result<()> {
         openapi: Default::default(),
     });
 
-    handler
-        .build_module::<AppModule>(AppModuleCtx {
-            common: ctx.clone(),
-            node_client,
-            indexer_client,
-        })
-        .await?;
+    let app_ctx = Arc::new(AppModuleCtx {
+        common: ctx.clone(),
+        node_client,
+        indexer_client,
+    });
+
+    handler.build_module::<AppModule>(app_ctx.clone()).await?;
 
     handler
-        .build_module::<ContractStateIndexer<HyllarToken>>(ContractStateIndexerCtx {
-            contract_name: "hyllar".into(),
-            common: ctx.clone(),
-        })
+        .build_module::<ProverModule>(app_ctx.clone())
         .await?;
-    handler
-        .build_module::<ContractStateIndexer<HyllarToken>>(ContractStateIndexerCtx {
-            contract_name: "hyllar2".into(),
-            common: ctx.clone(),
-        })
-        .await?;
+
+    //handler
+    //    .build_module::<ContractStateIndexer<HyllarToken>>(ContractStateIndexerCtx {
+    //        contract_name: "hyllar".into(),
+    //        common: ctx.clone(),
+    //    })
+    //    .await?;
+    //handler
+    //    .build_module::<ContractStateIndexer<HyllarToken>>(ContractStateIndexerCtx {
+    //        contract_name: "hyllar2".into(),
+    //        common: ctx.clone(),
+    //    })
+    //    .await?;
 
     handler
         .build_module::<DAListener>(DAListenerCtx {

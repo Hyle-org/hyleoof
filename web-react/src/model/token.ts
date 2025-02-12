@@ -1,6 +1,24 @@
 import { borshSerialize, BorshSchema } from "borsher";
 import { ContractName, Blob } from "./hyle";
 
+//pub struct StructuredBlobData<Parameters> {
+//    pub caller: Option<BlobIndex>,
+//    pub callees: Option<Vec<BlobIndex>>,
+//    pub parameters: Parameters,
+//}
+export type StructuredBlobData<Parameters> = {
+  caller: number | null;
+  callees: number[] | null;
+  parameters: Parameters;
+};
+
+const structuredBlobDataSchema = (schema: BorshSchema) =>
+  BorshSchema.Struct({
+    caller: BorshSchema.Option(BorshSchema.u32),
+    callees: BorshSchema.Option(BorshSchema.Vec(BorshSchema.u32)),
+    parameters: schema,
+  });
+
 //pub enum ERC20Action {
 //    TotalSupply,
 //    BalanceOf {
@@ -42,15 +60,25 @@ export const buildTransferBlob = (
     Transfer: { recipient, amount },
   };
 
+  const structured: StructuredBlobData<ERC20Action> = {
+    caller: null,
+    callees: null,
+    parameters: action,
+  };
+
   const blob: Blob = {
     contract_name: token,
-    data: serializeERC20Action(action),
+    data: serializeERC20Action(structured),
   };
   return blob;
 };
 
-export const serializeERC20Action = (action: ERC20Action): number[] => {
-  return Array.from(borshSerialize(erc20Schema, action));
+export const serializeERC20Action = (
+  action: StructuredBlobData<ERC20Action>,
+): number[] => {
+  return Array.from(
+    borshSerialize(structuredBlobDataSchema(erc20Schema), action),
+  );
 };
 
 const erc20Schema = BorshSchema.Enum({

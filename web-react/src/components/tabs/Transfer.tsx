@@ -6,7 +6,7 @@ import transfer from "@/api/endpoints/transfer";
 import { useFormSubmission } from "@/hooks/useFormSubmission";
 import { useHyllar } from "@/hooks/useHyllar";
 import { useInvokeSnap, useMetaMask } from "@/hooks";
-import { signMessage } from "@/utils/sign";
+import { signBlobs } from "@/utils/sign";
 import { idContractName } from "@/config";
 import { HYLE_PROVER_URL } from "@/config/contract";
 import { Blob } from "@/model/hyle";

@@ -1,20 +1,41 @@
 import { FormEvent, useState } from "react";
 import Button from "@/components/ui/Button";
 import Input from "@/components/ui/Input";
-import register from "@/api/endpoints/register";
-import { useFormSubmission } from "@/hooks/useFormSubmission";
-import { useInvokeSnap, useMetaMask } from "@/hooks";
+import { useMetaMask } from "@/hooks";
+import { Blob, BlobTransaction } from "@/model/hyle";
+import { signMessage } from "@/utils/sign";
+import { buildRegisterBlob } from "@/model/mmid";
+import * as node from "@/api/node";
 
 export default function Register() {
   const { account } = useMetaMask();
   const [message, setMessage] = useState("");
-  const invokeSnap = useInvokeSnap();
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    await invokeSnap({
-      method: "register_account"
-    })
+
+    try {
+      setMessage("Pending signature...");
+
+      const { signature, account } = await signMessage("hyle registration");
+
+      console.log('signature', signature);
+
+      const register: Blob = buildRegisterBlob(signature);
+
+      const blobTx: BlobTransaction = {
+        identity: account,
+        blobs: [register],
+      };
+
+      console.log('blob', blobTx);
+
+      await node.sendBlobTx(blobTx);
+
+      setMessage("Transaction sent ✅");
+    } catch (error) {
+      setMessage(`Failed to register: ${error.message}`);
+    }
   };
 
   return (

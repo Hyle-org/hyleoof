@@ -1,6 +1,5 @@
 import { AuthParams } from "../constants";
 import { Blob } from "@/model/hyle";
-import { buildIdentityBlob } from "@/model/mmid";
 import { buildTransferBlob } from "@/model/token";
 
 interface TransferParams extends AuthParams {

@@ -5,24 +5,30 @@ import { Blob } from "@/model/hyle";
 export type IdentityAction =
   | {
       RegisterIdentity: {
-        account: string;
+        signature: string;
       };
     }
   | {
       VerifyIdentity: {
-        account: string;
-        signature: string;
         nonce: number;
+        signature: string;
       };
     };
 
-export const buildIdentityBlob = (
-  account: string,
-  nonce: number,
-  signature: string,
-): Blob => {
+export const buildRegisterBlob = (signature: string): Blob => {
   const action: IdentityAction = {
-    VerifyIdentity: { account, signature, nonce },
+    RegisterIdentity: { signature },
+  };
+  const blob: Blob = {
+    contract_name: idContractName,
+    data: serializeIdentityAction(action),
+  };
+  return blob;
+};
+
+export const buildIdentityBlob = (nonce: number, signature: string): Blob => {
+  const action: IdentityAction = {
+    VerifyIdentity: { nonce, signature },
   };
 
   const blob: Blob = {
@@ -38,10 +44,10 @@ const serializeIdentityAction = (action: IdentityAction): number[] => {
 
 const schema = BorshSchema.Enum({
   RegisterIdentity: BorshSchema.Struct({
-    account: BorshSchema.String,
+    signature: BorshSchema.String,
   }),
   VerifyIdentity: BorshSchema.Struct({
-    account: BorshSchema.String,
     nonce: BorshSchema.u32,
+    signature: BorshSchema.String,
   }),
 });

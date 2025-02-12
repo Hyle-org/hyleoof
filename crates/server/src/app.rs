@@ -2,7 +2,6 @@ use std::sync::Arc;
 
 use crate::task_manager::Prover;
 use crate::utils::AppError;
-use amm::AmmState;
 use anyhow::Result;
 use axum::{
     extract::{Json, State},
@@ -23,16 +22,12 @@ use hyle::{
     utils::modules::{module_bus_client, Module},
 };
 
-use hyle_metamask::IdentityContractState;
 use hyllar::HyllarToken;
-use sdk::{identity_provider::IdentityAction, BlobTransaction};
-use sdk::{ContractName, Identity, TxHash};
+use sdk::BlobTransaction;
+use sdk::{ContractName, TxHash};
 use serde::Deserialize;
 use tokio::sync::Mutex;
 use tower_http::cors::{Any, CorsLayer};
-use tracing::info;
-
-pub const MMID_CN: &str = "mmid";
 
 pub struct AppModule {
     bus: AppModuleBusClient,
@@ -51,7 +46,7 @@ pub struct AppModuleBusClient {
 }
 
 impl Module for AppModule {
-    type Context = AppModuleCtx;
+    type Context = Arc<AppModuleCtx>;
 
     async fn build(ctx: Self::Context) -> Result<Self> {
         let state = RouterCtx {
@@ -69,9 +64,6 @@ impl Module for AppModule {
         let api = Router::new()
             .route("/_health", get(health))
             .route("/api/faucet", post(faucet))
-            .route("/api/transfer", post(transfer))
-            .route("/api/register", post(register))
-            .route("/api/swap", post(swap))
             .with_state(state)
             .layer(cors); // Appliquer le middleware CORS
 
@@ -112,15 +104,11 @@ async fn build_app_context(
         .fetch_current_state(&"hydentity".into())
         .await
         .unwrap();
-    let mm_identity = indexer.fetch_current_state(&MMID_CN.into()).await.unwrap();
-    let amm = indexer.fetch_current_state(&"amm".into()).await.unwrap();
 
     let executor = TxExecutorBuilder::new(States {
         hyllar,
         hyllar2,
         hydentity,
-        mmid: mm_identity,
-        amm,
     })
     .build();
 
@@ -129,7 +117,6 @@ async fn build_app_context(
         client: node.clone(),
         prover: Arc::new(Prover::new(node)),
         hydentity_cn: "hydentity".into(),
-        amm_cn: "amm".into(),
     }
 }
 
@@ -157,90 +144,7 @@ async fn faucet(
 }
 
 // --------------------------------------------------------
-//      Transfer
 // --------------------------------------------------------
-
-#[derive(Deserialize)]
-struct TransferRequest {
-    account: String,
-    recipient: String,
-    token: ContractName,
-    amount: u128,
-}
-
-async fn transfer(
-    State(ctx): State<RouterCtx>,
-    Json(payload): Json<TransferRequest>,
-) -> Result<impl IntoResponse, AppError> {
-    let tx_hash = do_transfer(
-        ctx,
-        payload.account.into(),
-        payload.recipient,
-        payload.token,
-        payload.amount,
-    )
-    .await?;
-    Ok(Json(tx_hash))
-}
-
-// --------------------------------------------------------
-//   Swap
-// --------------------------------------------------------
-
-#[derive(Deserialize)]
-struct SwapRequest {
-    account: Identity,
-    token_a: ContractName,
-    token_b: ContractName,
-    amount: u128,
-}
-
-async fn swap(
-    State(ctx): State<RouterCtx>,
-    Json(payload): Json<SwapRequest>,
-) -> Result<impl IntoResponse, AppError> {
-    let SwapRequest {
-        account,
-        token_a,
-        token_b,
-        amount,
-    } = payload;
-
-    let tx_hash = do_swap(ctx, account, token_a, token_b, amount).await?;
-    Ok(Json(tx_hash))
-}
-
-// --------------------------------------------------------
-//      Register
-// --------------------------------------------------------
-
-#[derive(Deserialize)]
-struct RegisterRequest {
-    account: Identity,
-}
-
-async fn register(
-    State(ctx): State<RouterCtx>,
-    Json(payload): Json<RegisterRequest>,
-) -> Result<impl IntoResponse, AppError> {
-    let RegisterRequest { account } = payload;
-
-    let tx_hash = do_register(ctx, account).await?;
-    Ok(Json(tx_hash))
-}
-
-// --------------------------------------------------------
-// --------------------------------------------------------
-
-async fn do_register(ctx: RouterCtx, account: Identity) -> Result<TxHash, AppError> {
-    let mut app = ctx.app.lock_owned().await;
-    let mut transaction = ProvableBlobTx::new(account);
-
-    todo!();
-    //app.register_identity(&mut transaction)?;
-
-    app.send(transaction).await
-}
 
 async fn do_faucet(
     ctx: RouterCtx,
@@ -257,46 +161,11 @@ async fn do_faucet(
     app.send(transaction).await
 }
 
-async fn do_transfer(
-    ctx: RouterCtx,
-    identity: Identity,
-    recipient: String,
-    token: ContractName,
-    amount: u128,
-) -> Result<TxHash, AppError> {
-    let mut app = ctx.app.lock_owned().await;
-    let mut transaction = ProvableBlobTx::new(identity);
-
-    app.verify_identity(&mut transaction)?;
-    app.transfer(&mut transaction, token, recipient, amount)?;
-
-    app.send(transaction).await
-}
-
-async fn do_swap(
-    ctx: RouterCtx,
-    identity: Identity,
-    token_a: ContractName,
-    token_b: ContractName,
-    amount: u128,
-) -> Result<TxHash, AppError> {
-    let mut app = ctx.app.lock_owned().await;
-    let mut transaction = ProvableBlobTx::new(identity);
-
-    app.verify_identity(&mut transaction)?;
-    app.approve(&mut transaction, token_a.clone(), "amm".to_string(), amount)?;
-    app.swap(&mut transaction, token_a, token_b, amount)?;
-
-    app.send(transaction).await
-}
-
 contract_states!(
     pub struct States {
         pub hyllar: HyllarToken,
         pub hyllar2: HyllarToken,
         pub hydentity: Hydentity,
-        pub mmid: IdentityContractState,
-        pub amm: AmmState,
     }
 );
 
@@ -305,7 +174,6 @@ pub struct HyleOofCtx {
     pub client: Arc<NodeApiHttpClient>,
     pub prover: Arc<Prover>,
     pub hydentity_cn: ContractName,
-    pub amm_cn: ContractName,
 }
 
 impl HyleOofCtx {
@@ -322,35 +190,6 @@ impl HyleOofCtx {
         self.prover.add(proof_tx_builder).await;
 
         Ok(tx_hash)
-    }
-
-    fn register_identity(
-        &mut self,
-        transaction: &mut ProvableBlobTx,
-        password: String,
-    ) -> Result<()> {
-        todo!()
-        //hydentity::client::register_identity(transaction, self.hydentity_cn.clone(), password)
-    }
-
-    pub(crate) fn verify_identity(&mut self, transaction: &mut ProvableBlobTx) -> Result<()> {
-        let account = transaction.identity.0.clone();
-        let state: &IdentityContractState = &self.executor.mmid;
-
-        info!("State: {:?}", state);
-
-        let nonce = state
-            .get_nonce(&account)
-            .map_err(|_| anyhow::anyhow!("Account not found"))?;
-
-        transaction.add_action(
-            MMID_CN.into(),
-            IdentityAction::VerifyIdentity { account, nonce },
-            None,
-            None,
-        )?;
-
-        Ok(())
     }
 
     pub(crate) fn verify_hydentity(
@@ -384,38 +223,5 @@ impl HyleOofCtx {
         amount: u128,
     ) -> Result<()> {
         hyllar::client::approve(transaction, token, spender, amount)
-    }
-
-    pub(crate) fn swap(
-        &mut self,
-        transaction: &mut ProvableBlobTx,
-        token_a: ContractName,
-        token_b: ContractName,
-        amount: u128,
-    ) -> Result<()> {
-        let amount_b = Self::get_paired_amount(
-            &self.executor.amm,
-            token_a.0.clone(),
-            token_b.0.clone(),
-            amount,
-        )?;
-        amm::client::swap(
-            transaction,
-            self.amm_cn.clone(),
-            (token_a, token_b),
-            (amount, amount_b),
-        )
-    }
-
-    fn get_paired_amount(
-        state: &AmmState,
-        token_a: String,
-        token_b: String,
-        amount: u128,
-    ) -> Result<u128> {
-        let attr = state
-            .get_paired_amount(token_a, token_b, amount)
-            .ok_or_else(|| anyhow::anyhow!("Key pair not found"))?;
-        Ok(attr)
     }
 }
