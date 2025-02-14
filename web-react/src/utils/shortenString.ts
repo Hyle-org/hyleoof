@@ -1,4 +1,7 @@
 export function shortenString(str: string, maxLength: number): string {
+  if (maxLength <= 0) {
+    return str;
+  }
   const ellipsis = "[...]";
 
   if (str.length <= maxLength) {

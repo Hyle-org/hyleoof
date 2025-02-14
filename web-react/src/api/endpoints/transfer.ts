@@ -13,7 +13,7 @@ export default async function transfer({
   token,
   amount,
 }: TransferParams): Promise<Array<Blob>> {
-  const transfer: Blob = buildTransferBlob(recipient, token, amount);
+  const transfer: Blob = buildTransferBlob(recipient, token, amount, null);
 
   return [transfer];
 }

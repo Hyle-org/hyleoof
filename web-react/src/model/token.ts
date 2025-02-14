@@ -6,16 +6,25 @@ import { ContractName, Blob } from "./hyle";
 //    pub callees: Option<Vec<BlobIndex>>,
 //    pub parameters: Parameters,
 //}
+
+export type BlobIndex = {
+  0: number;
+};
+
+export const blobIndexSchema = BorshSchema.Struct({
+  0: BorshSchema.u64,
+});
+
 export type StructuredBlobData<Parameters> = {
-  caller: number | null;
-  callees: number[] | null;
+  caller: BlobIndex | null;
+  callees: BlobIndex[] | null;
   parameters: Parameters;
 };
 
-const structuredBlobDataSchema = (schema: BorshSchema) =>
+export const structuredBlobDataSchema = (schema: BorshSchema) =>
   BorshSchema.Struct({
-    caller: BorshSchema.Option(BorshSchema.u32),
-    callees: BorshSchema.Option(BorshSchema.Vec(BorshSchema.u32)),
+    caller: BorshSchema.Option(blobIndexSchema),
+    callees: BorshSchema.Option(BorshSchema.Vec(blobIndexSchema)),
     parameters: schema,
   });
 
@@ -51,17 +60,62 @@ export type ERC20Action =
   | { Approve: { spender: string; amount: number } }
   | { Allowance: { owner: string; spender: string } };
 
+export const buildApproveBlob = (
+  token: ContractName,
+  spender: string,
+  amount: number,
+): Blob => {
+  const action: ERC20Action = {
+    Approve: { spender, amount },
+  };
+  const structured: StructuredBlobData<ERC20Action> = {
+    caller: null,
+    callees: null,
+    parameters: action,
+  };
+  const blob: Blob = {
+    contract_name: token,
+    data: serializeERC20Action(structured),
+  };
+  return blob;
+};
+
+export const buildTransferFromBlob = (
+  sender: string,
+  recipient: string,
+  token: ContractName,
+  amount: number,
+  caller: number | null,
+): Blob => {
+  const action: ERC20Action = {
+    TransferFrom: { sender, recipient, amount },
+  };
+
+  const structured: StructuredBlobData<ERC20Action> = {
+    caller: caller ? { 0: caller } : null,
+    callees: null,
+    parameters: action,
+  };
+
+  const blob: Blob = {
+    contract_name: token,
+    data: serializeERC20Action(structured),
+  };
+  return blob;
+};
+
 export const buildTransferBlob = (
   recipient: string,
   token: ContractName,
   amount: number,
+  caller: number | null,
 ): Blob => {
   const action: ERC20Action = {
     Transfer: { recipient, amount },
   };
 
   const structured: StructuredBlobData<ERC20Action> = {
-    caller: null,
+    caller: caller ? { 0: caller } : null,
     callees: null,
     parameters: action,
   };

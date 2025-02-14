@@ -21,7 +21,7 @@ export async function signMessage(message: string) {
 
 export async function signBlobs(blobs: Array<Blob>) {
   // TODO: fetch nonce
-  const nonce = 0;
+  const nonce = 1;
 
   const message = `verify ${nonce} ${blobs.map((blob) => blob.contract_name + " [" + blob.data.join(", ") + "]").join(" ")}`;
 

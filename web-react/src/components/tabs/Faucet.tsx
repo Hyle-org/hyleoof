@@ -11,6 +11,7 @@ const FAUCET_AMOUNT = 10;
 
 export default function Faucet() {
   const { account } = useMetaMask();
+  const [recipient, setRecipient] = useState(account);
   const [token, setToken] = useState("hyllar");
   const [message, setMessage] = useState("");
   const { getBalance: getBalance } = useHyllar({ contractName: token });
@@ -35,9 +36,9 @@ export default function Faucet() {
           type="text"
           labelText=""
           suffixText=""
-          value={account}
+          value={recipient}
           name="account"
-          readOnly
+          onChange={(e) => setRecipient(e.target.value)}
         />
 
         <Button type="submit">{`Faucet ${FAUCET_AMOUNT} hyllar`}</Button>

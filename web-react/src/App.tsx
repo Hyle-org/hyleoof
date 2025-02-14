@@ -8,12 +8,13 @@ import { useMetaMask } from "./hooks/useMetaMask";
 import { useRequestSnap } from "./hooks/useRequestSnap";
 import { useInvokeSnap } from "./hooks/useInvokeSnap";
 import { isLocalSnap } from "./utils/snap";
-import { defaultSnapOrigin } from "./config";
+import { defaultSnapOrigin, idContractName } from "./config";
 import { useMetaMaskContext } from "./hooks/MetamaskContext";
 import { ConnectButton, DisconnectButton, InstallFlaskButton } from "./components/Buttons";
 import { shortenString } from "./utils/shortenString";
 import { useRequest } from "./hooks";
 import { a } from "vitest/dist/chunks/suite.BJU7kdY9.js";
+import Copiable from "./components/Copiable";
 
 enum TabOption {
   Register = "Register",
@@ -32,7 +33,6 @@ const TabComponents: Record<TabOption, React.FC> = {
 const queryClient = new QueryClient();
 
 function App() {
-  const { error } = useMetaMaskContext();
   const { isFlask, snapsDetected, installedSnap, account, setAccount } = useMetaMask();
   const requestSnap = useRequestSnap();
   const request = useRequest();
@@ -53,7 +53,7 @@ function App() {
     setAutoconnect(false);
     const ethAccounts = await request({ method: "eth_requestAccounts" }) as string[];
     console.log(ethAccounts);
-    setAccount(ethAccounts[0]);
+    setAccount(ethAccounts[0] + "." + idContractName);
   };
 
   if (installedSnap && autoconnect) { getAccount(); }
@@ -77,7 +77,7 @@ function App() {
           {installedSnap && account && (
             <div>
               <p>Connected with:</p>
-              <p>{shortenString(account, 45)}</p>
+              <Copiable text={account} size={40} />
             </div>
           )}
           {

@@ -12,14 +12,14 @@ use hyle::{
     },
 };
 use sdk::{
-    BlobTransaction, Block, ContractInput, ContractName, Hashable, HyleOutput, ProofTransaction,
-    TransactionData, TxHash,
+    BlobTransaction, Block, BlockHeight, ContractInput, ContractName, Hashable, HyleOutput,
+    ProofTransaction, TransactionData, TxHash,
 };
 use tracing::{error, info, warn};
 
 pub struct ProverModule {
     bus: ProverModuleBusClient,
-    ctx: Arc<AppModuleCtx>,
+    ctx: Arc<ProverModuleCtx>,
     unsettled_txs: Vec<BlobTransaction>,
 }
 
@@ -29,12 +29,16 @@ pub struct ProverModuleBusClient {
     receiver(NodeStateEvent),
 }
 }
+pub struct ProverModuleCtx {
+    pub app: Arc<AppModuleCtx>,
+    pub start_height: BlockHeight,
+}
 
 impl Module for ProverModule {
-    type Context = Arc<AppModuleCtx>;
+    type Context = Arc<ProverModuleCtx>;
 
     async fn build(ctx: Self::Context) -> Result<Self> {
-        let bus = ProverModuleBusClient::new_from_bus(ctx.common.bus.new_handle()).await;
+        let bus = ProverModuleBusClient::new_from_bus(ctx.app.common.bus.new_handle()).await;
 
         Ok(ProverModule {
             bus,
@@ -86,7 +90,7 @@ impl ProverModule {
             should_trigger = self.settle_tx(failed)? == 0 || should_trigger;
         }
 
-        if should_trigger {
+        if should_trigger && block.block_height > self.ctx.start_height {
             self.trigger_prove_first();
         }
 
@@ -112,7 +116,7 @@ impl ProverModule {
             info!("Triggering prove for tx: {}", tx.hash());
             let ctx = self.ctx.clone();
             tokio::task::spawn(async move {
-                match prove_blob_tx(ctx, tx).await {
+                match prove_blob_tx(&ctx.app, tx).await {
                     Ok(_) => {}
                     Err(e) => {
                         info!("Error proving tx: {:?}", e);
@@ -128,17 +132,20 @@ fn get_prover(cn: &ContractName) -> Option<Risc0Prover> {
         "hyllar" => Some(Risc0Prover::new(hyllar::client::metadata::HYLLAR_ELF)),
         "hyllar2" => Some(Risc0Prover::new(hyllar::client::metadata::HYLLAR_ELF)),
         "mmid" => Some(Risc0Prover::new(hyle_metamask::client::metadata::ELF)),
+        "amm" => Some(Risc0Prover::new(amm::client::metadata::AMM_ELF)),
         _ => None,
     }
 }
 
-async fn prove_blob_tx(ctx: Arc<AppModuleCtx>, tx: BlobTransaction) -> Result<()> {
+async fn prove_blob_tx(ctx: &Arc<AppModuleCtx>, tx: BlobTransaction) -> Result<()> {
     let blobs = tx.blobs.clone();
     let tx_hash = tx.hash();
     for (index, blob) in tx.blobs.iter().enumerate() {
         if let Some(prover) = get_prover(&blob.contract_name) {
             info!("Proving tx: {}. Blob for {}", tx_hash, blob.contract_name);
             let contract = ctx.node_client.get_contract(&blob.contract_name).await?;
+
+            info!("state: {:?}", contract.state);
 
             let inputs = ContractInput {
                 initial_state: contract.state,
@@ -152,6 +159,7 @@ async fn prove_blob_tx(ctx: Arc<AppModuleCtx>, tx: BlobTransaction) -> Result<()
 
             match prover.prove(inputs).await {
                 Ok(proof) => {
+                    info!("Proof generated for tx: {}", tx_hash);
                     let tx = ProofTransaction {
                         contract_name: blob.contract_name.clone(),
                         proof,

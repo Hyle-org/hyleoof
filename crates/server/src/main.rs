@@ -5,10 +5,7 @@ use clap::Parser;
 use client_sdk::rest_client::{IndexerApiHttpClient, NodeApiHttpClient};
 use hyle::{
     bus::{metrics::BusMetrics, SharedMessageBus},
-    indexer::{
-        contract_state_indexer::{ContractStateIndexer, ContractStateIndexerCtx},
-        da_listener::{DAListener, DAListenerCtx},
-    },
+    indexer::da_listener::{DAListener, DAListenerCtx},
     model::{api::NodeInfo, CommonRunContext},
     rest::{RestApi, RestApiRunContext},
     utils::{
@@ -17,8 +14,7 @@ use hyle::{
         modules::ModulesHandler,
     },
 };
-use hyllar::HyllarToken;
-use prover::ProverModule;
+use prover::{ProverModule, ProverModuleCtx};
 use std::{
     env,
     sync::{Arc, Mutex},
@@ -95,25 +91,17 @@ async fn main() -> Result<()> {
         node_client,
         indexer_client,
     });
+    let height = app_ctx.node_client.get_block_height().await?;
+    let prover_ctx = Arc::new(ProverModuleCtx {
+        app: app_ctx.clone(),
+        start_height: height,
+    });
 
     handler.build_module::<AppModule>(app_ctx.clone()).await?;
 
     handler
-        .build_module::<ProverModule>(app_ctx.clone())
+        .build_module::<ProverModule>(prover_ctx.clone())
         .await?;
-
-    //handler
-    //    .build_module::<ContractStateIndexer<HyllarToken>>(ContractStateIndexerCtx {
-    //        contract_name: "hyllar".into(),
-    //        common: ctx.clone(),
-    //    })
-    //    .await?;
-    //handler
-    //    .build_module::<ContractStateIndexer<HyllarToken>>(ContractStateIndexerCtx {
-    //        contract_name: "hyllar2".into(),
-    //        common: ctx.clone(),
-    //    })
-    //    .await?;
 
     handler
         .build_module::<DAListener>(DAListenerCtx {

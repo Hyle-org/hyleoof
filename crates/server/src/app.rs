@@ -4,7 +4,7 @@ use crate::task_manager::Prover;
 use crate::utils::AppError;
 use anyhow::Result;
 use axum::{
-    extract::{Json, State},
+    extract::{Json, Path, State},
     http::Method,
     response::IntoResponse,
     routing::{get, post},
@@ -64,6 +64,10 @@ impl Module for AppModule {
         let api = Router::new()
             .route("/_health", get(health))
             .route("/api/faucet", post(faucet))
+            .route(
+                "/api/paired_amount/{token_a}/{token_b}/{amount}",
+                get(paired_amount),
+            )
             .with_state(state)
             .layer(cors); // Appliquer le middleware CORS
 
@@ -143,6 +147,21 @@ async fn faucet(
     Ok(Json(tx_hash))
 }
 
+// --------------------------------------------------------
+//      Get Paired amount
+// --------------------------------------------------------
+
+async fn paired_amount(
+    Path((token_a, token_b, amount)): Path<(String, String, u128)>,
+    State(ctx): State<RouterCtx>,
+) -> Result<impl IntoResponse, AppError> {
+    let app = ctx.app.lock().await;
+    let contract = app.client.get_contract(&"amm".into()).await?;
+    let amm: amm::AmmState = contract.state.try_into()?;
+    let amount_b = amm.get_paired_amount(token_a, token_b, amount);
+
+    Ok(Json(amount_b))
+}
 // --------------------------------------------------------
 // --------------------------------------------------------
 
