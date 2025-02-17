@@ -1,13 +1,9 @@
-use std::{any::Any, collections::HashMap, sync::Arc};
+use std::{collections::HashMap, sync::Arc};
 
 use crate::app::AppModuleCtx;
-use amm::{client::AmmPseudoExecutor, AmmState};
+use amm::client::AmmPseudoExecutor;
 use anyhow::Result;
-use client_sdk::{
-    contract_states,
-    helpers::{risc0::Risc0Prover, ClientSdkExecutor},
-    transaction_builder::TxExecutorBuilder,
-};
+use client_sdk::helpers::{risc0::Risc0Prover, ClientSdkExecutor};
 use hyle::{
     module_handle_messages,
     node_state::module::NodeStateEvent,
@@ -16,11 +12,10 @@ use hyle::{
         modules::{module_bus_client, Module},
     },
 };
-use hyle_metamask::IdentityContractState;
-use hyllar::{client::HyllarPseudoExecutor, HyllarToken};
+use hyllar::client::HyllarPseudoExecutor;
 use sdk::{
-    BlobTransaction, Block, BlockHeight, ContractInput, ContractName, Hashable, HyleOutput,
-    ProofTransaction, StateDigest, TransactionData, TxHash,
+    BlobTransaction, Block, BlockHeight, ContractInput, ContractName, Hashable, ProofTransaction,
+    StateDigest, TransactionData, TxHash,
 };
 use tracing::{error, info, warn};
 

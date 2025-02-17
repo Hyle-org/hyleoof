@@ -5,7 +5,10 @@ use clap::Parser;
 use client_sdk::rest_client::{IndexerApiHttpClient, NodeApiHttpClient};
 use hyle::{
     bus::{metrics::BusMetrics, SharedMessageBus},
-    indexer::da_listener::{DAListener, DAListenerCtx},
+    indexer::{
+        contract_state_indexer::{ContractStateIndexer, ContractStateIndexerCtx},
+        da_listener::{DAListener, DAListenerCtx},
+    },
     model::{api::NodeInfo, CommonRunContext},
     rest::{RestApi, RestApiRunContext},
     utils::{
@@ -101,6 +104,15 @@ async fn main() -> Result<()> {
 
     handler
         .build_module::<ProverModule>(prover_ctx.clone())
+        .await?;
+
+    handler
+        .build_module::<ContractStateIndexer<hyle_metamask::IdentityContractState>>(
+            ContractStateIndexerCtx {
+                common: ctx.clone(),
+                contract_name: "mmid".into(),
+            },
+        )
         .await?;
 
     handler
