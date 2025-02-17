@@ -71,8 +71,8 @@ source = "git+https://github.com/Hyle-org/hyle.git?tag=v0.9.0#6218e2d6e5eddbc7ae
 dependencies = [
  "anyhow",
  "bincode 2.0.0-rc.3",
- "client-sdk",
- "hyle-contract-sdk",
+ "client-sdk 0.8.0",
+ "hyle-contract-sdk 0.8.0",
  "serde",
 ]
 
@@ -463,9 +463,9 @@ dependencies = [
 
 [[package]]
 name = "blst"
-version = "0.3.13"
+version = "0.3.14"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "4378725facc195f1a538864863f6de233b500a8862747e7f165078a419d5e874"
+checksum = "47c79a94619fade3c0b887670333513a67ac28a6a7e653eb260bf0d4103db38d"
 dependencies = [
  "cc",
  "glob",
@@ -493,10 +493,30 @@ dependencies = [
 ]
 
 [[package]]
+name = "bonsai-runner"
+version = "0.11.0"
+source = "git+https://github.com/Hyle-org/hyle.git?tag=v0.11.0#57373afcbf3d9d32cf8127a1af8f44fc0f34f822"
+dependencies = [
+ "anyhow",
+ "axum",
+ "bincode 1.3.3",
+ "bonsai-sdk",
+ "borsh",
+ "bytemuck",
+ "hex",
+ "risc0-zkvm",
+ "serde",
+ "serde_json",
+ "tokio",
+ "tracing",
+ "tracing-subscriber 0.3.19",
+]
+
+[[package]]
 name = "bonsai-sdk"
-version = "1.2.2"
+version = "1.2.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "32a6c42e9ac4df9f62aade6f4a7fab56db33d4518d1cac37434f040f610f6d40"
+checksum = "5e274325e6251c944fad96881a9744d82d6cee67244e284f62ebd1d4ede287bd"
 dependencies = [
  "duplicate",
  "maybe-async",
@@ -645,10 +665,25 @@ source = "git+https://github.com/Hyle-org/hyle.git?tag=v0.9.0#6218e2d6e5eddbc7ae
 dependencies = [
  "anyhow",
  "bincode 2.0.0-rc.3",
- "bonsai-runner",
+ "bonsai-runner 0.8.0",
  "borsh",
- "hyle-contract-sdk",
+ "hyle-contract-sdk 0.8.0",
  "reqwest",
+ "risc0-zkvm",
+ "serde",
+ "serde_json",
+ "tracing",
+]
+
+[[package]]
+name = "client-sdk"
+version = "0.11.0"
+source = "git+https://github.com/Hyle-org/hyle.git?tag=v0.11.0#57373afcbf3d9d32cf8127a1af8f44fc0f34f822"
+dependencies = [
+ "anyhow",
+ "bonsai-runner 0.11.0",
+ "borsh",
+ "hyle-contract-sdk 0.11.0",
  "risc0-zkvm",
  "serde",
  "serde_json",
@@ -874,7 +909,16 @@ version = "1.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "4a9b99b9cbbe49445b21764dc0625032a89b145a2642e67603e1c936f5458d05"
 dependencies = [
- "derive_more-impl",
+ "derive_more-impl 1.0.0",
+]
+
+[[package]]
+name = "derive_more"
+version = "2.0.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "093242cf7570c207c83073cf82f79706fe7b8317e98620a47d5be7c3d8497678"
+dependencies = [
+ "derive_more-impl 2.0.1",
 ]
 
 [[package]]
@@ -882,6 +926,18 @@ name = "derive_more-impl"
 version = "1.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "cb7330aeadfbe296029522e6c40f315320aba36fc43a5b3632f3795348f3bd22"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn 2.0.96",
+ "unicode-xid",
+]
+
+[[package]]
+name = "derive_more-impl"
+version = "2.0.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "bda628edc44c4bb645fbe0f758797143e4e07926f7ebf4e9bdfbd3d2ce621df3"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -1411,14 +1467,14 @@ checksum = "df3b46402a9d5adb4c86a0cf463f42e19994e3ee891101b1841f30a545cb49a9"
 
 [[package]]
 name = "hydentity"
-version = "0.8.0"
-source = "git+https://github.com/Hyle-org/hyle.git?tag=v0.9.0#6218e2d6e5eddbc7ae26f7c794a7798e1e67ba98"
+version = "0.11.0"
+source = "git+https://github.com/Hyle-org/hyle.git?tag=v0.11.0#57373afcbf3d9d32cf8127a1af8f44fc0f34f822"
 dependencies = [
  "anyhow",
- "bincode 2.0.0-rc.3",
- "client-sdk",
+ "borsh",
+ "client-sdk 0.11.0",
  "hex",
- "hyle-contract-sdk",
+ "hyle-contract-sdk 0.11.0",
  "serde",
  "serde_json",
  "sha2 0.10.8 (git+https://github.com/risc0/RustCrypto-hashes?tag=sha2-v0.10.8)",
@@ -1430,9 +1486,19 @@ version = "0.8.0"
 source = "git+https://github.com/Hyle-org/hyle.git?tag=v0.9.0#6218e2d6e5eddbc7ae26f7c794a7798e1e67ba98"
 dependencies = [
  "bincode 2.0.0-rc.3",
- "hyle-model",
+ "hyle-model 0.8.0",
  "serde",
  "tracing",
+]
+
+[[package]]
+name = "hyle-contract-sdk"
+version = "0.11.0"
+source = "git+https://github.com/Hyle-org/hyle.git?tag=v0.11.0#57373afcbf3d9d32cf8127a1af8f44fc0f34f822"
+dependencies = [
+ "borsh",
+ "hyle-model 0.11.0",
+ "serde",
 ]
 
 [[package]]
@@ -1440,7 +1506,7 @@ name = "hyle-contracts"
 version = "0.8.0"
 source = "git+https://github.com/Hyle-org/hyle.git?tag=v0.9.0#6218e2d6e5eddbc7ae26f7c794a7798e1e67ba98"
 dependencies = [
- "hyle-contract-sdk",
+ "hyle-contract-sdk 0.8.0",
 ]
 
 [[package]]
@@ -1458,7 +1524,28 @@ dependencies = [
  "serde_json",
  "serde_with",
  "sha3",
- "strum_macros",
+ "strum_macros 0.26.4",
+ "utoipa",
+]
+
+[[package]]
+name = "hyle-model"
+version = "0.11.0"
+source = "git+https://github.com/Hyle-org/hyle.git?tag=v0.11.0#57373afcbf3d9d32cf8127a1af8f44fc0f34f822"
+dependencies = [
+ "anyhow",
+ "base64",
+ "blst",
+ "borsh",
+ "derive_more 2.0.1",
+ "hex",
+ "readonly",
+ "serde",
+ "serde_json",
+ "serde_with",
+ "sha3",
+ "strum",
+ "strum_macros 0.27.1",
  "utoipa",
 ]
 
@@ -1469,8 +1556,8 @@ source = "git+https://github.com/Hyle-org/hyle.git?tag=v0.9.0#6218e2d6e5eddbc7ae
 dependencies = [
  "anyhow",
  "bincode 2.0.0-rc.3",
- "client-sdk",
- "hyle-contract-sdk",
+ "client-sdk 0.8.0",
+ "hyle-contract-sdk 0.8.0",
  "serde",
  "serde_with",
 ]
@@ -2507,6 +2594,17 @@ dependencies = [
 ]
 
 [[package]]
+name = "readonly"
+version = "0.2.12"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "a25d631e41bfb5fdcde1d4e2215f62f7f0afa3ff11e26563765bd6ea1d229aeb"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn 2.0.96",
+]
+
+[[package]]
 name = "redox_syscall"
 version = "0.5.8"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2639,9 +2737,9 @@ dependencies = [
 
 [[package]]
 name = "risc0-binfmt"
-version = "1.2.2"
+version = "1.2.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "fac7b3a4d7f6e86b2be2daf0ec53b9b8740895ff8279011cee24e4bae72cd77e"
+checksum = "cc047ec0ec944104bf94cf55efa3a697aca63cff506cc949ec8d345c48ef0706"
 dependencies = [
  "anyhow",
  "borsh",
@@ -2654,9 +2752,9 @@ dependencies = [
 
 [[package]]
 name = "risc0-build"
-version = "1.2.2"
+version = "1.2.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "4481ff9a05c3d96c0df2278a4681172fb40291253049a3ab57ffa2c46c24a0ba"
+checksum = "2336678ab6701f737522f153050c8c688860a2db29ef8fea7a42ae0a1de614d6"
 dependencies = [
  "anyhow",
  "cargo_metadata",
@@ -2673,9 +2771,9 @@ dependencies = [
 
 [[package]]
 name = "risc0-build-kernel"
-version = "1.2.2"
+version = "1.2.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "23f29e33a7c90e9c326e2af642030ff155f88338ebbf09d64ac5faacabd423e1"
+checksum = "6258acddb682459958ba1eab1e63b10d61de4f2889a3ffbfe0c6965429626f5b"
 dependencies = [
  "cc",
  "directories",
@@ -2688,9 +2786,9 @@ dependencies = [
 
 [[package]]
 name = "risc0-circuit-keccak"
-version = "1.2.2"
+version = "1.2.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "25beb2e593a72e4baa3ed9a18a2ee4148f629bfa9dcdac5cbe84faa12d2590d1"
+checksum = "2cc983c81ee51af9bde296eb1b4dff73501fb436c3401d30d5548e00b2c0a354"
 dependencies = [
  "anyhow",
  "bytemuck",
@@ -2710,9 +2808,9 @@ dependencies = [
 
 [[package]]
 name = "risc0-circuit-keccak-sys"
-version = "1.2.2"
+version = "1.2.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "1a910fc9d6c0b57628326b38358c5bd2bfb44d4588e6308a08072e7a4dd31378"
+checksum = "27d440f8d56be049e80022fcdd5afb34d295b657f19f9b03cc05139e2b631291"
 dependencies = [
  "cc",
  "derive_more 1.0.0",
@@ -2724,9 +2822,9 @@ dependencies = [
 
 [[package]]
 name = "risc0-circuit-recursion"
-version = "1.2.2"
+version = "1.2.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e02357d6333355b2f9f3903149757fec59c59ef7cefd7494738446f33148cd00"
+checksum = "c7d68e1a5344eb83553a6a465fcec5ceb4ab751e7b3b96c46a6c03b697f70856"
 dependencies = [
  "anyhow",
  "bytemuck",
@@ -2749,9 +2847,9 @@ dependencies = [
 
 [[package]]
 name = "risc0-circuit-recursion-sys"
-version = "1.2.2"
+version = "1.2.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d2ef7b40cbafb07ec994c4d317096e72cf22998f6c0e7873db31bbb2f6377478"
+checksum = "f621b1dd155e73d9f61ef670a441afa3f342d0c36da8451d3783f04996790017"
 dependencies = [
  "glob",
  "risc0-build-kernel",
@@ -2761,9 +2859,9 @@ dependencies = [
 
 [[package]]
 name = "risc0-circuit-rv32im"
-version = "1.2.2"
+version = "1.2.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d062e3ee0a8a788cfeff90777e95792d58520fb71b40c28a04000277a3f0054d"
+checksum = "8ca07c57b1b0eff21288a7b193a06b2b5943b3eceda6dafa0c087cbe0fcfcfa6"
 dependencies = [
  "anyhow",
  "auto_ops",
@@ -2794,9 +2892,9 @@ dependencies = [
 
 [[package]]
 name = "risc0-circuit-rv32im-sys"
-version = "1.2.2"
+version = "1.2.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "28a380438dbfcc4e1780f455bb63d3aac7c821e06e188f18652467915209d4f9"
+checksum = "f5e4fc9f200907dfddc486976dd4a981c5e47a00940de1f20c594dc3fa91efc5"
 dependencies = [
  "glob",
  "risc0-build-kernel",
@@ -2806,9 +2904,9 @@ dependencies = [
 
 [[package]]
 name = "risc0-core"
-version = "1.2.2"
+version = "1.2.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "da950fcd306644dc5c2c0a09ad288901450eb5f41c42f4f2120be2949f63cd2e"
+checksum = "5a3ba5078ac767bb5cf35505e6d4da24eff76807fa73bb6ffb88e794654dd4dc"
 dependencies = [
  "bytemuck",
  "nvtx",
@@ -2818,9 +2916,9 @@ dependencies = [
 
 [[package]]
 name = "risc0-groth16"
-version = "1.2.2"
+version = "1.2.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "414481d8f3f8c666a7f45b03dd9c5e32cc6dadb2abd0f55b9460386f731eeb4a"
+checksum = "aa2df58accff2fde7e8bad9d144ae91cdfb5d0101addd3365f013fe3e33dccd8"
 dependencies = [
  "anyhow",
  "ark-bn254",
@@ -2843,9 +2941,9 @@ dependencies = [
 
 [[package]]
 name = "risc0-sys"
-version = "1.2.2"
+version = "1.2.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "048046fedafcab0084477b31a8ba3b9e25c6dc9d0fa5fafa7ed16de03f46e459"
+checksum = "05e31cb227dee71b71f5ddd280e782dd83752b90e4457fcfca8fee232164c0b5"
 dependencies = [
  "anyhow",
  "risc0-build-kernel",
@@ -2853,9 +2951,9 @@ dependencies = [
 
 [[package]]
 name = "risc0-zkp"
-version = "1.2.2"
+version = "1.2.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ddf3776370f26ea04e50f7e6f9d2468807aa1049063ca1b9000e1974d092ddc5"
+checksum = "53e429d1cdb86a702eba04a02b3929bdd62a9a1859ec23b281ba2a8d0c6f418f"
 dependencies = [
  "anyhow",
  "blake2",
@@ -2883,9 +2981,9 @@ dependencies = [
 
 [[package]]
 name = "risc0-zkvm"
-version = "1.2.2"
+version = "1.2.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "6700c4875b90726b7bf9e981fccbde4ea11b3593d3b2ac6fa09c96f6de166152"
+checksum = "e7ecc97ec255ad47e1de41b9691a8d92fa48efb779b611d28c3a1c4b7c79abd0"
 dependencies = [
  "addr2line 0.22.0",
  "anyhow",
@@ -2927,9 +3025,9 @@ dependencies = [
 
 [[package]]
 name = "risc0-zkvm-platform"
-version = "1.2.2"
+version = "1.2.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a6b5ac61f6d36b02655a415a8a2afd021aa260402d45deff5524c80dbc521f29"
+checksum = "3707a298cacf4d665258b9e976d422401dcfe833f50794fa1e7c20d15ab45e7f"
 dependencies = [
  "bytemuck",
  "cfg-if",
@@ -3186,12 +3284,12 @@ dependencies = [
  "amm",
  "anyhow",
  "axum",
- "bonsai-runner",
+ "bonsai-runner 0.8.0",
  "borsh",
- "client-sdk",
+ "client-sdk 0.8.0",
  "hex",
  "hydentity",
- "hyle-contract-sdk",
+ "hyle-contract-sdk 0.8.0",
  "hyle-contracts",
  "hyllar",
  "reqwest",
@@ -3326,10 +3424,29 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "7da8b5736845d9f2fcb837ea5d9e2628564b3b043a70948a3f0b778838c5fb4f"
 
 [[package]]
+name = "strum"
+version = "0.27.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "f64def088c51c9510a8579e3c5d67c65349dcf755e5479ad3d010aa6454e2c32"
+
+[[package]]
 name = "strum_macros"
 version = "0.26.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "4c6bee85a5a24955dc440386795aa378cd9cf82acd5f764469152d2270e581be"
+dependencies = [
+ "heck 0.5.0",
+ "proc-macro2",
+ "quote",
+ "rustversion",
+ "syn 2.0.96",
+]
+
+[[package]]
+name = "strum_macros"
+version = "0.27.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "c77a8c5abcaf0f9ce05d62342b7d298c346515365c36b673df4ebe3ced01fde8"
 dependencies = [
  "heck 0.5.0",
  "proc-macro2",
