@@ -1,7 +1,7 @@
 import { FormEvent } from "react";
 import { useMutation, UseMutationOptions } from "@tanstack/react-query";
 
-type FormDataApiCall<TParams, TResponse> = (
+type FormDataHandler<TParams, TResponse> = (
   params: TParams,
 ) => Promise<TResponse>;
 
@@ -19,7 +19,7 @@ type FormDataApiCall<TParams, TResponse> = (
  *          - handleSubmit: A form submission handler that prevents default behavior
  */
 export function useFormSubmission<TParams, TResponse>(
-  apiCall: FormDataApiCall<TParams, TResponse>,
+  apiCall: FormDataHandler<TParams, TResponse>,
   options?: Omit<UseMutationOptions<TResponse, Error, FormData>, "mutationFn">,
 ) {
   const mutation = useMutation({

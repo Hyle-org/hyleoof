@@ -41,6 +41,10 @@ body {
   color: var(--accent-color);
 }
 
+.header {
+  padding-bottom: 10px;
+}
+
 /* Tabs */
 .tabs {
   display: flex;

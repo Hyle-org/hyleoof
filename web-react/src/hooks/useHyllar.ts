@@ -1,5 +1,9 @@
-import { getContractState, GetContractStateResponse } from "@/api/indexer/getContractState";
-import { camelizeKeys, CamelizeKeys } from "@/utils/camelizeKeys";
+import {
+  getContractState,
+  GetContractStateResponse,
+} from "@/api/indexer/getContractState";
+import { idContractName } from "@/config/contract";
+import { camelizeKeys, CamelizeKeys, toCamelCase } from "@/utils/camelizeKeys";
 import { useEffect, useState } from "react";
 
 interface HyllarToken extends CamelizeKeys<GetContractStateResponse> {
@@ -16,7 +20,7 @@ interface UseHyllarParams {
  * @param {string} params.contractName - Name of the contract to fetch state for
  * @returns {Object} Hook state and utility functions
  * @returns {HyllarToken|null} returns.hyllarState - Current state of the Hyllar contract
- * @returns {(hydentity: string) => number|undefined} returns.getHydentityBalance - Function to get balance for a specific hydentity
+ * @returns {(account: string) => number|undefined} returns.getBalance - Function to get balance for a specific identity
  * @returns {() => number|undefined} returns.getTotalSupply - Function to get the total token supply
  */
 export function useHyllar({ contractName }: UseHyllarParams) {
@@ -32,11 +36,11 @@ export function useHyllar({ contractName }: UseHyllarParams) {
     }
   };
 
-  const getHydentityBalance = (username: string) => {
-    const hydentity = `${username}.hydentity`;
-    const balance = hyllarState?.balances[hydentity];
+  const getBalance = (account: string) => {
+    const id = toCamelCase(account);
+    const balance = hyllarState?.balances[id];
     return balance;
-  }
+  };
 
   const getTotalSupply = () => hyllarState?.totalSupply;
 
@@ -44,5 +48,5 @@ export function useHyllar({ contractName }: UseHyllarParams) {
     setHyllar();
   }, [contractName]);
 
-  return { hyllarState, getHydentityBalance, getTotalSupply };
+  return { hyllarState, getBalance, getTotalSupply };
 }

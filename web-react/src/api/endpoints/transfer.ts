@@ -1,5 +1,6 @@
-import { createApiRequest } from "../createApiRequest";
-import { AuthParams, SERVER_URL } from "../constants";
+import { AuthParams } from "../constants";
+import { Blob } from "@/model/hyle";
+import { buildTransferBlob } from "@/model/token";
 
 interface TransferParams extends AuthParams {
   recipient: string;
@@ -8,22 +9,11 @@ interface TransferParams extends AuthParams {
 }
 
 export default async function transfer({
-  username,
-  password,
   recipient,
   token,
   amount,
-}: TransferParams) {
-  return createApiRequest({
-    baseUrl: SERVER_URL,
-    endpoint: "/transfer",
-    method: "POST",
-    body: {
-      username: username + ".hydentity",
-      password,
-      recipient,
-      token,
-      amount: Number(amount),
-    },
-  })();
+}: TransferParams): Promise<Array<Blob>> {
+  const transfer: Blob = buildTransferBlob(recipient, token, amount, null);
+
+  return [transfer];
 }

@@ -1,0 +1,15 @@
+Config(
+  /// Node identifier in the consensus. Usage subject to change in future releases.
+  id: "node",
+  /// “json” or “full”
+  log_format: "full",
+  /// Host & port for the REST API endpoint.
+  rest: "127.0.0.1:3000",
+  /// Max body size of a request in bytes accepted by the rest api
+  rest_max_body_size: 10_485_760, // 10 MB
+  /// Host & port of the data availability module, which streams historical & new blocks. It might be used by indexers.
+  da_address: "127.0.0.1:4141",
+  /// Directory name to store node state.
+  data_directory: "data",
+)
+

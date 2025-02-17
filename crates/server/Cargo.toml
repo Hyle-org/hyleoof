@@ -7,21 +7,28 @@ homepage = { workspace = true }
 repository = { workspace = true }
 
 [dependencies]
-sdk = { git = "https://github.com/Hyle-org/hyle.git", package="hyle-contract-sdk", features = ["tracing"], tag = "v0.9.0" }
-client-sdk = { git = "https://github.com/Hyle-org/hyle.git", package="client-sdk", default-features = false, features = ["risc0", "rest"], tag = "v0.9.0" }
-hyllar = { git = "https://github.com/Hyle-org/hyle.git", package="hyllar", features = ["client"], tag = "v0.9.0"  }
-hydentity = { git = "https://github.com/Hyle-org/hyle.git", package="hydentity", features = ["client"], tag = "v0.9.0"  }
-amm = { git = "https://github.com/Hyle-org/hyle.git", package="amm", features = ["client"], tag = "v0.9.0"  }
-hyle_contracts = { git = "https://github.com/Hyle-org/hyle.git", package="hyle-contracts", tag = "v0.9.0"  }
-bonsai_runner = { git = "https://github.com/Hyle-org/hyle.git", package="bonsai-runner", features = [], tag = "v0.9.0"  }
+sdk = { git = "https://github.com/Hyle-org/hyle.git", package="hyle-contract-sdk", features = ["tracing"], branch = "metamask" }
+client-sdk = { git = "https://github.com/Hyle-org/hyle.git", package="client-sdk", default-features = false, features = ["risc0", "rest"], branch = "metamask" }
+hyllar = { git = "https://github.com/Hyle-org/hyle.git", package="hyllar", features = ["client"], branch = "metamask"  }
+hydentity = { git = "https://github.com/Hyle-org/hyle.git", package="hydentity", features = ["client"], branch = "metamask"  }
+amm = { git = "https://github.com/Hyle-org/hyle.git", package="amm", features = ["client"], branch = "metamask"  }
+hyle_contracts = { git = "https://github.com/Hyle-org/hyle.git", package="hyle-contracts", branch = "metamask"  }
+bonsai_runner = { git = "https://github.com/Hyle-org/hyle.git", package="bonsai-runner", features = [], branch = "metamask"  }
+hyle = { git = "https://github.com/Hyle-org/hyle.git", package="hyle", features = [], branch = "metamask"  }
+
+# hyle_metamask = { path = "/home/bertrand/workspace/metamask-id/metamask-contract/contract", package="contract-identity", features = ["client"] }
+hyle_metamask = { git = "https://github.com/Hyle-org/metamask-id.git", package="contract-identity", features = ["client"] }
 
 risc0-zkvm = { version = "1.2.2", features = ["prove"] }
 
-# sdk = { path = "../../../hyle3/contract-sdk", package="hyle-contract-sdk"}
-# hyllar = { path = "../../../hyle3/contracts/hyllar/contract", package="hyllar" }
-# hydentity = { path = "../../../hyle3/contracts/hydentity/contract", package="hydentity" }
-# amm = { path = "../../../hyle3/contracts/amm/contract", package="amm" }
-# hyle = { path = "../../../hyle3", package="hyle" }
+# sdk = { path = "/home/bertrand/workspace/hyle2/crates/contract-sdk", package="hyle-contract-sdk", features = ["tracing"] }
+# client-sdk = { path = "/home/bertrand/workspace/hyle2/crates/client-sdk", package="client-sdk", default-features = false, features = ["risc0", "rest"] }
+# hyllar = { path = "/home/bertrand/workspace/hyle2/crates/contracts/hyllar", package="hyllar", features = ["client"] }
+# hydentity = { path = "/home/bertrand/workspace/hyle2/crates/contracts/hydentity", package="hydentity", features = ["client"]  }
+# amm = { path = "/home/bertrand/workspace/hyle2/crates/contracts/amm", package="amm", features = ["client"]  }
+# hyle_contracts = { path = "/home/bertrand/workspace/hyle2/crates/contracts", package="hyle-contracts"  }
+# bonsai_runner = { path = "/home/bertrand/workspace/hyle2/crates/bonsai-runner", package="bonsai-runner", features = [] }
+# hyle = { path = "/home/bertrand/workspace/hyle2", package="hyle", features = []  }
 
 axum = "0.8.1"
 tokio = { version = "1", features = ["full"] }
@@ -36,4 +43,7 @@ hex = "0.4.3"
 borsh = "1.5.3"
 tracing = "0.1.41"
 tracing-subscriber = { version = "0.3.18", features = ["env-filter"] }
+clap = "4.5.28"
+utoipa-axum = { version = "0.2.0" }
+utoipa = "5.3.1"
 

@@ -1,39 +1,55 @@
-import { useState } from "react";
+import { FormEvent, useState } from "react";
 import Button from "@/components/ui/Button";
 import Input from "@/components/ui/Input";
-import register from "@/api/endpoints/register";
-import { useFormSubmission } from "@/hooks/useFormSubmission";
+import { useMetaMask } from "@/hooks";
+import { Blob, BlobTransaction } from "@/model/hyle";
+import { signMessage } from "@/utils/sign";
+import { buildRegisterBlob } from "@/model/mmid";
+import * as node from "@/api/node";
 
 export default function Register() {
-  const [username, setUsername] = useState("");
+  const { account } = useMetaMask();
   const [message, setMessage] = useState("");
 
-  const { handleSubmit } = useFormSubmission(register, {
-    onMutate: () => {
-      setMessage("Registering...");
-    },
-    onError: (error) => {
+  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+
+    try {
+      setMessage("Pending signature...");
+
+      const { signature, account } = await signMessage("hyle registration");
+
+      console.log('signature', signature);
+
+      const register: Blob = buildRegisterBlob(signature);
+
+      const blobTx: BlobTransaction = {
+        identity: account,
+        blobs: [register],
+      };
+
+      console.log('blob', blobTx);
+
+      await node.sendBlobTx(blobTx);
+
+      setMessage("Transaction sent ✅");
+    } catch (error) {
       setMessage(`Failed to register: ${error.message}`);
-    },
-    onSuccess: () => {
-      setMessage(`Register successful for user ${username}.hydentity`);
-    },
-  });
+    }
+  };
 
   return (
     <form onSubmit={handleSubmit}>
       <Input
         type="text"
-        labelText="Username"
-        suffixText=".hydentity"
-        value={username}
-        name="username"
-        onChange={(e) => setUsername(e.target.value)}
+        labelText="Account"
+        suffixText=""
+        value={account}
+        name="account"
+        readOnly
       />
-      <Input type="password" labelText="Password" name="password" />
 
-      
-      <Button>{`Register ${username}.hydentity`}</Button>
+      <Button>{`Register`}</Button>
       <p>{message}</p>
     </form>
   );

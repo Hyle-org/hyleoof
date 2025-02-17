@@ -1,5 +1,6 @@
 import { createApiRequest } from "../createApiRequest";
 import { AuthParams, SERVER_URL } from "../constants";
+import { idContractName } from "@/config/contract";
 
 interface ApproveParams extends AuthParams {
   spender: string;
@@ -8,8 +9,7 @@ interface ApproveParams extends AuthParams {
 }
 
 export default async function approve({
-  username,
-  password,
+  account,
   spender = "amm",
   token,
   amount,
@@ -19,8 +19,7 @@ export default async function approve({
     endpoint: "/approve",
     method: "POST",
     body: {
-      username: username + ".hydentity",
-      password,
+      account: account + "." + idContractName,
       token,
       spender,
       amount: Number(amount),

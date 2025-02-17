@@ -1,18 +1,19 @@
+import { idContractName } from "@/config/contract";
 import { SERVER_URL } from "../constants";
 import { createApiRequest } from "../createApiRequest";
 
 interface FaucetParams {
-  username: string;
+  account: string;
   token: string;
 }
 
-export default async function faucet({ username, token }: FaucetParams) {
+export default async function faucet({ account, token }: FaucetParams) {
   return createApiRequest({
     baseUrl: SERVER_URL,
     endpoint: "/faucet",
     method: "POST",
     body: {
-      username: username + ".hydentity",
+      account: account,
       token,
     },
   })();
