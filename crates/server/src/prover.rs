@@ -1,8 +1,13 @@
-use std::sync::Arc;
+use std::{any::Any, collections::HashMap, sync::Arc};
 
 use crate::app::AppModuleCtx;
+use amm::{client::AmmPseudoExecutor, AmmState};
 use anyhow::Result;
-use client_sdk::helpers::risc0::Risc0Prover;
+use client_sdk::{
+    contract_states,
+    helpers::{risc0::Risc0Prover, ClientSdkExecutor},
+    transaction_builder::TxExecutorBuilder,
+};
 use hyle::{
     module_handle_messages,
     node_state::module::NodeStateEvent,
@@ -11,9 +16,11 @@ use hyle::{
         modules::{module_bus_client, Module},
     },
 };
+use hyle_metamask::IdentityContractState;
+use hyllar::{client::HyllarPseudoExecutor, HyllarToken};
 use sdk::{
     BlobTransaction, Block, BlockHeight, ContractInput, ContractName, Hashable, HyleOutput,
-    ProofTransaction, TransactionData, TxHash,
+    ProofTransaction, StateDigest, TransactionData, TxHash,
 };
 use tracing::{error, info, warn};
 
@@ -137,24 +144,53 @@ fn get_prover(cn: &ContractName) -> Option<Risc0Prover> {
     }
 }
 
+fn get_executor(cn: &ContractName) -> Option<Box<dyn ClientSdkExecutor + Send + Sync>> {
+    match cn.0.as_str() {
+        "hyllar" => Some(Box::new(HyllarPseudoExecutor {})),
+        "hyllar2" => Some(Box::new(HyllarPseudoExecutor {})),
+        "mmid" => Some(Box::new(hyle_metamask::client::PseudoExecutor {})),
+        "amm" => Some(Box::new(AmmPseudoExecutor {})),
+        _ => None,
+    }
+}
+
 async fn prove_blob_tx(ctx: &Arc<AppModuleCtx>, tx: BlobTransaction) -> Result<()> {
     let blobs = tx.blobs.clone();
     let tx_hash = tx.hash();
+    let mut states = HashMap::<ContractName, StateDigest>::new();
+
     for (index, blob) in tx.blobs.iter().enumerate() {
         if let Some(prover) = get_prover(&blob.contract_name) {
             info!("Proving tx: {}. Blob for {}", tx_hash, blob.contract_name);
-            let contract = ctx.node_client.get_contract(&blob.contract_name).await?;
-
-            info!("state: {:?}", contract.state);
+            if !states.contains_key(&blob.contract_name) {
+                let contract = ctx.node_client.get_contract(&blob.contract_name).await?;
+                states.insert(blob.contract_name.clone(), contract.state);
+            }
 
             let inputs = ContractInput {
-                initial_state: contract.state,
+                initial_state: states.get(&blob.contract_name).unwrap().clone(),
                 identity: tx.identity.clone(),
                 tx_hash: tx_hash.clone(),
                 private_input: vec![],
                 blobs: blobs.clone(),
                 index: sdk::BlobIndex(index),
                 tx_ctx: None,
+            };
+
+            let success = {
+                let res = get_executor(&blob.contract_name).unwrap().execute(&inputs);
+
+                match res {
+                    Ok((_, hyle_outputs)) => {
+                        states.insert(blob.contract_name.clone(), hyle_outputs.next_state);
+
+                        hyle_outputs.success
+                    }
+                    Err(e) => {
+                        warn!("Error executing blob: {:?}", e);
+                        false
+                    }
+                }
             };
 
             match prover.prove(inputs).await {
@@ -169,22 +205,14 @@ async fn prove_blob_tx(ctx: &Arc<AppModuleCtx>, tx: BlobTransaction) -> Result<(
                         .send_tx_proof(&tx)
                         .await
                         .log_error("failed to send proof to node");
-
-                    let receipt = borsh::from_slice::<risc0_zkvm::Receipt>(&tx.proof.0)?;
-                    let ho = receipt.journal.decode::<HyleOutput>();
-                    if let Ok(ho) = ho {
-                        if !ho.success {
-                            let program_error = std::str::from_utf8(&ho.program_outputs).unwrap();
-                            warn!("Execution failed ! Program output: {}", program_error);
-
-                            return Ok(());
-                        }
+                    if !success {
+                        return Ok(()); // Will fail-fast on first "failed" proof
                     }
                 }
                 Err(e) => {
                     error!("Error proving tx: {:?}", e);
                 }
-            }
+            };
         }
     }
     Ok(())

@@ -2393,6 +2393,7 @@ dependencies = [
  "clap",
  "client-sdk",
  "config",
+ "contract-identity",
  "fjall",
  "futures",
  "hex",
