@@ -1,15 +1,16 @@
 import TokenSelector from "@/components/TokenSelector";
 import Input from "@/components/ui/Input";
-import { useState } from "react";
 import Button from "../ui/Button";
-import { useFormSubmission } from "@/hooks/useFormSubmission";
+import { useState } from "react";
 import swap from "@/api/endpoints/swap";
+import { useFormSubmission } from "@/hooks/useFormSubmission";
 import { useHyllar } from "@/hooks/useHyllar";
 import { useMetaMask } from "@/hooks";
 import { createApiRequest } from "@/api/createApiRequest";
 import { SERVER_URL } from "@/api/constants";
 import { Blob } from "@/model/hyle";
 import { useSendBlobTransaction } from "@/hooks/useSendBlobTransaction";
+import { useSignBlobs } from "@/hooks/useSignBlobs";
 
 export default function Swap() {
   const { account } = useMetaMask();
@@ -20,6 +21,7 @@ export default function Swap() {
   const [message, setMessage] = useState("");
   const { getBalance } = useHyllar({ contractName: fromToken });
   const sendBlobTransaction = useSendBlobTransaction();
+  const signBlobs = useSignBlobs();
 
   const setAmount = async (value: number) => {
     setFromTokenAmount(value);
@@ -41,7 +43,14 @@ export default function Swap() {
     onSuccess: async (blobs: Array<Blob>) => {
       setMessage(`Pending signature`);
 
-      await sendBlobTransaction(blobs);
+      const res = await signBlobs({ blobs });
+      if (res == null) {
+        throw new Error('Signature failed');
+      }
+
+      const { account, signature, nonce } = res;
+
+      await sendBlobTransaction(blobs, account, nonce, signature);
 
       setMessage(`Transaction sent ✅`);
     },

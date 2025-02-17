@@ -37,7 +37,7 @@ export function useHyllar({ contractName }: UseHyllarParams) {
   };
 
   const getBalance = (account: string) => {
-    const id = toCamelCase(`${account}.${idContractName}`);
+    const id = toCamelCase(account);
     const balance = hyllarState?.balances[id];
     return balance;
   };

@@ -13,7 +13,7 @@ export default async function faucet({ account, token }: FaucetParams) {
     endpoint: "/faucet",
     method: "POST",
     body: {
-      account: account + "." + idContractName,
+      account: account,
       token,
     },
   })();

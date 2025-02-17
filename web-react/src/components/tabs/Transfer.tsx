@@ -1,16 +1,14 @@
 import TokenSelector from "@/components/TokenSelector";
 import Input from "@/components/ui/Input";
 import Button from "@/components/ui/Button";
-import { FormEvent, useState } from "react";
+import { useState } from "react";
 import transfer from "@/api/endpoints/transfer";
 import { useFormSubmission } from "@/hooks/useFormSubmission";
 import { useHyllar } from "@/hooks/useHyllar";
-import { useInvokeSnap, useMetaMask } from "@/hooks";
-import { signBlobs } from "@/utils/sign";
-import { idContractName } from "@/config";
-import { HYLE_PROVER_URL } from "@/config/contract";
+import { useMetaMask } from "@/hooks";
 import { Blob } from "@/model/hyle";
 import { useSendBlobTransaction } from "@/hooks/useSendBlobTransaction";
+import { useSignBlobs } from "@/hooks/useSignBlobs";
 
 export type TxHash = string;
 export type BlockHeight = number;
@@ -33,6 +31,7 @@ export default function Transfer() {
   const [message, setMessage] = useState("");
   const { getBalance } = useHyllar({ contractName: token });
   const sendBlobTransaction = useSendBlobTransaction();
+  const signBlobs = useSignBlobs();
 
   const { handleSubmit } = useFormSubmission(transfer, {
     onMutate: () => {
@@ -44,7 +43,13 @@ export default function Transfer() {
     onSuccess: async (blobs: Array<Blob>) => {
       setMessage(`Pending signature`);
 
-      await sendBlobTransaction(blobs);
+      const res = await signBlobs({ blobs });
+      if (res == null) {
+        throw new Error('Signature failed');
+      }
+      const { account, signature, nonce } = res;
+
+      await sendBlobTransaction(blobs, account, nonce, signature);
 
       setMessage(`Transaction sent ✅`);
     },

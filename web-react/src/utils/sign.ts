@@ -19,17 +19,6 @@ export async function signMessage(message: string) {
   return { signature, account };
 }
 
-export async function signBlobs(blobs: Array<Blob>) {
-  // TODO: fetch nonce
-  const nonce = 1;
-
-  const message = `verify ${nonce} ${blobs.map((blob) => blob.contract_name + " [" + blob.data.join(", ") + "]").join(" ")}`;
-
-  const { signature, account } = await signMessage(message);
-
-  return { signature, account, nonce };
-}
-
 // Convert message to hex format
 function toHexMessage(message: string): string {
   return (

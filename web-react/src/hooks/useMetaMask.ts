@@ -10,8 +10,15 @@ import { useMetaMaskContext } from "./MetamaskContext";
  * @returns The informations.
  */
 export const useMetaMask = () => {
-  const { provider, setInstalledSnap, installedSnap, account, setAccount } =
-    useMetaMaskContext();
+  const {
+    provider,
+    setInstalledSnap,
+    installedSnap,
+    account,
+    setAccount,
+    nonce,
+    setNonce,
+  } = useMetaMaskContext();
   const request = useRequest();
 
   const [isFlask, setIsFlask] = useState(false);
@@ -59,6 +66,8 @@ export const useMetaMask = () => {
     installedSnap,
     getSnap,
     account,
+    nonce,
     setAccount,
+    setNonce,
   };
 };

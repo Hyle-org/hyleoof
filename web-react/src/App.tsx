@@ -8,12 +8,9 @@ import { useMetaMask } from "./hooks/useMetaMask";
 import { useRequestSnap } from "./hooks/useRequestSnap";
 import { useInvokeSnap } from "./hooks/useInvokeSnap";
 import { isLocalSnap } from "./utils/snap";
-import { defaultSnapOrigin, idContractName } from "./config";
-import { useMetaMaskContext } from "./hooks/MetamaskContext";
-import { ConnectButton, DisconnectButton, InstallFlaskButton } from "./components/Buttons";
-import { shortenString } from "./utils/shortenString";
+import { defaultSnapOrigin } from "./config";
+import { ConnectButton, InstallFlaskButton } from "./components/Buttons";
 import { useRequest } from "./hooks";
-import { a } from "vitest/dist/chunks/suite.BJU7kdY9.js";
 import Copiable from "./components/Copiable";
 
 enum TabOption {
@@ -33,9 +30,9 @@ const TabComponents: Record<TabOption, React.FC> = {
 const queryClient = new QueryClient();
 
 function App() {
-  const { isFlask, snapsDetected, installedSnap, account, setAccount } = useMetaMask();
+  const { isFlask, snapsDetected, installedSnap, account, setAccount, setNonce } = useMetaMask();
   const requestSnap = useRequestSnap();
-  const request = useRequest();
+  const invokeSnap = useInvokeSnap();
   const [autoconnect, setAutoconnect] = useState(true);
 
   const isMetaMaskReady = isLocalSnap(defaultSnapOrigin)
@@ -51,9 +48,9 @@ function App() {
 
   const getAccount = async () => {
     setAutoconnect(false);
-    const ethAccounts = await request({ method: "eth_requestAccounts" }) as string[];
-    console.log(ethAccounts);
-    setAccount(ethAccounts[0] + "." + idContractName);
+    const { account, nonce } = await invokeSnap({ method: "get_account" }) as { account: string, nonce: number };
+    setNonce(nonce);
+    setAccount(account);
   };
 
   if (installedSnap && autoconnect) { getAccount(); }

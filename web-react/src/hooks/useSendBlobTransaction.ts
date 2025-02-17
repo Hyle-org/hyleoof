@@ -7,9 +7,12 @@ export const useSendBlobTransaction = () => {
   /**
    * Request the Snap.
    */
-  const sendBlobTx = async (blobs: Array<Blob>) => {
-    const { signature, account, nonce } = await signBlobs(blobs);
-
+  const sendBlobTx = async (
+    blobs: Array<Blob>,
+    account: string,
+    nonce: number,
+    signature: string,
+  ) => {
     const verifyIdentity: Blob = buildIdentityBlob(nonce, signature);
 
     const blobTx: BlobTransaction = {
