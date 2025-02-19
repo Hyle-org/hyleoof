@@ -10,7 +10,6 @@ import { useInvokeSnap } from "./hooks/useInvokeSnap";
 import { isLocalSnap } from "./utils/snap";
 import { defaultSnapOrigin } from "./config";
 import { ConnectButton, InstallFlaskButton } from "./components/Buttons";
-import { useRequest } from "./hooks";
 import Copiable from "./components/Copiable";
 
 enum TabOption {

@@ -39,7 +39,8 @@ export default function Register() {
 
       setMessage("Transaction sent ✅");
     } catch (error) {
-      setMessage(`Failed to register: ${error.message}`);
+      const err = error as Error;
+      setMessage(`Failed to register: ${err.message}`);
     }
   };
 

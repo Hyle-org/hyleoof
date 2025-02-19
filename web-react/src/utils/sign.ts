@@ -1,4 +1,3 @@
-import { Blob } from "@/model/hyle";
 import { getSnapsProvider } from "./metamask";
 import { idContractName } from "@/config";
 
@@ -10,7 +9,7 @@ export async function signMessage(message: string) {
     method: "eth_requestAccounts",
   });
 
-  const signature = await ethereum.request<string>({
+  const signature = await ethereum.request({
     method: "personal_sign",
     params: [hexMessage, ethAddr[0]],
   });

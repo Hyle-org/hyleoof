@@ -2,7 +2,6 @@ import {
   getContractState,
   GetContractStateResponse,
 } from "@/api/indexer/getContractState";
-import { idContractName } from "@/config/contract";
 import { camelizeKeys, CamelizeKeys, toCamelCase } from "@/utils/camelizeKeys";
 import { useEffect, useState } from "react";
 

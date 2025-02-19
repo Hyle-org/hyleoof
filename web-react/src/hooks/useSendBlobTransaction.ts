@@ -1,4 +1,3 @@
-import { signBlobs } from "@/utils/sign";
 import { Blob, BlobTransaction } from "@/model/hyle";
 import { buildIdentityBlob } from "@/model/mmid";
 import * as node from "@/api/node";

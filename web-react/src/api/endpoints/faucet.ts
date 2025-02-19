@@ -1,4 +1,3 @@
-import { idContractName } from "@/config/contract";
 import { SERVER_URL } from "../constants";
 import { createApiRequest } from "../createApiRequest";
 

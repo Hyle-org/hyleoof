@@ -1,25 +1,32 @@
-FROM rust:slim-bookworm AS build
+# Étape de build
+FROM node:18-alpine AS build
 
-# Add wasm target
-RUN rustup target add wasm32-unknown-unknown
+# Installer pnpm
+RUN npm install -g pnpm
 
-# Install wasm-pack for testing
-RUN curl https://rustwasm.github.io/wasm-pack/installer/init.sh -sSf | sh
-
-# Install trunk
-ADD https://github.com/thedodd/trunk/releases/download/v0.21.4/trunk-x86_64-unknown-linux-gnu.tar.gz ./tmp
-RUN cd /tmp && tar xf trunk-x86_64-unknown-linux-gnu.tar.gz && chmod +x trunk && mv trunk /bin
-
-RUN apt-get update && apt-get install -y clang
-
+# Définir le répertoire de travail
 WORKDIR /app
-COPY ./crates ./crates
-COPY ./Cargo.toml .
-COPY ./Cargo.lock .
 
-RUN cd /app/crates/ui && trunk build --release
+# Copier les fichiers de l'application
+COPY web-react/package.json web-react/pnpm-lock.yaml ./
 
+# Installer les dépendances
+RUN pnpm install
+
+# Copier le reste des fichiers de l'application
+COPY web-react .
+
+# Construire l'application
+RUN pnpm run build
+
+# Étape de production
 FROM nginx:1.21.5-alpine AS production
 
-COPY --from=build /app/crates/ui/config.js /usr/share/nginx/html
-COPY --from=build /app/crates/ui/dist /usr/share/nginx/html
+# Copier les fichiers de build depuis l'étape de build
+COPY --from=build /app/dist /usr/share/nginx/html
+
+# Exposer le port 80
+EXPOSE 80
+
+# Démarrer Nginx
+CMD ["nginx", "-g", "daemon off;"]

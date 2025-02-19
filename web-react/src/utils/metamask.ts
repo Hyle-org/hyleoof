@@ -11,7 +11,7 @@ import type {
  * @returns True if the provider supports snaps, false otherwise.
  */
 export async function hasSnapsSupport(
-  provider: MetaMaskInpageProvider = window.ethereum,
+  provider: MetaMaskInpageProvider | undefined = window.ethereum,
 ) {
   try {
     await provider.request({
@@ -44,6 +44,7 @@ export async function getMetaMaskEIP6963Provider() {
      * @param provider - A MetaMask provider if found, otherwise null.
      */
     function resolve(provider: MetaMaskInpageProvider | null) {
+      // @ts-ignore
       window.removeEventListener(
         "eip6963:announceProvider",
         onAnnounceProvider,
@@ -72,6 +73,7 @@ export async function getMetaMaskEIP6963Provider() {
       }
     }
 
+    // @ts-ignore
     window.addEventListener("eip6963:announceProvider", onAnnounceProvider);
 
     window.dispatchEvent(new Event("eip6963:requestProvider"));

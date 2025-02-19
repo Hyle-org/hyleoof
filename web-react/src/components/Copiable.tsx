@@ -1,5 +1,5 @@
 import { shortenString } from '@/utils/shortenString';
-import React, { useState } from 'react';
+import { useState } from 'react';
 
 const Copiable = ({ text, size }: { text: string, size: number | null }) => {
   const [copied, setCopied] = useState(false);

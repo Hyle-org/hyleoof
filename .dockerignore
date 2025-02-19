@@ -1,1 +1,6 @@
 target
+target-ra
+web-react/node_modules
+dist
+data
+.github

@@ -1,0 +1,23 @@
+name: Frontend
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - uses: actions/setup-node@v3
+        with:
+          node-version: '16'  # Adaptez la version de Node.js à vos besoins
+
+      - run: npm install -g pnpm
+
+      - run: pnpm install
+
+      - run: pnpm run build
+
