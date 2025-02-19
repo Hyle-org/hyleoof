@@ -2,7 +2,7 @@ FROM rust:alpine AS builder
 
 RUN apk add pkgconfig openssl-dev gcc musl-dev
 RUN apk add --no-cache openssl-libs-static
-RUN apk add g++
+RUN apk add g++ curl
 
 WORKDIR /app
 COPY .cargo .cargo

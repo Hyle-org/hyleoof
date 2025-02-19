@@ -13,7 +13,7 @@ jobs:
 
       - uses: actions/setup-node@v3
         with:
-          node-version: '16'  # Adaptez la version de Node.js à vos besoins
+          node-version: '23'
 
       - run: npm install -g pnpm
 
