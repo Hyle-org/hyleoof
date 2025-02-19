@@ -14,7 +14,7 @@ use hyle::{
 };
 use hyllar::client::HyllarPseudoExecutor;
 use sdk::{
-    BlobTransaction, Block, BlockHeight, ContractInput, ContractName, Hashable, ProofTransaction,
+    BlobTransaction, Block, BlockHeight, ContractInput, ContractName, Hashed, ProofTransaction,
     StateDigest, TransactionData, TxHash,
 };
 use tracing::{error, info, warn};
@@ -74,7 +74,7 @@ impl ProverModule {
     async fn handle_processed_block(&mut self, block: Block) -> Result<()> {
         let mut should_trigger = self.unsettled_txs.is_empty();
 
-        for tx in block.txs {
+        for (_, tx) in block.txs {
             if let TransactionData::Blob(tx) = tx.transaction_data {
                 self.handle_blob(tx);
             }
@@ -104,7 +104,7 @@ impl ProverModule {
     }
 
     fn settle_tx(&mut self, tx: TxHash) -> Result<usize> {
-        let tx = self.unsettled_txs.iter().position(|t| t.hash() == tx);
+        let tx = self.unsettled_txs.iter().position(|t| t.hashed() == tx);
         if let Some(pos) = tx {
             self.unsettled_txs.remove(pos);
             Ok(pos)
@@ -115,7 +115,7 @@ impl ProverModule {
 
     fn trigger_prove_first(&self) {
         if let Some(tx) = self.unsettled_txs.first().cloned() {
-            info!("Triggering prove for tx: {}", tx.hash());
+            info!("Triggering prove for tx: {}", tx.hashed());
             let ctx = self.ctx.clone();
             tokio::task::spawn(async move {
                 match prove_blob_tx(&ctx.app, tx).await {
@@ -151,7 +151,7 @@ fn get_executor(cn: &ContractName) -> Option<Box<dyn ClientSdkExecutor + Send + 
 
 async fn prove_blob_tx(ctx: &Arc<AppModuleCtx>, tx: BlobTransaction) -> Result<()> {
     let blobs = tx.blobs.clone();
-    let tx_hash = tx.hash();
+    let tx_hash = tx.hashed();
     let mut states = HashMap::<ContractName, StateDigest>::new();
 
     for (index, blob) in tx.blobs.iter().enumerate() {

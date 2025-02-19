@@ -23,6 +23,7 @@ pub async fn init_node(
     node: Arc<NodeApiHttpClient>,
     indexer: Arc<IndexerApiHttpClient>,
 ) -> Result<()> {
+    init_mmid(&node, &indexer).await?;
     init_amm(&node, &indexer).await?;
     init_hyllar2(&node, &indexer).await?;
     init_hyllar(node, indexer).await?;
@@ -113,10 +114,8 @@ async fn init_hyllar(
                     1_000_000_000_000_000,
                 )?;
 
-                let blob_tx = BlobTransaction {
-                    identity: transaction.identity.clone(),
-                    blobs: transaction.blobs.clone(),
-                };
+                let blob_tx =
+                    BlobTransaction::new(transaction.identity.clone(), transaction.blobs.clone());
 
                 let proof_tx_builder = app.executor.process(transaction)?;
 
@@ -197,6 +196,34 @@ async fn init_hyllar2(node: &NodeApiHttpClient, indexer: &IndexerApiHttpClient) 
         }
     };
 
+    Ok(())
+}
+
+async fn init_mmid(node: &NodeApiHttpClient, indexer: &IndexerApiHttpClient) -> Result<()> {
+    match indexer.get_indexer_contract(&"mmid".into()).await {
+        Ok(contract) => {
+            let image_id = hex::encode(compute_image_id(hyle_metamask::client::metadata::ELF)?);
+            let program_id = hex::encode(contract.program_id.as_slice());
+            if program_id != image_id {
+                bail!(
+                    "Invalid Metamask contract image_id. On-chain version is {program_id}, expected {image_id}",
+                );
+            }
+            info!("✅ Metamask contract is up to date");
+        }
+        Err(_) => {
+            info!("🚀 Registering Metamask contract");
+            let image_id = hex::encode(compute_image_id(hyle_metamask::client::metadata::ELF)?);
+            node.register_contract(&APIRegisterContract {
+                verifier: "risc0".into(),
+                program_id: ProgramId(hex::decode(image_id)?),
+                state_digest: hyle_metamask::IdentityContractState::new().as_digest(),
+                contract_name: "mmid".into(),
+            })
+            .await?;
+            wait_contract_state(indexer, &"mmid".into()).await?;
+        }
+    };
     Ok(())
 }
 
