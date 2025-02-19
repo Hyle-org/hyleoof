@@ -363,10 +363,7 @@ struct HyleOofCtx {
 
 impl HyleOofCtx {
     async fn send(&mut self, transaction: ProvableBlobTx) -> Result<TxHash, AppError> {
-        let blob_tx = BlobTransaction {
-            identity: transaction.identity.clone(),
-            blobs: transaction.blobs.clone(),
-        };
+        let blob_tx = BlobTransaction::new(transaction.identity.clone(), transaction.blobs.clone());
 
         let proof_tx_builder = self.executor.process(transaction)?;
 

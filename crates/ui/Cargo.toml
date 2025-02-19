@@ -7,9 +7,9 @@ homepage = { workspace = true }
 repository = { workspace = true }
 
 [dependencies]
-sdk = { git = "https://github.com/Hyle-org/hyle.git", package="hyle-contract-sdk", tag = "v0.9.0"  }
-client-sdk = { git = "https://github.com/Hyle-org/hyle.git", package="client-sdk", default-features = false, features = ["rest"], tag = "v0.9.0" }
-hyllar = { git = "https://github.com/Hyle-org/hyle.git", package="hyllar", default-features = false, tag = "v0.9.0"  }
+sdk = { git = "https://github.com/Hyle-org/hyle.git", package="hyle-contract-sdk", tag = "v0.11.0"  }
+client-sdk = { git = "https://github.com/Hyle-org/hyle.git", package="client-sdk", default-features = false, features = ["rest"], tag = "v0.11.0" }
+hyllar = { git = "https://github.com/Hyle-org/hyle.git", package="hyllar", default-features = false, tag = "v0.11.0"  }
 
 serde = { version = "1.0", default-features = false, features = [
     "derive",

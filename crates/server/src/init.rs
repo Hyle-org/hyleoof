@@ -112,10 +112,8 @@ async fn init_hyllar(
                     1_000_000_000_000_000,
                 )?;
 
-                let blob_tx = BlobTransaction {
-                    identity: transaction.identity.clone(),
-                    blobs: transaction.blobs.clone(),
-                };
+                let blob_tx =
+                    BlobTransaction::new(transaction.identity.clone(), transaction.blobs.clone());
 
                 let proof_tx_builder = app.executor.process(transaction)?;
 
