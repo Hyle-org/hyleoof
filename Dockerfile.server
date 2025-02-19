@@ -1,8 +1,7 @@
-FROM rust:alpine AS builder
+FROM rust:latest AS builder
 
-RUN apk add pkgconfig openssl-dev gcc musl-dev
-RUN apk add --no-cache openssl-libs-static
-RUN apk add g++ curl
+RUN curl -L https://risczero.com/install | bash
+RUN source "/root/.profile" && rzup install
 
 WORKDIR /app
 COPY .cargo .cargo
@@ -13,7 +12,7 @@ COPY Cargo.lock .
 RUN cargo build -p server
 
 # RUNNER
-FROM alpine:latest
+FROM rust:latest
 
 WORKDIR /app
 
