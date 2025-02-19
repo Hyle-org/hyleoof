@@ -19,5 +19,5 @@ jobs:
 
       - run: pnpm install
 
-      - run: pnpm run build
+      - run: cd web-react && pnpm run build
 

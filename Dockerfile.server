@@ -1,7 +1,7 @@
 FROM rust:latest AS builder
 
 RUN curl -L https://risczero.com/install | bash
-RUN source "/root/.profile" && rzup install
+RUN /root/.risc0/bin/rzup install
 
 WORKDIR /app
 COPY .cargo .cargo
