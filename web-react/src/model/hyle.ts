@@ -9,3 +9,9 @@ export interface BlobTransaction {
   identity: Identity;
   blobs: Blob[];
 }
+
+export interface TxEvent {
+  block_hash: string;
+  block_height: number;
+  events: { metadata: object; name: string }[];
+}

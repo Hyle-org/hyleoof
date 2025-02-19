@@ -6,10 +6,14 @@ import { Blob, BlobTransaction } from "@/model/hyle";
 import { signMessage } from "@/utils/sign";
 import { buildRegisterBlob } from "@/model/mmid";
 import * as node from "@/api/node";
+import { useFetchEvents } from "@/hooks/useFetchEvents";
 
 export default function Register() {
   const { account } = useMetaMask();
   const [message, setMessage] = useState("");
+  const fetchEvents = useFetchEvents(setMessage, () => {
+    setTimeout(() => setMessage(""), 2000);
+  });
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -30,7 +34,8 @@ export default function Register() {
 
       console.log('blob', blobTx);
 
-      await node.sendBlobTx(blobTx);
+      const tx = await node.sendBlobTx(blobTx);
+      fetchEvents(tx);
 
       setMessage("Transaction sent ✅");
     } catch (error) {

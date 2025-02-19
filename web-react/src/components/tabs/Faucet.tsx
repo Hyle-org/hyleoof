@@ -6,6 +6,7 @@ import faucet from "@/api/endpoints/faucet";
 import { useFormSubmission } from "@/hooks/useFormSubmission";
 import { useHyllar } from "@/hooks/useHyllar";
 import { useMetaMask } from "@/hooks";
+import { useFetchEvents } from "@/hooks/useFetchEvents";
 
 const FAUCET_AMOUNT = 10;
 
@@ -14,7 +15,11 @@ export default function Faucet() {
   const [recipient, setRecipient] = useState(account);
   const [token, setToken] = useState("hyllar");
   const [message, setMessage] = useState("");
-  const { getBalance: getBalance } = useHyllar({ contractName: token });
+  const { getBalance, updateHyllarState } = useHyllar({ contractName: token });
+  const fetchEvents = useFetchEvents((e: string) => setMessage(e), () => {
+    updateHyllarState();
+    setTimeout(() => setMessage("Your identity is now registered on-chain, you can initiate transfer."), 2000);
+  });
 
   const { handleSubmit } = useFormSubmission(faucet, {
     onMutate: () => {
@@ -23,10 +28,12 @@ export default function Faucet() {
     onError: (error) => {
       setMessage(`Failed to faucet: ${error.message}`);
     },
-    onSuccess: () => {
+    onSuccess: async (tx) => {
       setMessage(`Faucet successful, token ${token}`);
+      fetchEvents(tx as string);
     },
   });
+
 
   return (
     <>
@@ -45,8 +52,8 @@ export default function Faucet() {
       </form>
 
       <div className="state">
-        <p>{message}</p>
         <p>{`Balance: ${getBalance(account) || `0`}`}</p>
+        <p>{message}</p>
       </div>
     </>
   );

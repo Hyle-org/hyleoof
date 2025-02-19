@@ -20,7 +20,7 @@ export const useSendBlobTransaction = () => {
       blobs: [verifyIdentity, ...blobs],
     };
 
-    await node.sendBlobTx(blobTx);
+    return await node.sendBlobTx(blobTx);
   };
 
   return sendBlobTx;

@@ -26,7 +26,7 @@ interface UseHyllarParams {
 export function useHyllar({ contractName }: UseHyllarParams) {
   const [hyllarState, setHyllarState] = useState<HyllarToken | null>(null);
 
-  const setHyllar = async () => {
+  const updateHyllarState = async () => {
     try {
       const response = await getContractState({ contractName });
       const camelizedResponse = camelizeKeys(response);
@@ -45,8 +45,8 @@ export function useHyllar({ contractName }: UseHyllarParams) {
   const getTotalSupply = () => hyllarState?.totalSupply;
 
   useEffect(() => {
-    setHyllar();
+    updateHyllarState();
   }, [contractName]);
 
-  return { hyllarState, getBalance, getTotalSupply };
+  return { hyllarState, getBalance, updateHyllarState, getTotalSupply };
 }

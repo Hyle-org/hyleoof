@@ -9,6 +9,7 @@ import { useMetaMask } from "@/hooks";
 import { Blob } from "@/model/hyle";
 import { useSendBlobTransaction } from "@/hooks/useSendBlobTransaction";
 import { useSignBlobs } from "@/hooks/useSignBlobs";
+import { useFetchEvents } from "@/hooks/useFetchEvents";
 
 export type TxHash = string;
 export type BlockHeight = number;
@@ -32,6 +33,9 @@ export default function Transfer() {
   const { getBalance } = useHyllar({ contractName: token });
   const sendBlobTransaction = useSendBlobTransaction();
   const signBlobs = useSignBlobs();
+  const fetchEvents = useFetchEvents(setMessage, () => {
+    setTimeout(() => setMessage(""), 2000);
+  });
 
   const { handleSubmit } = useFormSubmission(transfer, {
     onMutate: () => {
@@ -49,7 +53,8 @@ export default function Transfer() {
       }
       const { account, signature, nonce } = res;
 
-      await sendBlobTransaction(blobs, account, nonce, signature);
+      const tx = await sendBlobTransaction(blobs, account, nonce, signature);
+      fetchEvents(tx);
 
       setMessage(`Transaction sent ✅`);
     },
