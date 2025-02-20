@@ -12,7 +12,7 @@ export default function Register() {
   const { account } = useMetaMask();
   const [message, setMessage] = useState("");
   const fetchEvents = useFetchEvents(setMessage, () => {
-    setTimeout(() => setMessage(""), 2000);
+    setTimeout(() => setMessage("Your identity is now registered on-chain, you can initiate transfer."), 2000);
   });
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {

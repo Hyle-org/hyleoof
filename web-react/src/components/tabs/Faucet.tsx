@@ -18,7 +18,7 @@ export default function Faucet() {
   const { getBalance, updateHyllarState } = useHyllar({ contractName: token });
   const fetchEvents = useFetchEvents((e: string) => setMessage(e), () => {
     updateHyllarState();
-    setTimeout(() => setMessage("Your identity is now registered on-chain, you can initiate transfer."), 2000);
+    setTimeout(() => setMessage("✅ Enjoy you tokens!"), 2000);
   });
 
   const { handleSubmit } = useFormSubmission(faucet, {

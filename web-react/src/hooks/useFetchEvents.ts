@@ -11,9 +11,12 @@ export const useFetchEvents = (
       for (const e of event.events) {
         console.log(e);
         if (e.name == "Settled" || e.name == "Sequenced") {
-          onEvent(`Transaction ${shortenString(tx, 18)} ${e.name}`);
+          onEvent(
+            `Transaction ${shortenString(tx, 18)} sequenced. Waiting for settlement...`,
+          );
         }
         if (e.name == "Settled") {
+          onEvent(`✨ Transaction ${shortenString(tx, 18)} settled!`);
           onSettle();
           return;
         }
