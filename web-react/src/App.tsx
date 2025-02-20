@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import Register from "@/components/tabs/Register";
 import Faucet from "@/components/tabs/Faucet";
 import Transfer from "@/components/tabs/Transfer";
@@ -60,6 +60,7 @@ function App() {
   };
 
   const handleToggle = () => {
+    //@ts-ignore
     setUseSnap((prev) => !prev);
   };
 
