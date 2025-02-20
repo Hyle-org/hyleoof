@@ -2,8 +2,8 @@ import React, { useEffect } from 'react';
 import './Notification.css';
 
 interface NotificationProps {
-  notification: { id: number; message: string };
-  onClose: (id: number) => void;
+  notification: { id: string; message: string };
+  onClose: (id: string) => void;
 }
 
 const Notification: React.FC<NotificationProps> = ({ notification, onClose }) => {
