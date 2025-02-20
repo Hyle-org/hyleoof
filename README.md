@@ -18,11 +18,12 @@ Rebuilds the app whenever a change is detected and runs a local server to host i
 #### Backend
 
 ```sh
-cargo run -p server
+cargo run
 ```
 
 Note: You need to have a running hyle node with indexer:  
 ```sh
 # in hyle repo
+git checkout v0.11.1
 cargo run -- --pg
 ```
