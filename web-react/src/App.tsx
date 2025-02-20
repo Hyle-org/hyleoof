@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Register from "@/components/tabs/Register";
 import Faucet from "@/components/tabs/Faucet";
 import Transfer from "@/components/tabs/Transfer";
@@ -8,9 +8,10 @@ import { useMetaMask } from "./hooks/useMetaMask";
 import { useRequestSnap } from "./hooks/useRequestSnap";
 import { useInvokeSnap } from "./hooks/useInvokeSnap";
 import { isLocalSnap } from "./utils/snap";
-import { defaultSnapOrigin } from "./config";
+import { defaultSnapOrigin, idContractName } from "./config";
 import { ConnectButton, InstallFlaskButton } from "./components/Buttons";
 import Copiable from "./components/Copiable";
+import SnapToggle from "./components/ui/SnapToggle";
 
 enum TabOption {
   Register = "Register",
@@ -29,14 +30,14 @@ const TabComponents: Record<TabOption, React.FC> = {
 const queryClient = new QueryClient();
 
 function App() {
-  const { isFlask, snapsDetected, installedSnap, account, setAccount, setNonce } = useMetaMask();
+  const { isFlask, providerDetected, provider, installedSnap, useSnap, setUseSnap, account, setAccount } = useMetaMask();
   const requestSnap = useRequestSnap();
   const invokeSnap = useInvokeSnap();
   const [autoconnect, setAutoconnect] = useState(true);
 
-  const isMetaMaskReady = isLocalSnap(defaultSnapOrigin)
+  const isMetaMaskReady = useSnap ? (isLocalSnap(defaultSnapOrigin)
     ? isFlask
-    : snapsDetected;
+    : providerDetected) : providerDetected;
 
   const handleConnect = async () => {
     console.log("connecting")
@@ -46,13 +47,23 @@ function App() {
   };
 
   const getAccount = async () => {
+    if (useSnap) {
+      const { account } = await invokeSnap({ method: "get_account" }) as { account: string, nonce: number };
+      setAccount(account);
+    } else {
+      const accounts = await provider?.request({ method: "eth_requestAccounts" }) as string[];
+      console.log("accounts", accounts)
+      const account = `${accounts[0]}.${idContractName}`;
+      setAccount(account);
+    }
     setAutoconnect(false);
-    const { account, nonce } = await invokeSnap({ method: "get_account" }) as { account: string, nonce: number };
-    setNonce(nonce);
-    setAccount(account);
   };
 
-  if (installedSnap && autoconnect) { getAccount(); }
+  const handleToggle = () => {
+    setUseSnap((prev) => !prev);
+  };
+
+  if ((!useSnap || installedSnap) && autoconnect) { getAccount(); }
 
   const [activeTab, setActiveTab] = useState<TabOption>(TabOption.Faucet);
   const ActiveComponent = TabComponents[activeTab];
@@ -61,25 +72,26 @@ function App() {
     <QueryClientProvider client={queryClient}>
       <div className="container">
         <div className="header">
-          {!isMetaMaskReady && (
+          <SnapToggle isToggled={useSnap} onToggle={handleToggle} />
+          {useSnap && !isMetaMaskReady && (
             <InstallFlaskButton />
           )}
-          {!installedSnap && (
+          {useSnap && !installedSnap && (
             <ConnectButton
               onClick={handleConnect}
+              useSnap={useSnap}
               disabled={!isMetaMaskReady}
             />
           )}
-          {installedSnap && account && (
+          {account && (
             <div>
               <p>Connected with:</p>
               <Copiable text={account} size={40} />
             </div>
           )}
-          {
-            installedSnap && !account && (
-              <ConnectButton onClick={getAccount} />
-            )
+          {(!useSnap || installedSnap) && !account && (
+            <ConnectButton useSnap={useSnap} onClick={getAccount} />
+          )
           }
         </div>
         <div className="tabs">

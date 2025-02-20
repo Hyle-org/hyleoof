@@ -4,6 +4,7 @@ import type { ComponentProps } from 'react';
 import styled from 'styled-components';
 
 import FlaskFox from '../assets/flask_fox.svg?react';
+import MetamaskFox from '../assets/metamask_fox.svg?react';
 import { useMetaMask, useRequestSnap } from '../hooks';
 import { shouldDisplayReconnectButton } from '../utils';
 
@@ -40,7 +41,23 @@ const Button = styled.button`
   align-self: flex-start;
   align-items: center;
   justify-content: center;
-  margin-top: auto;
+  margin: 15px auto;
+  font-size: ${(props) => props.theme.fontSizes.small};
+  border-radius: ${(props) => props.theme.radii.button};
+  border: 1px solid ${(props) => props.theme.colors.background?.inverse};
+  background-color: ${(props) => props.theme.colors.background?.inverse};
+  color: ${(props) => props.theme.colors.text?.inverse};
+  text-decoration: none;
+  font-weight: bold;
+  padding: 1rem;
+  cursor: pointer;
+  transition: all 0.2s ease-in-out;
+
+  &:hover {
+    background-color: transparent;
+    border: 1px solid ${(props) => props.theme.colors.background?.inverse};
+    color: ${(props) => props.theme.colors.text?.default};
+  }
   ${({ theme }) => theme.mediaQueries.small} {
     width: 100%;
   }
@@ -79,10 +96,14 @@ export const InstallFlaskButton = () => (
   </Link>
 );
 
-export const ConnectButton = (props: ComponentProps<typeof Button>) => {
+interface ConnectButtonProps extends ComponentProps<typeof Button> {
+  useSnap?: boolean; // Ajoutez la prop isSnap avec un type optionnel boolean
+}
+
+export const ConnectButton = (props: ConnectButtonProps) => {
   return (
     <Button {...props}>
-      <FlaskFox />
+      {props.useSnap ? <FlaskFox /> : <MetamaskFox />}
       <ButtonText>Connect</ButtonText>
     </Button>
   );

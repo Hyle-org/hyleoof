@@ -36,6 +36,7 @@ export default function Transfer() {
   const signBlobs = useSignBlobs();
   const { addNotification } = useNotification();
   const fetchEvents = useFetchEvents(addNotification, () => {
+    updateHyllarState();
     setMessage("");
   });
 
@@ -102,3 +103,6 @@ export default function Transfer() {
   );
 }
 
+function updateHyllarState() {
+  throw new Error("Function not implemented.");
+}

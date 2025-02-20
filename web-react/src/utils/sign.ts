@@ -1,10 +1,10 @@
-import { getSnapsProvider } from "./metamask";
+import { getEthProvider } from "./metamask";
 import { idContractName } from "@/config";
 
 export async function signMessage(message: string) {
   const hexMessage = toHexMessage(message);
 
-  const ethereum = await getSnapsProvider();
+  const ethereum = await getEthProvider(false);
   const ethAddr = await ethereum.request({
     method: "eth_requestAccounts",
   });

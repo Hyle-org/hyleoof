@@ -65,10 +65,11 @@ export async function getMetaMaskEIP6963Provider() {
       if (!detail) {
         return;
       }
+      console.log("announceProvider", detail);
 
       const { info, provider } = detail;
 
-      if (info.rdns.includes("io.metamask")) {
+      if (info.rdns.includes("io.metamask") || info.rdns.includes("io.rabby")) {
         resolve(provider);
       }
     }
@@ -86,16 +87,19 @@ export async function getMetaMaskEIP6963Provider() {
  *
  * @returns The provider, or `null` if no provider supports snaps.
  */
-export async function getSnapsProvider() {
+export async function getEthProvider(useSnap: boolean) {
+  console.log("Getting snaps provider");
   if (typeof window === "undefined") {
     return null;
   }
 
   if (await hasSnapsSupport()) {
+    console.log("Using default provider");
     return window.ethereum;
   }
 
   if (window.ethereum?.detected) {
+    console.log("Using detected provider");
     for (const provider of window.ethereum.detected) {
       if (await hasSnapsSupport(provider)) {
         return provider;
@@ -104,6 +108,7 @@ export async function getSnapsProvider() {
   }
 
   if (window.ethereum?.providers) {
+    console.log("Using providers");
     for (const provider of window.ethereum.providers) {
       if (await hasSnapsSupport(provider)) {
         return provider;
@@ -113,7 +118,11 @@ export async function getSnapsProvider() {
 
   const eip6963Provider = await getMetaMaskEIP6963Provider();
 
-  if (eip6963Provider && (await hasSnapsSupport(eip6963Provider))) {
+  if (
+    eip6963Provider &&
+    (!useSnap || (await hasSnapsSupport(eip6963Provider)))
+  ) {
+    console.log("Using EIP6963 provider");
     return eip6963Provider;
   }
 

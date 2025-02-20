@@ -29,6 +29,13 @@ export const useFetchEvents = (
             `Transaction ${shortenString(tx, 18)} sequenced. Waiting for settlement...`,
           );
         }
+        if (e.name == "SettledAsFailed") {
+          onEvent(
+            `⛈️  Transaction ${shortenString(tx, 18)} settled as failed.`,
+          );
+          onSettle();
+          return;
+        }
         if (e.name == "Settled") {
           onEvent(`✨ Transaction ${shortenString(tx, 18)} settled!`);
           onSettle();

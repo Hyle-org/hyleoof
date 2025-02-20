@@ -3,7 +3,7 @@ import type { ReactNode } from 'react';
 import { createContext, useContext, useEffect, useState } from 'react';
 
 import type { Snap } from '../types';
-import { getSnapsProvider } from '../utils';
+import { getEthProvider } from '../utils';
 
 type MetaMaskContextType = {
   provider: MetaMaskInpageProvider | null;
@@ -15,6 +15,8 @@ type MetaMaskContextType = {
   setAccount: (account: string) => void;
   nonce: number;
   setNonce: (nonce: number) => void;
+  useSnap: boolean;
+  setUseSnap: (val: boolean) => void;
 };
 
 export const MetaMaskContext = createContext<MetaMaskContextType>({
@@ -35,6 +37,10 @@ export const MetaMaskContext = createContext<MetaMaskContextType>({
   setNonce: () => {
     /* no-op */
   },
+  useSnap: true,
+  setUseSnap: () => {
+    /* no-op */
+  },
 });
 
 /**
@@ -50,9 +56,10 @@ export const MetaMaskProvider = ({ children }: { children: ReactNode }) => {
   const [error, setError] = useState<Error | null>(null);
   const [account, setAccount] = useState<string>("");
   const [nonce, setNonce] = useState<number>(0);
+  const [useSnap, setUseSnap] = useState(false);
 
   useEffect(() => {
-    getSnapsProvider().then(setProvider).catch(console.error);
+    getEthProvider(useSnap).then(setProvider).catch(console.error);
   }, []);
 
   useEffect(() => {
@@ -71,7 +78,7 @@ export const MetaMaskProvider = ({ children }: { children: ReactNode }) => {
 
   return (
     <MetaMaskContext.Provider
-      value={{ provider, error, setError, installedSnap, setInstalledSnap, account, setAccount, nonce, setNonce }}
+      value={{ provider, error, setError, installedSnap, setInstalledSnap, account, setAccount, nonce, setNonce, useSnap, setUseSnap }}
     >
       {children}
     </MetaMaskContext.Provider>

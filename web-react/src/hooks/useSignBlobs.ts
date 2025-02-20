@@ -1,5 +1,6 @@
 import { Blob } from "@/model/hyle";
 import { useInvokeSnap } from "./useInvokeSnap";
+import { signMessage } from "@/utils/sign";
 
 export type InvokeSnapParams = {
   blobs: Array<Blob>;
@@ -8,10 +9,10 @@ export type InvokeSnapParams = {
 /**
  * Utility hook to wrap the `sign_blobs` snap rpc call.
  */
-export const useSignBlobs = () => {
+export const useSignBlobs = (useSnap = false) => {
   const invokeSnap = useInvokeSnap();
 
-  const signBlobs = async ({ blobs }: InvokeSnapParams) =>
+  const signBlobsWithSnap = async ({ blobs }: InvokeSnapParams) =>
     invokeSnap({
       method: "sign_blobs",
       params: {
@@ -19,5 +20,19 @@ export const useSignBlobs = () => {
       },
     }) as Promise<{ signature: string; account: string; nonce: number }>;
 
-  return signBlobs;
+  //// Sign message using personal_sign
+  const signBlobs = async ({ blobs }: { blobs: Array<Blob> }) => {
+    const nonce = new Date().getTime();
+
+    console.log(blobs);
+    console.log(nonce);
+
+    const message = `verify ${nonce} ${blobs.map((blob) => blob.contract_name + " [" + blob.data.join(", ") + "]").join(" ")}`;
+
+    const { signature, account } = await signMessage(message);
+
+    return { account, signature, nonce };
+  };
+
+  return useSnap ? signBlobsWithSnap : signBlobs;
 };

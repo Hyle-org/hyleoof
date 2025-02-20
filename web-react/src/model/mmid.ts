@@ -31,6 +31,8 @@ export const buildIdentityBlob = (nonce: number, signature: string): Blob => {
     VerifyIdentity: { nonce, signature },
   };
 
+  console.log("action", action);
+
   const blob: Blob = {
     contract_name: idContractName,
     data: serializeIdentityAction(action),
@@ -47,7 +49,7 @@ const schema = BorshSchema.Enum({
     signature: BorshSchema.String,
   }),
   VerifyIdentity: BorshSchema.Struct({
-    nonce: BorshSchema.u32,
+    nonce: BorshSchema.u128,
     signature: BorshSchema.String,
   }),
 });

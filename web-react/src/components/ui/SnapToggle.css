@@ -1,0 +1,25 @@
+/* ToggleButton.css */
+.toggle-button {
+  display: inline-block;
+  cursor: pointer;
+  border: 2px solid #555; /* Bordure du bouton */
+  border-radius: 5px;
+  padding: 10px;
+  transition:
+    background-color 0.3s,
+    transform 0.3s;
+}
+
+.toggle-button:hover {
+  background-color: #444; /* Effet au survol */
+}
+
+.toggle-button:active {
+  transform: scale(0.95); /* Effet de clic */
+}
+
+.logo {
+  width: 50px; /* Taille des logos */
+  height: auto;
+  fill: currentColor; /* Permet de changer la couleur du SVG via le CSS */
+}

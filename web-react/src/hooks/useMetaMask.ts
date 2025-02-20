@@ -16,14 +16,15 @@ export const useMetaMask = () => {
     installedSnap,
     account,
     setAccount,
-    nonce,
     setNonce,
+    useSnap,
+    setUseSnap,
   } = useMetaMaskContext();
   const request = useRequest();
 
   const [isFlask, setIsFlask] = useState(false);
 
-  const snapsDetected = provider !== null;
+  const providerDetected = provider !== null;
 
   /**
    * Detect if the version of MetaMask is Flask.
@@ -62,12 +63,14 @@ export const useMetaMask = () => {
 
   return {
     isFlask,
-    snapsDetected,
+    providerDetected,
+    provider,
     installedSnap,
     getSnap,
     account,
-    nonce,
     setAccount,
     setNonce,
+    useSnap,
+    setUseSnap,
   };
 };
