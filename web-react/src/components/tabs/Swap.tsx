@@ -11,6 +11,8 @@ import { SERVER_URL } from "@/api/constants";
 import { Blob } from "@/model/hyle";
 import { useSendBlobTransaction } from "@/hooks/useSendBlobTransaction";
 import { useSignBlobs } from "@/hooks/useSignBlobs";
+import { useNotification } from "@/hooks/NotificationContext";
+import { useFetchEvents } from "@/hooks/useFetchEvents";
 
 export default function Swap() {
   const { account } = useMetaMask();
@@ -22,6 +24,10 @@ export default function Swap() {
   const { getBalance } = useHyllar({ contractName: fromToken });
   const sendBlobTransaction = useSendBlobTransaction();
   const signBlobs = useSignBlobs();
+  const { addNotification } = useNotification();
+  const fetchEvents = useFetchEvents(addNotification, () => {
+    setMessage("");
+  });
 
   const setAmount = async (value: number) => {
     setFromTokenAmount(value);
@@ -50,7 +56,8 @@ export default function Swap() {
 
       const { account, signature, nonce } = res;
 
-      await sendBlobTransaction(blobs, account, nonce, signature);
+      const tx = await sendBlobTransaction(blobs, account, nonce, signature);
+      fetchEvents(tx);
 
       setMessage(`Transaction sent ✅`);
     },

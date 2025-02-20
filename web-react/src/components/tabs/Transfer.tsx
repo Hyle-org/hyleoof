@@ -10,6 +10,7 @@ import { Blob } from "@/model/hyle";
 import { useSendBlobTransaction } from "@/hooks/useSendBlobTransaction";
 import { useSignBlobs } from "@/hooks/useSignBlobs";
 import { useFetchEvents } from "@/hooks/useFetchEvents";
+import { useNotification } from "@/hooks/NotificationContext";
 
 export type TxHash = string;
 export type BlockHeight = number;
@@ -33,8 +34,9 @@ export default function Transfer() {
   const { getBalance } = useHyllar({ contractName: token });
   const sendBlobTransaction = useSendBlobTransaction();
   const signBlobs = useSignBlobs();
-  const fetchEvents = useFetchEvents(setMessage, () => {
-    setTimeout(() => setMessage(""), 2000);
+  const { addNotification } = useNotification();
+  const fetchEvents = useFetchEvents(addNotification, () => {
+    setMessage("");
   });
 
   const { handleSubmit } = useFormSubmission(transfer, {

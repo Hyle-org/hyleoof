@@ -7,12 +7,14 @@ import { signMessage } from "@/utils/sign";
 import { buildRegisterBlob } from "@/model/mmid";
 import * as node from "@/api/node";
 import { useFetchEvents } from "@/hooks/useFetchEvents";
+import { useNotification } from "@/hooks/NotificationContext";
 
 export default function Register() {
   const { account } = useMetaMask();
   const [message, setMessage] = useState("");
-  const fetchEvents = useFetchEvents(setMessage, () => {
-    setTimeout(() => setMessage("Your identity is now registered on-chain, you can initiate transfer."), 2000);
+  const { addNotification } = useNotification();
+  const fetchEvents = useFetchEvents(addNotification, () => {
+    setMessage("Your identity is now registered on-chain, you can initiate transfer.");
   });
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {

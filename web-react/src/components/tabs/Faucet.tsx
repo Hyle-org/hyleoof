@@ -7,6 +7,7 @@ import { useFormSubmission } from "@/hooks/useFormSubmission";
 import { useHyllar } from "@/hooks/useHyllar";
 import { useMetaMask } from "@/hooks";
 import { useFetchEvents } from "@/hooks/useFetchEvents";
+import { useNotification } from "@/hooks/NotificationContext";
 
 const FAUCET_AMOUNT = 10;
 
@@ -15,10 +16,12 @@ export default function Faucet() {
   const [recipient, setRecipient] = useState(account);
   const [token, setToken] = useState("hyllar");
   const [message, setMessage] = useState("");
+  const { addNotification } = useNotification();
+
   const { getBalance, updateHyllarState } = useHyllar({ contractName: token });
-  const fetchEvents = useFetchEvents((e: string) => setMessage(e), () => {
+  const fetchEvents = useFetchEvents(addNotification, () => {
     updateHyllarState();
-    setTimeout(() => setMessage("✅ Enjoy you tokens!"), 2000);
+    setMessage("✅ Enjoy you tokens!");
   });
 
   const { handleSubmit } = useFormSubmission(faucet, {
@@ -29,11 +32,10 @@ export default function Faucet() {
       setMessage(`Failed to faucet: ${error.message}`);
     },
     onSuccess: async (tx) => {
-      setMessage(`Faucet successful, token ${token}`);
       fetchEvents(tx as string);
+      setMessage(`Transaction sent ✅`);
     },
   });
-
 
   return (
     <>

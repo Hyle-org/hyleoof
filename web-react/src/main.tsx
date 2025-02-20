@@ -6,12 +6,17 @@ import { MetaMaskProvider } from "./hooks/MetamaskContext.tsx";
 
 import { dark } from './config/theme';
 import { ThemeProvider } from "styled-components";
+import { NotificationProvider } from "./hooks/NotificationContext.tsx";
+import NotificationList from "./components/ui/NotificationList.tsx";
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
     <ThemeProvider theme={dark}>
-      <MetaMaskProvider>
-        <App />
-      </MetaMaskProvider>
+      <NotificationProvider>
+        <MetaMaskProvider>
+          <App />
+          <NotificationList />
+        </MetaMaskProvider>
+      </NotificationProvider>
     </ThemeProvider>
   </StrictMode>,
 );
