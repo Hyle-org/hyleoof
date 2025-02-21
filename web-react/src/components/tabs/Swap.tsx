@@ -21,11 +21,12 @@ export default function Swap() {
   const [fromTokenAmount, setFromTokenAmount] = useState(0);
   const [toTokenAmount, setToTokenAmount] = useState(0);
   const [message, setMessage] = useState("");
-  const { getBalance } = useHyllar({ contractName: fromToken });
+  const { getBalance, updateHyllarState } = useHyllar({ contractName: fromToken });
   const sendBlobTransaction = useSendBlobTransaction();
   const signBlobs = useSignBlobs();
   const { addNotification } = useNotification();
   const fetchEvents = useFetchEvents(addNotification, () => {
+    updateHyllarState();
     setMessage("");
   });
 

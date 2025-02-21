@@ -31,7 +31,7 @@ export default function Transfer() {
   const [amount, setAmount] = useState(0);
   const [token, setToken] = useState("hyllar");
   const [message, setMessage] = useState("");
-  const { getBalance } = useHyllar({ contractName: token });
+  const { getBalance, updateHyllarState } = useHyllar({ contractName: token });
   const sendBlobTransaction = useSendBlobTransaction();
   const signBlobs = useSignBlobs();
   const { addNotification } = useNotification();
@@ -103,6 +103,3 @@ export default function Transfer() {
   );
 }
 
-function updateHyllarState() {
-  throw new Error("Function not implemented.");
-}

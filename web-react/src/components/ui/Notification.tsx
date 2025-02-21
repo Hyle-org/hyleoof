@@ -10,7 +10,7 @@ const Notification: React.FC<NotificationProps> = ({ notification, onClose }) =>
   useEffect(() => {
     const timer = setTimeout(() => {
       onClose(notification.id);
-    }, 6000);
+    }, 15000);
 
     return () => clearTimeout(timer);
   }, [notification.id, onClose]);
