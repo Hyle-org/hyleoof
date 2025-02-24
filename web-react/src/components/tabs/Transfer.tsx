@@ -6,7 +6,7 @@ import transfer from "@/api/endpoints/transfer";
 import { useFormSubmission } from "@/hooks/useFormSubmission";
 import { useHyllar } from "@/hooks/useHyllar";
 import { useMetaMask } from "@/hooks";
-import { Blob } from "@/model/hyle";
+import { Blob } from "hyle";
 import { useSendBlobTransaction } from "@/hooks/useSendBlobTransaction";
 import { useSignBlobs } from "@/hooks/useSignBlobs";
 import { useFetchEvents } from "@/hooks/useFetchEvents";

@@ -1,5 +1,4 @@
-import { Blob, BlobTransaction } from "@/model/hyle";
-import { buildIdentityBlob } from "@/model/mmid";
+import { Blob, blob_builder, BlobTransaction } from "hyle";
 import * as node from "@/api/node";
 
 export const useSendBlobTransaction = () => {
@@ -12,7 +11,10 @@ export const useSendBlobTransaction = () => {
     nonce: number,
     signature: string,
   ) => {
-    const verifyIdentity: Blob = buildIdentityBlob(nonce, signature);
+    const verifyIdentity: Blob = blob_builder.metamask.verifyIdentity(
+      nonce,
+      signature,
+    );
 
     const blobTx: BlobTransaction = {
       identity: account,

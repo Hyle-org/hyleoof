@@ -2,9 +2,8 @@ import { FormEvent, useState } from "react";
 import Button from "@/components/ui/Button";
 import Input from "@/components/ui/Input";
 import { useMetaMask } from "@/hooks";
-import { Blob, BlobTransaction } from "@/model/hyle";
+import { Blob, blob_builder, BlobTransaction } from "hyle";
 import { signMessage } from "@/utils/sign";
-import { buildRegisterBlob } from "@/model/mmid";
 import * as node from "@/api/node";
 import { useFetchEvents } from "@/hooks/useFetchEvents";
 import { useNotification } from "@/hooks/NotificationContext";
@@ -27,7 +26,7 @@ export default function Register() {
 
       console.log('signature', signature);
 
-      const register: Blob = buildRegisterBlob(signature);
+      const register: Blob = blob_builder.metamask.register(signature);
 
       const blobTx: BlobTransaction = {
         identity: account,

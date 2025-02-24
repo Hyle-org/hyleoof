@@ -1,4 +1,4 @@
-import { BlobTransaction } from "@/model/hyle";
+import { BlobTransaction } from "hyle";
 import { NODE_URL } from "../constants";
 import { createApiRequest } from "../createApiRequest";
 

@@ -1,4 +1,4 @@
-import { TxEvent } from "@/model/hyle";
+import { TxEvent } from "hyle";
 import { NODE_URL } from "../constants";
 import { createApiRequest } from "../createApiRequest";
 

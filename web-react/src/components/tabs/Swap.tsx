@@ -8,7 +8,7 @@ import { useHyllar } from "@/hooks/useHyllar";
 import { useMetaMask } from "@/hooks";
 import { createApiRequest } from "@/api/createApiRequest";
 import { SERVER_URL } from "@/api/constants";
-import { Blob } from "@/model/hyle";
+import { Blob } from "hyle";
 import { useSendBlobTransaction } from "@/hooks/useSendBlobTransaction";
 import { useSignBlobs } from "@/hooks/useSignBlobs";
 import { useNotification } from "@/hooks/NotificationContext";

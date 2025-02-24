@@ -17,6 +17,9 @@ importers:
       borsher:
         specifier: ^3.6.0
         version: 3.6.0
+      hyle:
+        specifier: ^0.1.1
+        version: 0.1.1
       react:
         specifier: ^19.0.0
         version: 19.0.0
@@ -1390,6 +1393,9 @@ packages:
 
   hoist-non-react-statics@3.3.2:
     resolution: {integrity: sha512-/gGivxi8JPKWNm/W0jSmzcMPpfpPLc3dY/6GxhX2hQ9iGj3aDfklV4ET7NjKpSinLpJ5vafa9iiGIEZg10SfBw==}
+
+  hyle@0.1.1:
+    resolution: {integrity: sha512-4UnwUdii9+O5DufyRaDM7gzgPihY98JIU5rkd1PO7uzENLVhF/cybE737wS773r6lsogTjrBsAY0W0Dzw4yxTQ==}
 
   ieee754@1.2.1:
     resolution: {integrity: sha512-dcyqhDvX1C46lXZcVqCpK+FtMRQVdIMN6/Df5js2zouUsqG7I6sFxitIC+7KYK29KdXOLHdu9zL4sFnoVQnqaA==}
@@ -3365,6 +3371,10 @@ snapshots:
   hoist-non-react-statics@3.3.2:
     dependencies:
       react-is: 16.13.1
+
+  hyle@0.1.1:
+    dependencies:
+      borsher: 3.6.0
 
   ieee754@1.2.1: {}
 

@@ -1,4 +1,4 @@
-import { Blob } from "@/model/hyle";
+import { Blob } from "hyle";
 import { useInvokeSnap } from "./useInvokeSnap";
 import { signMessage } from "@/utils/sign";
 

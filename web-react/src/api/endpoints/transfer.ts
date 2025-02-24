@@ -1,6 +1,5 @@
 import { AuthParams } from "../constants";
-import { Blob } from "@/model/hyle";
-import { buildTransferBlob } from "@/model/token";
+import { blob_builder, Blob } from "hyle";
 
 interface TransferParams extends AuthParams {
   recipient: string;
@@ -13,7 +12,12 @@ export default async function transfer({
   token,
   amount,
 }: TransferParams): Promise<Array<Blob>> {
-  const transfer: Blob = buildTransferBlob(recipient, token, amount, null);
+  const transfer: Blob = blob_builder.token.transfer(
+    recipient,
+    token,
+    amount,
+    null,
+  );
 
   return [transfer];
 }
