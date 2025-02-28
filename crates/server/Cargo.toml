@@ -15,7 +15,7 @@ amm = { git = "https://github.com/Hyle-org/hyle.git", package="amm", features = 
 hyle_contracts = { git = "https://github.com/Hyle-org/hyle.git", package="hyle-contracts", tag = "v0.11.0"  }
 bonsai_runner = { git = "https://github.com/Hyle-org/hyle.git", package="bonsai-runner", features = [], tag = "v0.11.0"  }
 
-risc0-zkvm = { version = "1.2.3", features = ["prove"] }
+risc0-zkvm = { version = "1.2.5", features = ["prove"] }
 
 # sdk = { path = "../../../hyle3/contract-sdk", package="hyle-contract-sdk"}
 # hyllar = { path = "../../../hyle3/contracts/hyllar/contract", package="hyllar" }
