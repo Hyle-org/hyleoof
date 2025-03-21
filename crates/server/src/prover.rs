@@ -1,23 +1,21 @@
 use std::{collections::HashMap, sync::Arc};
 
 use crate::app::AppModuleCtx;
-use amm::client::AmmPseudoExecutor;
+use amm::Amm;
 use anyhow::Result;
-use client_sdk::helpers::{risc0::Risc0Prover, ClientSdkExecutor};
+use client_sdk::helpers::risc0::Risc0Prover;
 use hyle::{
-    module_handle_messages,
+    log_error, module_handle_messages,
     node_state::module::NodeStateEvent,
-    utils::{
-        logger::LogMe,
-        modules::{module_bus_client, Module},
-    },
+    utils::modules::{module_bus_client, Module},
 };
-use hyllar::client::HyllarPseudoExecutor;
+use hyle_metamask::IdentityContractState;
+use hyllar::Hyllar;
 use sdk::{
-    BlobTransaction, Block, BlockHeight, ContractInput, ContractName, Hashed, ProofTransaction,
-    StateDigest, TransactionData, TxHash,
+    BlobTransaction, Block, BlockHeight, ContractInput, ContractName, Hashed, HyleOutput,
+    ProofTransaction, TransactionData, TxHash,
 };
-use tracing::{error, info, warn};
+use tracing::{error, info};
 
 pub struct ProverModule {
     bus: ProverModuleBusClient,
@@ -53,9 +51,7 @@ impl Module for ProverModule {
         module_handle_messages! {
             on_bus self.bus,
             listen<NodeStateEvent> event => {
-                _ = self.handle_node_state_event(event)
-                    .await
-                    .log_error("Handling node state event")
+                _ = log_error!(self.handle_node_state_event(event).await, "handle note state event")
             }
 
         };
@@ -139,31 +135,53 @@ fn get_prover(cn: &ContractName) -> Option<Risc0Prover> {
     }
 }
 
-fn get_executor(cn: &ContractName) -> Option<Box<dyn ClientSdkExecutor + Send + Sync>> {
+fn execute(cn: &ContractName, input: &ContractInput) -> Option<(Vec<u8>, HyleOutput)> {
     match cn.0.as_str() {
-        "hyllar" => Some(Box::new(HyllarPseudoExecutor {})),
-        "hyllar2" => Some(Box::new(HyllarPseudoExecutor {})),
-        "mmid" => Some(Box::new(hyle_metamask::client::PseudoExecutor {})),
-        "amm" => Some(Box::new(AmmPseudoExecutor {})),
+        "hyllar" | "hyllar2" => {
+            let (s, o) = sdk::guest::execute::<Hyllar>(input);
+            Some((s.to_bytes(), o))
+        }
+        "mmid" => {
+            let (s, o) = sdk::guest::execute::<IdentityContractState>(input);
+            Some((s.as_bytes().unwrap(), o))
+        }
+        "amm" => {
+            let (s, o) = sdk::guest::execute::<Amm>(input);
+            Some((s.as_bytes(), o))
+        }
         _ => None,
+    }
+}
+
+async fn get_state(ctx: &Arc<AppModuleCtx>, cn: &ContractName) -> Result<Vec<u8>> {
+    match cn.0.as_str() {
+        "hyllar" | "hyllar2" => Ok(ctx
+            .indexer_client
+            .fetch_current_state::<Hyllar>(cn)
+            .await?
+            .to_bytes()),
+        "mmid" | "amm" => Ok(ctx.node_client.get_contract(cn).await?.state.0),
+        _ => Err(anyhow::anyhow!("contract not found")),
     }
 }
 
 async fn prove_blob_tx(ctx: &Arc<AppModuleCtx>, tx: BlobTransaction) -> Result<()> {
     let blobs = tx.blobs.clone();
     let tx_hash = tx.hashed();
-    let mut states = HashMap::<ContractName, StateDigest>::new();
+    let mut states = HashMap::<ContractName, Vec<u8>>::new();
 
     for (index, blob) in tx.blobs.iter().enumerate() {
         if let Some(prover) = get_prover(&blob.contract_name) {
             info!("Proving tx: {}. Blob for {}", tx_hash, blob.contract_name);
             if !states.contains_key(&blob.contract_name) {
-                let contract = ctx.node_client.get_contract(&blob.contract_name).await?;
-                states.insert(blob.contract_name.clone(), contract.state);
+                states.insert(
+                    blob.contract_name.clone(),
+                    get_state(ctx, &blob.contract_name).await?,
+                );
             }
 
             let inputs = ContractInput {
-                initial_state: states.get(&blob.contract_name).unwrap().clone(),
+                state: states.get(&blob.contract_name).unwrap().clone(),
                 identity: tx.identity.clone(),
                 tx_hash: tx_hash.clone(),
                 private_input: vec![],
@@ -173,19 +191,12 @@ async fn prove_blob_tx(ctx: &Arc<AppModuleCtx>, tx: BlobTransaction) -> Result<(
             };
 
             let success = {
-                let res = get_executor(&blob.contract_name).unwrap().execute(&inputs);
+                let (next_state, hyle_outputs) =
+                    execute(&blob.contract_name, &inputs).expect("contract not found");
 
-                match res {
-                    Ok((_, hyle_outputs)) => {
-                        states.insert(blob.contract_name.clone(), hyle_outputs.next_state);
+                states.insert(blob.contract_name.clone(), next_state);
 
-                        hyle_outputs.success
-                    }
-                    Err(e) => {
-                        warn!("Error executing blob: {:?}", e);
-                        false
-                    }
-                }
+                hyle_outputs.success
             };
 
             match prover.prove(inputs).await {
@@ -195,11 +206,10 @@ async fn prove_blob_tx(ctx: &Arc<AppModuleCtx>, tx: BlobTransaction) -> Result<(
                         contract_name: blob.contract_name.clone(),
                         proof,
                     };
-                    let _ = ctx
-                        .node_client
-                        .send_tx_proof(&tx)
-                        .await
-                        .log_error("failed to send proof to node");
+                    let _ = log_error!(
+                        ctx.node_client.send_tx_proof(&tx).await,
+                        "failed to send proof to node"
+                    );
                     if !success {
                         return Ok(()); // Will fail-fast on first "failed" proof
                     }

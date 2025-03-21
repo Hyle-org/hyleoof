@@ -5,12 +5,9 @@ use client_sdk::{
     rest_client::{IndexerApiHttpClient, NodeApiHttpClient},
     transaction_builder::{ProvableBlobTx, TxExecutorBuilder},
 };
-use hyllar::client::metadata::HYLLAR_ELF;
+use hyllar::{client::metadata::HYLLAR_ELF, erc20::ERC20, Hyllar};
 use risc0_zkvm::compute_image_id;
-use sdk::{
-    api::APIRegisterContract, erc20::ERC20, BlobTransaction, ContractName, Digestable, ProgramId,
-    StateDigest,
-};
+use sdk::{api::APIRegisterContract, BlobTransaction, ContractName, HyleContract, ProgramId};
 use tokio::time::timeout;
 use tracing::{debug, info};
 
@@ -46,13 +43,13 @@ async fn init_amm(node: &NodeApiHttpClient, indexer: &IndexerApiHttpClient) -> R
             info!("🚀 Registering AMM contract");
             let image_id = hex::encode(compute_image_id(amm::client::metadata::AMM_ELF)?);
             node.register_contract(&APIRegisterContract {
-                verifier: "risc0".into(),
+                verifier: "risc0-1".into(),
                 program_id: ProgramId(hex::decode(image_id)?),
-                state_digest: amm::AmmState::new(BTreeMap::from([(
+                state_commitment: amm::Amm::new(BTreeMap::from([(
                     amm::UnorderedTokenPair::new("hyllar".to_string(), "hyllar2".to_string()),
                     (1_000_000_000, 1_000_000_000),
                 )]))
-                .as_digest(),
+                .commit(),
                 contract_name: "amm".into(),
             })
             .await?;
@@ -73,21 +70,25 @@ async fn init_hyllar(
             let program_id = hex::encode(contract.program_id.as_slice());
             if program_id != image_id {
                 bail!(
-                    "Invalid Hyllar contract image_id. On-chain version is {program_id}, expected {image_id}",
-                );
-            }
-            info!("✅ Hyllar contract is up to date");
-
-            let contract = hyllar::HyllarTokenContract::init(
-                StateDigest(contract.state_digest).try_into()?,
-                "faucet.hydentity".into(),
+                "Invalid Hyllar contract image_id. On-chain version is {program_id}, expected {image_id}",
             );
+            }
+        }
+        Err(e) => {
+            bail!("Error fetching Hyllar contract: {e}");
+        }
+    }
 
+    match indexer
+        .fetch_current_state::<Hyllar>(&"hyllar".into())
+        .await
+    {
+        Ok(contract) => {
             if contract.balance_of("amm").is_err() {
                 info!("🚀 Initializing Hyllar contract state");
 
                 let executor = TxExecutorBuilder::new(States {
-                    hyllar: contract.state().clone(),
+                    hyllar: contract.clone(),
                     hyllar2: indexer.fetch_current_state(&"hyllar2".into()).await?,
                     hydentity: indexer.fetch_current_state(&"hydentity".into()).await?,
                 })
@@ -107,9 +108,21 @@ async fn init_hyllar(
                     "amm".into(),
                     1_000_000_000,
                 )?;
+                app.transfer(
+                    &mut transaction,
+                    "hyllar2".into(),
+                    "amm".into(),
+                    1_000_000_000,
+                )?;
                 app.approve(
                     &mut transaction,
                     "hyllar".into(),
+                    "amm".into(),
+                    1_000_000_000_000_000,
+                )?;
+                app.approve(
+                    &mut transaction,
+                    "hyllar2".into(),
                     "amm".into(),
                     1_000_000_000_000_000,
                 )?;
@@ -130,13 +143,9 @@ async fn init_hyllar(
 
                 timeout(Duration::from_secs(30), async {
                     loop {
-                        if let Ok(contract) =node.get_contract(&"hyllar".into())
+                        if let Ok(contract) =indexer.fetch_current_state::<Hyllar>(&"hyllar".into())
                             .await
                         {
-                            let contract = hyllar::HyllarTokenContract::init(
-                                contract.state.try_into().unwrap(),
-                                "faucet.hydentity".into(),
-                            );
                             let balance = contract.balance_of("amm");
                             if balance != Ok(1_000_000_000) {
                                 info!("⏰ Waiting for Hyllar contract state to be ready. amm balance is {balance:?}");
@@ -175,20 +184,12 @@ async fn init_hyllar2(node: &NodeApiHttpClient, indexer: &IndexerApiHttpClient) 
             info!("🚀 Registering Hyllar2 contract");
             let image_id = hex::encode(compute_image_id(HYLLAR_ELF)?);
 
-            let mut hyllar_token = hyllar::HyllarTokenContract::init(
-                hyllar::HyllarToken::new(100_000_000_000, "faucet.hydentity".to_string()),
-                "faucet.hydentity".into(),
-            );
-            hyllar_token.transfer("amm", 1_000_000_000).unwrap();
-
-            hyllar_token.approve("amm", 1_000_000_000_000_000).unwrap(); // faucet qui approve amm pour
-                                                                         // déplacer ses fonds
-            let hyllar_state = hyllar_token.state();
+            let hyllar_token = hyllar::Hyllar::default();
 
             node.register_contract(&APIRegisterContract {
-                verifier: "risc0".into(),
+                verifier: "risc0-1".into(),
                 program_id: ProgramId(hex::decode(image_id)?),
-                state_digest: hyllar_state.as_digest(),
+                state_commitment: hyllar_token.commit(),
                 contract_name: "hyllar2".into(),
             })
             .await?;
@@ -215,9 +216,9 @@ async fn init_mmid(node: &NodeApiHttpClient, indexer: &IndexerApiHttpClient) -> 
             info!("🚀 Registering Metamask contract");
             let image_id = hex::encode(compute_image_id(hyle_metamask::client::metadata::ELF)?);
             node.register_contract(&APIRegisterContract {
-                verifier: "risc0".into(),
+                verifier: "risc0-1".into(),
                 program_id: ProgramId(hex::decode(image_id)?),
-                state_digest: hyle_metamask::IdentityContractState::new().as_digest(),
+                state_commitment: hyle_metamask::IdentityContractState::new().commit(),
                 contract_name: "mmid".into(),
             })
             .await?;

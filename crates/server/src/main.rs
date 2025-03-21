@@ -21,7 +21,6 @@ use prover::{ProverModule, ProverModuleCtx};
 use std::{
     env,
     sync::{Arc, Mutex},
-    time::Duration,
 };
 use tracing::{error, info, warn};
 
@@ -162,7 +161,7 @@ async fn main() -> Result<()> {
                 info!("SIGTERM received, shutting down");
             }
         }
-        _ = handler.shutdown_modules(Duration::from_secs(3)).await;
+        _ = handler.shutdown_modules().await;
     }
     #[cfg(not(unix))]
     {
@@ -174,7 +173,7 @@ async fn main() -> Result<()> {
                 info!("Ctrl-C received, shutting down");
             }
         }
-        _ = handler.shutdown_modules(Duration::from_secs(3)).await;
+        _ = handler.shutdown_modules().await;
     }
 
     if args.pg {

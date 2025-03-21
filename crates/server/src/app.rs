@@ -22,9 +22,9 @@ use hyle::{
     utils::modules::{module_bus_client, Module},
 };
 
-use hyllar::HyllarToken;
+use hyllar::Hyllar;
 use sdk::BlobTransaction;
-use sdk::{ContractName, TxHash};
+use sdk::{guest, ContractInput, ContractName, HyleOutput, TxHash};
 use serde::Deserialize;
 use tokio::sync::Mutex;
 use tower_http::cors::{Any, CorsLayer};
@@ -157,7 +157,7 @@ async fn paired_amount(
 ) -> Result<impl IntoResponse, AppError> {
     let app = ctx.app.lock().await;
     let contract = app.client.get_contract(&"amm".into()).await?;
-    let amm: amm::AmmState = contract.state.try_into()?;
+    let amm: amm::Amm = contract.state.try_into()?;
     let amount_b = amm.get_paired_amount(token_a, token_b, amount);
 
     Ok(Json(amount_b))
@@ -182,8 +182,8 @@ async fn do_faucet(
 
 contract_states!(
     pub struct States {
-        pub hyllar: HyllarToken,
-        pub hyllar2: HyllarToken,
+        pub hyllar: Hyllar,
+        pub hyllar2: Hyllar,
         pub hydentity: Hydentity,
     }
 );
