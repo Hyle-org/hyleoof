@@ -11,12 +11,9 @@ use hyle::{
     },
     model::{api::NodeInfo, CommonRunContext},
     rest::{RestApi, RestApiRunContext},
-    utils::{
-        conf,
-        logger::{setup_tracing, TracingMode},
-        modules::ModulesHandler,
-    },
+    utils::{conf, logger::setup_tracing, modules::ModulesHandler},
 };
+use prometheus::Registry;
 use prover::{ProverModule, ProverModuleCtx};
 use std::{
     env,
@@ -33,7 +30,7 @@ mod utils;
 #[derive(Parser, Debug)]
 #[command(version, about, long_about = None)]
 pub struct Args {
-    #[arg(long, default_value = "config.ron")]
+    #[arg(long, default_value = "config.toml")]
     pub config_file: Option<String>,
 
     #[clap(long, action)]
@@ -46,15 +43,8 @@ async fn main() -> Result<()> {
     let config =
         conf::Conf::new(args.config_file, None, Some(true)).context("reading config file")?;
 
-    setup_tracing(
-        match config.log_format.as_str() {
-            "json" => TracingMode::Json,
-            "node" => TracingMode::NodeName,
-            _ => TracingMode::Full,
-        },
-        format!("{}(nopkey)", config.id.clone(),),
-    )
-    .context("setting up tracing")?;
+    setup_tracing(&config, format!("{}(nopkey)", config.id.clone(),))
+        .context("setting up tracing")?;
 
     let config = Arc::new(config);
 
@@ -132,10 +122,11 @@ async fn main() -> Result<()> {
 
     handler
         .build_module::<RestApi>(RestApiRunContext {
-            rest_addr: ctx.config.rest.clone(),
-            max_body_size: ctx.config.rest_max_body_size,
+            port: ctx.config.rest_server_port,
+            max_body_size: ctx.config.rest_server_max_body_size,
             bus: ctx.bus.new_handle(),
             metrics_layer: None,
+            registry: Registry::new(),
             router: router.clone(),
             openapi: Default::default(),
             info: NodeInfo {
