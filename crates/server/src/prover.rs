@@ -15,7 +15,7 @@ use sdk::{
     BlobTransaction, Block, BlockHeight, ContractInput, ContractName, Hashed, HyleOutput,
     ProofTransaction, TransactionData, TxHash,
 };
-use tracing::{error, info};
+use tracing::{error, info, warn};
 
 pub struct ProverModule {
     bus: ProverModuleBusClient,
@@ -218,6 +218,8 @@ async fn prove_blob_tx(ctx: &Arc<AppModuleCtx>, tx: BlobTransaction) -> Result<(
                     error!("Error proving tx: {:?}", e);
                 }
             };
+        } else {
+            warn!("Prover not found for contract: {}", blob.contract_name);
         }
     }
     Ok(())
