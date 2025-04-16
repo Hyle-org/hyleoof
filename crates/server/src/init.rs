@@ -76,7 +76,7 @@ async fn init_hyllar(
 
             let contract = hyllar::HyllarTokenContract::init(
                 StateDigest(contract.state_digest).try_into()?,
-                "faucet.hydentity".into(),
+                "faucet@hydentity".into(),
             );
 
             if contract.balance_of("amm").is_err() {
@@ -96,7 +96,7 @@ async fn init_hyllar(
                     hydentity_cn: "hydentity".into(),
                     amm_cn: "amm".into(),
                 };
-                let mut transaction = ProvableBlobTx::new("faucet.hydentity".into());
+                let mut transaction = ProvableBlobTx::new("faucet@hydentity".into());
 
                 app.verify_identity(&mut transaction, "password".into())?;
                 app.transfer(
@@ -133,7 +133,7 @@ async fn init_hyllar(
                         {
                             let contract = hyllar::HyllarTokenContract::init(
                                 contract.state.try_into().unwrap(),
-                                "faucet.hydentity".into(),
+                                "faucet@hydentity".into(),
                             );
                             let balance = contract.balance_of("amm");
                             if balance != Ok(1_000_000_000) {
@@ -174,8 +174,8 @@ async fn init_hyllar2(node: &NodeApiHttpClient, indexer: &IndexerApiHttpClient) 
             let image_id = hex::encode(compute_image_id(HYLLAR_ELF)?);
 
             let mut hyllar_token = hyllar::HyllarTokenContract::init(
-                hyllar::HyllarToken::new(100_000_000_000, "faucet.hydentity".to_string()),
-                "faucet.hydentity".into(),
+                hyllar::HyllarToken::new(100_000_000_000, "faucet@hydentity".to_string()),
+                "faucet@hydentity".into(),
             );
             hyllar_token.transfer("amm", 1_000_000_000).unwrap();
 

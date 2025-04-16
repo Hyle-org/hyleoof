@@ -158,7 +158,7 @@ async fn faucet(
 ) -> Result<impl IntoResponse, AppError> {
     let tx_hash = do_transfer(
         ctx,
-        "faucet.hydentity".into(),
+        "faucet@hydentity".into(),
         "password".into(),
         payload.username,
         payload.token,

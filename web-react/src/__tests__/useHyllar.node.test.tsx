@@ -12,10 +12,10 @@ fetchMocker.enableMocks();
 const mockGetContractStateResponse: GetContractStateResponse = {
     total_supply: 1000,
     balances: {
-        "alice.hydentity": 100,
-        "bob.hydentity": 200,
+        "alice@hydentity": 100,
+        "bob@hydentity": 200,
     },
-    allowances: [[50, ["alice.hydentity", "bob.hydentity"]]],
+    allowances: [[50, ["alice@hydentity", "bob@hydentity"]]],
 };
 
 
