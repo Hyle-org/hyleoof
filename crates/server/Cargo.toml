@@ -7,15 +7,27 @@ homepage = { workspace = true }
 repository = { workspace = true }
 
 [dependencies]
-sdk = { git = "https://github.com/Hyle-org/hyle.git", package="hyle-contract-sdk", features = ["tracing"], tag = "v0.11.0" }
-client-sdk = { git = "https://github.com/Hyle-org/hyle.git", package="client-sdk", default-features = false, features = ["risc0", "rest"], tag = "v0.11.0" }
-hyllar = { git = "https://github.com/Hyle-org/hyle.git", package="hyllar", features = ["client"], tag = "v0.11.0"  }
-hydentity = { git = "https://github.com/Hyle-org/hyle.git", package="hydentity", features = ["client"], tag = "v0.11.0"  }
-amm = { git = "https://github.com/Hyle-org/hyle.git", package="amm", features = ["client"], tag = "v0.11.0"  }
-hyle_contracts = { git = "https://github.com/Hyle-org/hyle.git", package="hyle-contracts", tag = "v0.11.0"  }
-bonsai_runner = { git = "https://github.com/Hyle-org/hyle.git", package="bonsai-runner", features = [], tag = "v0.11.0"  }
+sdk = { git = "https://github.com/Hyle-org/hyle.git", package = "hyle-contract-sdk", features = [
+  "tracing",
+], branch = "main" }
+client-sdk = { git = "https://github.com/Hyle-org/hyle.git", package = "hyle-client-sdk", default-features = false, features = [
+  "risc0",
+  "rest",
+], branch = "main" }
+hyllar = { git = "https://github.com/Hyle-org/hyle.git", package = "hyle-hyllar", features = [
+  "client",
+], branch = "main" }
+hydentity = { git = "https://github.com/Hyle-org/hyle.git", package = "hyle-hydentity", features = [
+  "client",
+], branch = "main" }
+amm = { git = "https://github.com/Hyle-org/hyle.git", package = "hyle-amm", features = [
+  "client",
+], branch = "main" }
+hyle_contracts = { git = "https://github.com/Hyle-org/hyle.git", package = "hyle-contracts", branch = "main" }
+bonsai_runner = { git = "https://github.com/Hyle-org/hyle.git", package = "hyle-bonsai-runner", features = [
+], branch = "main" }
 
-risc0-zkvm = { version = "1.2.3", features = ["prove"] }
+risc0-zkvm = { version = "2.0.1", features = ["prove"] }
 
 # sdk = { path = "../../../hyle3/contract-sdk", package="hyle-contract-sdk"}
 # hyllar = { path = "../../../hyle3/contracts/hyllar/contract", package="hyllar" }
@@ -36,4 +48,3 @@ hex = "0.4.3"
 borsh = "1.5.3"
 tracing = "0.1.41"
 tracing-subscriber = { version = "0.3.18", features = ["env-filter"] }
-
