@@ -1,6 +1,6 @@
 use std::{env, sync::Arc};
 
-use amm::AmmState;
+use amm::Amm;
 use anyhow::Result;
 use axum::{
     extract::{Json, State},
@@ -12,13 +12,11 @@ use axum::{
 use client_sdk::{
     contract_states,
     rest_client::{IndexerApiHttpClient, NodeApiHttpClient},
-    transaction_builder::{ProvableBlobTx, TxExecutor, TxExecutorBuilder},
+    transaction_builder::{ProvableBlobTx, TxExecutor, TxExecutorBuilder, TxExecutorHandler},
 };
 use hydentity::Hydentity;
-use hyllar::HyllarToken;
-use reqwest::{Client, Url};
-use sdk::BlobTransaction;
-use sdk::{ContractName, Identity, TxHash};
+use hyllar::Hyllar;
+use sdk::*;
 use serde::Deserialize;
 use task_manager::Prover;
 use tokio::sync::Mutex;
@@ -49,7 +47,8 @@ async fn build_app_context(
         .fetch_current_state(&"hydentity".into())
         .await
         .unwrap();
-    let amm = indexer.fetch_current_state(&"amm".into()).await.unwrap();
+    let amm = indexer.get_indexer_contract(&"amm".into()).await.unwrap();
+    let amm: Amm = StateCommitment(amm.state_commitment).try_into().unwrap();
 
     let executor = TxExecutorBuilder::new(States {
         hyllar,
@@ -91,14 +90,8 @@ async fn main() {
     let node_url = env::var("NODE_URL").unwrap_or_else(|_| "http://localhost:4321".to_string());
     let indexer_url =
         env::var("INDEXER_URL").unwrap_or_else(|_| "http://localhost:4321".to_string());
-    let node_client = Arc::new(NodeApiHttpClient {
-        url: Url::parse(node_url.as_str()).unwrap(),
-        reqwest_client: Client::new(),
-    });
-    let indexer_client = Arc::new(IndexerApiHttpClient {
-        url: Url::parse(indexer_url.as_str()).unwrap(),
-        reqwest_client: Client::new(),
-    });
+    let node_client = Arc::new(NodeApiHttpClient::new(node_url).unwrap());
+    let indexer_client = Arc::new(IndexerApiHttpClient::new(indexer_url).unwrap());
 
     match init::init_node(node_client.clone(), indexer_client.clone()).await {
         Ok(_) => {}
@@ -158,7 +151,7 @@ async fn faucet(
 ) -> Result<impl IntoResponse, AppError> {
     let tx_hash = do_transfer(
         ctx,
-        "faucet.hydentity".into(),
+        "faucet@hydentity".into(),
         "password".into(),
         payload.username,
         payload.token,
@@ -346,10 +339,10 @@ async fn do_swap(
 
 contract_states!(
     pub struct States {
-        pub hyllar: HyllarToken,
-        pub hyllar2: HyllarToken,
+        pub hyllar: Hyllar,
+        pub hyllar2: Hyllar,
         pub hydentity: Hydentity,
-        pub amm: AmmState,
+        pub amm: Amm,
     }
 );
 
@@ -379,7 +372,11 @@ impl HyleOofCtx {
         transaction: &mut ProvableBlobTx,
         password: String,
     ) -> Result<()> {
-        hydentity::client::register_identity(transaction, self.hydentity_cn.clone(), password)
+        hydentity::client::tx_executor_handler::register_identity(
+            transaction,
+            self.hydentity_cn.clone(),
+            password,
+        )
     }
 
     fn verify_identity(
@@ -387,7 +384,7 @@ impl HyleOofCtx {
         transaction: &mut ProvableBlobTx,
         password: String,
     ) -> Result<()> {
-        hydentity::client::verify_identity(
+        hydentity::client::tx_executor_handler::verify_identity(
             transaction,
             self.hydentity_cn.clone(),
             &self.executor.hydentity,
@@ -402,7 +399,7 @@ impl HyleOofCtx {
         recipient: String,
         amount: u128,
     ) -> Result<()> {
-        hyllar::client::transfer(transaction, token, recipient, amount)
+        hyllar::client::tx_executor_handler::transfer(transaction, token, recipient, amount)
     }
 
     fn approve(
@@ -412,7 +409,7 @@ impl HyleOofCtx {
         spender: String,
         amount: u128,
     ) -> Result<()> {
-        hyllar::client::approve(transaction, token, spender, amount)
+        hyllar::client::tx_executor_handler::approve(transaction, token, spender, amount)
     }
 
     pub async fn swap(
@@ -428,7 +425,7 @@ impl HyleOofCtx {
             token_b.0.clone(),
             amount,
         )?;
-        amm::client::swap(
+        amm::client::tx_executor_handler::swap(
             transaction,
             self.amm_cn.clone(),
             (token_a, token_b),
@@ -437,7 +434,7 @@ impl HyleOofCtx {
     }
 
     fn get_paired_amount(
-        state: &AmmState,
+        state: &Amm,
         token_a: String,
         token_b: String,
         amount: u128,

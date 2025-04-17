@@ -22,7 +22,7 @@ export default function Faucet() {
       setMessage(`Failed to faucet: ${error.message}`);
     },
     onSuccess: () => {
-      setMessage(`Faucet successful for user ${username}.hydentity, token ${token}`);
+      setMessage(`Faucet successful for user ${username}@hydentity, token ${token}`);
     },
   });
 
@@ -33,19 +33,18 @@ export default function Faucet() {
         <Input
           type="text"
           labelText="Username"
-          suffixText=".hydentity"
           value={username}
           name="username"
           onChange={(e) => setUsername(e.target.value)}
         />
 
-        <Button type="submit">{`Faucet ${FAUCET_AMOUNT} hyllar to ${username}.hydentity`}</Button>
+        <Button type="submit">{`Faucet ${FAUCET_AMOUNT} hyllar to ${username}`}</Button>
       </form>
 
       <div className="state">
         <p>{message}</p>
         <p>{`Token supply: ${getTotalSupply() || "Loading..."}`}</p>
-        <p>{`Balance: ${getHydentityBalance(username) || `Account ${username}.hydentity not found`}`}</p>
+        <p>{`Balance: ${getHydentityBalance(username) || `Account ${username} not found`}`}</p>
       </div>
     </>
   );
